@@ -51,48 +51,66 @@ function App() {
       </section>
 {/* Add this after your <section className="app-hero"> */}
 <section className="services-grid">
+  {/* SERVICE 1: WELL & PUMP */}
   <div className="service-card">
-    <div className="service-icon">🚰</div>
-    <h3>Well & Pump Service</h3>
-    <p>Professional pump installation, well sanitization, and expert plumbing repairs to restore your water flow fast.</p>
+    <div className="service-header">
+      <div className="service-icon">🚰</div>
+      <h3>Well & Pump Specialist</h3>
+    </div>
+    <ul className="service-details">
+      <li><strong>Emergency Pump Service:</strong> No water? We diagnose and replace failing pumps fast.</li>
+      <li><strong>Pressure Tanks:</strong> Constant pressure solutions for consistent flow.</li>
+      <li><strong>Well Sanitization:</strong> Professional treatments to eliminate bacteria and odors.</li>
+    </ul>
   </div>
 
+  {/* SERVICE 2: FILTRATION (The Proprietary Angle) */}
   <div className="service-card">
-    <div className="service-icon">🔍</div>
-    <h3>Camera Inspection</h3>
-    <p>High-tech diagnostic imaging to find underground blockages or casing issues without digging up your yard.</p>
+    <div className="service-header">
+      <div className="service-icon">💎</div>
+      <h3>Advanced Filtration</h3>
+    </div>
+    <ul className="service-details">
+      <li><strong>Proprietary Systems:</strong> Custom-engineered filtration built specifically for the North Country's unique mineral profile.</li>
+      <li><strong>UV Sterilization:</strong> Hospital-grade technology to eliminate 99.9% of waterborne pathogens.</li>
+      <li><strong>Iron & Sulfur:</strong> Our signature solution for "rotten egg" smells and staining.</li>
+    </ul>
   </div>
 
+  {/* SERVICE 3: DRAINS & INSPECTION */}
   <div className="service-card">
-    <div className="service-icon">💎</div>
-    <h3>Water Filtration</h3>
-    <p>Custom-built systems for sulfur, iron, and sediment. We proudly install <strong>[Insert Brand Name]</strong> for maximum reliability.</p>
-  </div>
-
-  <div className="service-card">
-    <div className="service-icon">☀️</div>
-    <h3>UV Light Systems</h3>
-    <p>Advanced ultraviolet filtration to eliminate 99.9% of bacteria and viruses, ensuring your family's safety.</p>
+    <div className="service-header">
+      <div className="service-icon">🔍</div>
+      <h3>Drains & Inspections</h3>
+    </div>
+    <ul className="service-details">
+      <li><strong>Drain Cleaning:</strong> Professional snaking to clear stubborn clogs in sinks and main lines.</li>
+      <li><strong>Camera Inspection:</strong> High-definition video to find pipe issues without the guesswork.</li>
+      <li><strong>North Country Support:</strong> Full residential service for both mountain wells and city lines.</li>
+    </ul>
   </div>
 </section>
-      <footer className="app-footer">
+
+<footer className="app-footer">
   <div className="footer-line"></div>
-  
   <div className="footer-branding">
     <h3>Adirondack Advanced</h3>
     <p>Water Systems</p>
   </div>
-
   <div className="footer-info">
-    <p>📍 Serving Lake Placid, Saranac Lake, Tupper Lake & Surrounding Peaks</p>
+    <p>📍 Serving Plattsburgh, Lake Placid, Saranac Lake & The High Peaks</p>
     <p>📞 Emergency Service Available 24/7</p>
   </div>
-
   <div className="footer-copyright">
     <p>© 2026 Adirondack Advanced Water Systems</p>
     <p>Owner-Operated • Fully Insured</p>
   </div>
 </footer>
+      
+  
+ 
+
+ 
     </div>
   );
 }

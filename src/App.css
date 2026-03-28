@@ -1,42 +1,275 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Roboto:wght@400;500&display=swap');
+
+/* --- 2026 IMMERSIVE RESET --- */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Roboto', sans-serif;
+  overflow: hidden;
+}
+
+.mobile-app {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: white;
+  /* Hide scrollbar for the modern app feel */
+  scrollbar-width: none;
+}
+.mobile-app::-webkit-scrollbar { display: none; }
+
+/* THE STAR OF THE SHOW: Fixed Background */
+.fixed-background {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  filter: brightness(0.5) contrast(1.1); /* Darken slightly for readability */
+}
+
+/* --- TRANSPARENT HEADER --- */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  z-index: 1000;
+  
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+padding: 20px 20px 60px 20px;
+  /* 2026 Gradient: Dark to Transparent */
+  background: linear-gradient(
+    to bottom, 
+    rgba(0, 0, 0, 1.0) 0%, 
+    rgba(0, 0, 0, 0.8) 50%,
+    rgba(0, 0, 0, 0) 100% 
+   
+  );
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  
+  /* Critical for the max-width 500px alignment */
+  box-sizing: border-box; 
+}
+
+.header-content { display: flex; align-items: center; gap: 10px; }
+.logo-img { width: 50px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
+.header-text h2 {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-size: 1.1rem;
+}
+
+.header-text p {
+  letter-spacing: 2px;
+  font-weight: 400;
+}
+.menu-btn {
+  background: transparent !important; /* Removes the white box */
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  
+  /* Adds a tiny bit of "lift" so it doesn't get lost in the clouds */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.menu-btn:hover {
+  opacity: 0.7;
+  transform: scale(1.05);
+}
+
+.menu-btn svg {
+  /* This ensures the actual lines are crisp white */
+  fill: white; 
+}
+/* --- HERO & ACTION PANEL --- */
+.app-hero {
+  position: relative;
+  z-index: 10;
+  padding: 130px 25px 20px;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+h1 {
+   font-family: 'Montserrat';
+   font-size: 2.2rem;
+   font-weight: 800px;
+   margin-bottom: 10px;
+   text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+   line-height: 1.2;
+   }
+.hero-subtitle { 
+  font-family: 'Montserrat';
+  font-size: .95rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  opacity: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  margin-bottom: 40px;
+  display: block; }
+
+.action-panel {
+  background: transparent !important; /* Let the waterfall show through */
+  border: none !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-top: 0px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* THE CONTACT BUTTON (Emergency) */
+.btn-emergency {
+  /* Deep Blue Glass */
+  background: rgba(4, 18, 75, 0.7) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  padding: 20px;
+  width: 100%;
+  max-width: 340px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.btn-outline {
+  /* Clear Glass */
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+}
+/* THE SPLIT BUTTONS (Text/Call) */
+.split-buttons {
+  display: flex;
+  gap: 15px;
+  width: 90%;
 }
 
-.card {
-  padding: 2em;
+/* THE STORY FADER CONTAINER */
+.sentence-fader {
+  position: relative;
+  height: 60px; /* Space for the text to sit */
+  margin: -20px auto 140px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.read-the-docs {
-  color: #888;
+.fading-sentence {
+  position: absolute;
+  width: 100%;
+  max-width: 320px;
+  font-size: 1.1rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.95);
+  text-align: center;
+  line-height: 1.5;
+  text-shadow: 0 2px 15px rgba(0, 0, 0, 0.7);
+  
+  /* The Animation Logic */
+  opacity: 0;
+  animation: sequence-fade 12s infinite; 
+}
+
+/* THE TIMING: This is the secret sauce */
+.fading-sentence:nth-child(1) { animation-delay: 0s; }
+.fading-sentence:nth-child(2) { animation-delay: 4s; }
+.fading-sentence:nth-child(3) { animation-delay: 8s; }
+
+@keyframes sequence-fade {
+  /* Start: Invisible and slightly lower */
+  0% { opacity: 0; transform: translateY(10px); filter: blur(5px); }
+  
+  /* Reveal: Becomes clear and sharp */
+  5%, 30% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  
+  /* Exit: Fades out and moves upward */
+  35%, 100% { opacity: 0; transform: translateY(-10px); filter: blur(5px); }
+}
+/* SCREAMING Q */
+.emergency-scream {
+  color: #ffffff; /* Switch to white for a cleaner look */
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 6px; /* This is the secret—wide spacing feels 'designer' */
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.screaming-q {
+  color: #ff453a; /* Keep only the question mark red for a 'pop' of urgency */
+  margin-left: 2px;
+}
+
+.service-text {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.8;
+  color: white;
+  margin: 10px 0;
+}
+
+/* --- THE 2026 CINETIME REEL --- */
+.water-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  margin-top: 20vh;
+  /* Instead of a box, it's a full-width blur fade */
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.7) 20%, rgba(0,0,0,0.9));
+  backdrop-filter: blur(10px);
+  padding: 100px 0;
+}
+
+.scroll-lens {
+  height: 100%;
+  padding: 0 40px;
+}
+
+.scroll-content p {
+  margin-bottom: 50vh;
+  font-size: 1.2rem;
+  line-height: 1.8;
+  text-align: center;
+  font-style: italic;
+  opacity: 0;
+  
+  view-timeline-name: --p-reveal;
+  animation: apple-focus linear both;
+  animation-timeline: --p-reveal;
+  animation-range: entry 15% cover 50%;
+}
+
+@keyframes apple-focus {
+  0% { opacity: 0; filter: blur(10px); transform: scale(0.8) translateY(40px); }
+  50% { opacity: 1; filter: blur(0px); transform: scale(1.1) translateY(0px); }
+  100% { opacity: 0; filter: blur(10px); transform: scale(0.8) translateY(-40px); }
 }

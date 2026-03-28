@@ -49,8 +49,50 @@ function App() {
           </div>
         </div>
       </section>
+{/* Add this after your <section className="app-hero"> */}
+<section className="services-grid">
+  <div className="service-card">
+    <div className="service-icon">🚰</div>
+    <h3>Well & Pump Service</h3>
+    <p>Professional pump installation, well sanitization, and expert plumbing repairs to restore your water flow fast.</p>
+  </div>
 
-      
+  <div className="service-card">
+    <div className="service-icon">🔍</div>
+    <h3>Camera Inspection</h3>
+    <p>High-tech diagnostic imaging to find underground blockages or casing issues without digging up your yard.</p>
+  </div>
+
+  <div className="service-card">
+    <div className="service-icon">💎</div>
+    <h3>Water Filtration</h3>
+    <p>Custom-built systems for sulfur, iron, and sediment. We proudly install <strong>[Insert Brand Name]</strong> for maximum reliability.</p>
+  </div>
+
+  <div className="service-card">
+    <div className="service-icon">☀️</div>
+    <h3>UV Light Systems</h3>
+    <p>Advanced ultraviolet filtration to eliminate 99.9% of bacteria and viruses, ensuring your family's safety.</p>
+  </div>
+</section>
+      <footer className="app-footer">
+  <div className="footer-line"></div>
+  
+  <div className="footer-branding">
+    <h3>Adirondack Advanced</h3>
+    <p>Water Systems</p>
+  </div>
+
+  <div className="footer-info">
+    <p>📍 Serving Lake Placid, Saranac Lake, Tupper Lake & Surrounding Peaks</p>
+    <p>📞 Emergency Service Available 24/7</p>
+  </div>
+
+  <div className="footer-copyright">
+    <p>© 2026 Adirondack Advanced Water Systems</p>
+    <p>Owner-Operated • Fully Insured</p>
+  </div>
+</footer>
     </div>
   );
 }

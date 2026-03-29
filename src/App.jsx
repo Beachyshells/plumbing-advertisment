@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react'; // Add useState here
 import logoImage from './assets/water-tap.png';
 import Button from './components/Button';
 import EmergencyButton from './components/EmergencyButton';
@@ -6,13 +6,29 @@ import heroImage from './assets/hero-image.png';
 import './App.css';
 
 function App() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
   return (
     <div className="mobile-app">
-      {/* THE MOUNTAIN BACKGROUND */}
+      {/* --- 1. SIDE MENU DRAWER --- */}
+      <nav className={`side-menu ${isMenuOpen ? 'open' : ''}`}>
+        <button className="close-menu" onClick={toggleMenu}>✕</button>
+        <div className="menu-links">
+          <a href="#home" onClick={toggleMenu}>Home</a>
+          <a href="#services" onClick={toggleMenu}>Services</a>
+          <a href="#about" onClick={toggleMenu}>About Us</a>
+          <a href="tel:5185555555" className="menu-cta">EMERGENCY CALL</a>
+        </div>
+      </nav>
+
+      {/* --- 2. THE MOUNTAIN BACKGROUND --- */}
       <div className='fixed-background' style={{ backgroundImage: `url(${heroImage})` }}>
         <div className="bg-overlay"></div>
       </div>
 
+      {/* --- 3. HEADER (Now with Click Logic) --- */}
       <header className="app-header">
         <div className="header-content">
           <img src={logoImage} alt="Logo" className="logo-img" />
@@ -21,7 +37,8 @@ function App() {
             <p>Water Systems</p>
           </div>
         </div>
-        <button className="menu-btn" aria-label="Menu">
+        {/* ADDED onClick HERE */}
+        <button className="menu-btn" onClick={toggleMenu} aria-label="Menu">
           <svg viewBox="0 0 24 24" width="40" height="40" fill="white">
             <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
           </svg>

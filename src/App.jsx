@@ -166,7 +166,7 @@ export default function App() {
       </section>
 
       {/* TRUST BAR */}
-      <div className="relative z-10 bg-[#0a1628]">
+      <div className="relative z-10">
         <div className="border-y border-white/6 bg-white/2">
           <div className="max-w-7xl mx-auto px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-x-10">          {[
             { num: '3', label: 'Counties served — Clinton, Essex & Franklin' },

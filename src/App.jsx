@@ -106,17 +106,16 @@ export default function App() {
       </div>
 
       {/* HERO */}
-      <section id="home" className="relative min-h-screen flex overflow-hidden">
-
+      <section id="home" className="relative min-h-screen flex overflow-hidden md:overflow-visible">
         {/* MOBILE BACKGROUND — full image with overlay */}
-        <div className="md:hidden fixed inset-0">
+        <div className="md:hidden fixed inset-0 -z-10">
           <img
             src={heroImage}
             alt="Crystal clear Adirondack mountain water"
             className="w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-[#0a1628]" style={{
-            opacity: 0.7 + Math.min(scrollY / 600, 0.35)
+            opacity: 0.6 + Math.min(scrollY / 600, 0.35)
           }} />
         </div>
 

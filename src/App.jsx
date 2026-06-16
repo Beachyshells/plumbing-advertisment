@@ -109,7 +109,7 @@ export default function App() {
       <section id="home" className="relative min-h-screen flex overflow-hidden">
 
         {/* MOBILE BACKGROUND — full image with overlay */}
-        <div className="md:hidden absolute inset-0">
+        <div className="md:hidden fixed inset-0">
           <img
             src={heroImage}
             alt="Crystal clear Adirondack mountain water"

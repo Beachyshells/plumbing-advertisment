@@ -1,7 +1,6 @@
+import { useState, useEffect, useRef } from 'react'
 import heroImage from './assets/hero-image.png'
-
 import emailjs from '@emailjs/browser'
-import { useRef, useState } from 'react'
 
 function ContactForm() {
   const formRef = useRef()
@@ -56,6 +55,13 @@ function ContactForm() {
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
     <div className="bg-[#0a1628] text-[#e0e7f1] min-h-screen">
@@ -94,7 +100,9 @@ export default function App() {
             alt="Crystal clear Adirondack mountain water"
             className="w-full h-full object-cover object-top"
           />
-          <div className="absolute inset-0 bg-[#0a1628]/60" />
+          <div className="absolute inset-0 bg-[#0a1628]" style={{
+            opacity: 0.6 + Math.min(scrollY / 600, 0.35)
+          }} />
         </div>
 
         {/* DESKTOP — left image panel with diagonal slash */}
@@ -109,7 +117,9 @@ export default function App() {
         </div>
 
         {/* CONTENT */}
-        <div className="relative z-10 flex-1 flex flex-col justify-end md:justify-center px-8 md:px-14 pb-16 pt-28 min-h-screen md:min-h-0">
+        <div className="relative z-10 flex-1 flex flex-col justify-end md:justify-center px-8 md:px-14 pb-16 pt-28 min-h-screen md:min-h-0" style={{
+          opacity: Math.max(1 - scrollY / 400, 0)
+        }}>
           <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-4">
             Owner-operated · Certified · North Country
           </p>

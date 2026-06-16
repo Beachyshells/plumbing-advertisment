@@ -89,7 +89,22 @@ export default function App() {
         </div>
       </header>
 
-      {/* HERO */}
+      {/* MOBILE DRAWER */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+      )}
+      <div className={`fixed top-0 right-0 h-screen w-72 bg-[#0d1f3c] border-l border-white/8 z-50 flex flex-col pt-16 px-8 pb-8 transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <button className="absolute top-5 right-5 text-white/50 hover:text-white text-xl" onClick={() => setIsMenuOpen(false)}>✕</button>
+        <div className="flex flex-col gap-7 mt-4">
+          <a href="#home" className="text-white/60 text-base no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>Home</a>
+          <a href="#services" className="text-white/60 text-base no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>Services</a>
+          <a href="#products" className="text-white/60 text-base no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>Products</a>
+          <a href="#about" className="text-white/60 text-base no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>About</a>
+          <a href="#contact" className="text-white/60 text-base no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>Contact</a>
+          <a href="tel:+15185349949" className="mt-3 bg-[#176cc8] text-white text-center py-3.5 rounded-xl font-semibold text-sm no-underline hover:bg-[#1a7de0] transition-colors" onClick={() => setIsMenuOpen(false)}>Emergency</a>
+        </div>
+      </div>
+
       {/* HERO */}
       <section id="home" className="relative min-h-screen flex overflow-hidden">
 

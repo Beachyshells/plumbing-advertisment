@@ -116,7 +116,7 @@ export default function App() {
             className="w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-[#0a1628]" style={{
-            opacity: 0.6 + Math.min(scrollY / 600, 0.35)
+            opacity: 0.3 + Math.min(scrollY / 600, 0.35)
           }} />
         </div>
 
@@ -129,6 +129,9 @@ export default function App() {
             alt="Crystal clear Adirondack mountain water"
             className="w-full h-full object-cover object-center"
           />
+          <div className="absolute inset-0 bg-[#0a1628]" style={{
+            opacity: 0.3 + Math.min(scrollY / 600, 0.35)
+          }} />
         </div>
 
         {/* CONTENT */}

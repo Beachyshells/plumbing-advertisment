@@ -158,17 +158,17 @@ export default function App() {
       <div className="relative z-20 bg-[#0a1628]">
 
         {/* TRUST BAR */}
-        <div className="border-y border-white/5 bg-[#081120]">
-          <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-x-10">
+        <div className="border-y border-white/6 bg-[#0a1628]">
+          <div className="max-w-7xl px-6 py-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
             {[
-              { num: '3', label: 'Counties served — Clinton, Essex & Franklin' },
-              { num: 'Same-day', label: 'Callback for emergencies' },
+              { num: '3', label: 'Counties served' },
+              { num: 'Same-day', label: 'Callbacks' },
               { num: '100%', label: 'Owner-supervised' },
               { num: 'Certified', label: 'Installer' },
             ].map(stat => (
-              <div key={stat.label} className="flex gap-3 items-center md:items-baseline text-left">
-                <span className="font-serif text-2xl text-white min-w-[70px] sm:min-w-0">{stat.num}</span>
-                <span className="text-xs text-white/40 tracking-wide">{stat.label}</span>
+              <div key={stat.num} className="flex items-baseline gap-2">
+                <span className="font-serif text-2xl text-white">{stat.num}</span>
+                <span className="text-sm text-[#6daee0]">{stat.label}</span>
               </div>
             ))}
           </div>

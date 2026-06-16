@@ -103,45 +103,48 @@ export default function App() {
         </div>
       </div>
 
-      {/* HERO CONTAINER */}
-      <section id="home" className="relative min-h-screen w-full flex flex-col md:block bg-[#0a1628]">
+      {/* HERO */}
+      <section id="home" className="relative h-screen w-full">
 
-        {/* BACKGROUND STRATEGY */}
-        {/* Mobile: Standard background image container */}
-        <div className="block md:hidden w-full h-[45vh] relative mt-16 shrink-0">
-          <img src={heroImage} alt="Crystal clear Adirondack mountain water" className="w-full h-full object-cover object-top" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0a1628]" />
-        </div>
-
-        {/* Desktop Fixed Diagonal Split */}
-        <div className="hidden md:block fixed inset-0 z-0">
-          <div className="absolute inset-0 flex">
-            <div className="w-1/2 h-full shrink-0" style={{ clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' }}>
-              <img src={heroImage} alt="Crystal clear Adirondack mountain water" className="w-full h-full object-cover object-center" />
+        {/* FIXED BACKGROUND */}
+        <div className="fixed inset-0 z-0">
+          {/* MOBILE/TABLET — full image */}
+          <div className="lg:hidden w-full h-full">
+            <img src={heroImage} alt="Crystal clear Adirondack mountain water" className="w-full h-full object-cover object-top" />
+          </div>
+          {/* DESKTOP — diagonal split */}
+          <div className="hidden lg:block w-full h-full">
+            <div className="absolute inset-0 flex">
+              <div className="w-1/2 h-full shrink-0" style={{ clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' }}>
+                <img src={heroImage} alt="Crystal clear Adirondack mountain water" className="w-full h-full object-cover object-center" />
+              </div>
             </div>
           </div>
-          <div className="absolute inset-0 bg-[#0a1628]" style={{ opacity: 0.35 + Math.min(scrollY / 600, 0.45) }} />
+          {/* MOBILE/TABLET — bottom gradient so text is readable */}
+          <div className="lg:hidden absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/70 to-transparent" />
+          {/* DESKTOP — scroll-reactive overlay */}
+          <div className="hidden lg:block absolute inset-0 bg-[#0a1628]" style={{ opacity: 0.35 + Math.min(scrollY / 600, 0.45) }} />
         </div>
 
         {/* HERO CONTENT */}
-        <div className="relative z-10 flex flex-col justify-center  px-6 py-8 md:min-h-screen md:py-0 md:pl-[50%] md:pr-14 max-w-xl md:max-w-none mx-auto md:mx-0">
-          <div>
-            <p className="text-sm md:text-md lg:text-lg tracking-[0.18em] uppercase text-[#6daee0] mb-3 md:mb-4">
+        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-screen px-6 lg:px-0 lg:pl-[50%] lg:pr-14">
+          <div className="max-w-xl">
+            <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-4">
               Owner-operated · Certified · North Country
             </p>
-            <h1 className="font-serif text-5xl md:text-6xl font-normal leading-tight text-white mb-4 md:mb-6">
+            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-6">
               Pure as the mountains.<br /><em className="italic text-[#6daee0]">Right from your tap.</em>
             </h1>
-            <p className="text-sm md:text-base text-white/60 leading-relaxed mb-6 md:mb-8">
+            <p className="text-sm sm:text-base text-white/50 leading-relaxed mb-8">
               Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
             </p>
             <div className="flex gap-3 flex-wrap">
-              <a href="#contact" className="inline-flex items-center gap-2 bg-[#176cc8] hover:bg-[#1a7de0] text-white px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
-              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl text-sm font-medium no-underline bg-white/5 text-white/80 border border-white/10 hover:bg-white/12 transition-colors">Text us</a>
+              <a href="#contact" className="inline-flex items-center gap-2 bg-[#176cc8] hover:bg-[#1a7de0] text-white px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
+              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/7 text-white/70 border border-white/12 hover:bg-white/12 transition-colors">Text us</a>
             </div>
-            <ul className="list-none flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-6 mt-6 md:mt-8 p-0">
+            <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
               {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
-                <li key={item} className="flex items-center gap-2 text-xs text-white/40">
+                <li key={item} className="flex items-center gap-1.5 text-xs text-white/35">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#1a9e4a] shrink-0" />
                   {item}
                 </li>

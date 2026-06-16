@@ -1,5 +1,58 @@
-import { useState } from 'react'
 import heroImage from './assets/hero-image.png'
+
+import emailjs from '@emailjs/browser'
+import { useRef, useState } from 'react'
+
+function ContactForm() {
+  const formRef = useRef()
+  const [status, setStatus] = useState(null)
+
+  const handleSubmit = async () => {
+    setStatus('sending')
+    const form = formRef.current
+    try {
+      await emailjs.send(
+        'ADK_SERVICES',
+        'template_oz9fl65',
+        {
+          from_name: form.querySelector('[name="from_name"]').value,
+          from_contact: form.querySelector('[name="from_contact"]').value,
+          message: form.querySelector('[name="message"]').value,
+        },
+        '7derGOKaoYJKZFxce'
+      )
+      setStatus('success')
+    } catch (err) {
+      console.log(err)
+      setStatus('error')
+    }
+  }
+
+  return (
+    <div ref={formRef} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] tracking-widest uppercase text-white/35">Your name</label>
+        <input name="from_name" type="text" placeholder="Jane Smith" className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-[#176cc8] transition-colors placeholder:text-white/20" />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] tracking-widest uppercase text-white/35">Phone or email</label>
+        <input name="from_contact" type="text" placeholder="(518) 555-0100" className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-[#176cc8] transition-colors placeholder:text-white/20" />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] tracking-widest uppercase text-white/35">What's going on?</label>
+        <textarea name="message" placeholder="No water, strange smell, slow drain..." className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none h-28 resize-y focus:border-[#176cc8] transition-colors placeholder:text-white/20" />
+      </div>
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={status === 'sending'}
+        className="w-full bg-[#176cc8] hover:bg-[#1a7de0] text-white py-3 rounded-xl text-sm font-semibold cursor-pointer transition-colors active:scale-[0.98] disabled:opacity-50"
+      >
+        {status === 'sending' ? 'Sending...' : status === 'success' ? 'Message sent!' : status === 'error' ? 'Something went wrong' : 'Send message'}
+      </button>
+    </div>
+  )
+}
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -31,9 +84,21 @@ export default function App() {
       </header>
 
       {/* HERO */}
-      <section id="home" className="min-h-screen flex relative overflow-hidden">
-        {/* LEFT — image */}
-        <div className="w-1/2 top-0 h-screen hidden md:block relative" style={{
+      {/* HERO */}
+      <section id="home" className="relative min-h-screen flex overflow-hidden">
+
+        {/* MOBILE BACKGROUND — full image with overlay */}
+        <div className="md:hidden absolute inset-0">
+          <img
+            src={heroImage}
+            alt="Crystal clear Adirondack mountain water"
+            className="w-full h-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-[#0a1628]/60" />
+        </div>
+
+        {/* DESKTOP — left image panel with diagonal slash */}
+        <div className="w-1/2 top-0 h-screen hidden md:block relative shrink-0" style={{
           clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)'
         }}>
           <img
@@ -43,12 +108,12 @@ export default function App() {
           />
         </div>
 
-        {/* RIGHT — content */}
-        <div className="flex-1 flex flex-col justify-center px-14 pt-24 pb-16">
+        {/* CONTENT */}
+        <div className="relative z-10 flex-1 flex flex-col justify-end md:justify-center px-8 md:px-14 pb-16 pt-28 min-h-screen md:min-h-0">
           <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-4">
             Owner-operated · Certified · North Country
           </p>
-          <h1 className="font-serif text-6xl font-normal leading-tight text-white mb-6">
+          <h1 className="font-serif text-5xl md:text-6xl font-normal leading-tight text-white mb-6">
             Pure as the mountains.<br /><em className="italic text-[#6daee0]">Right from your tap.</em>
           </h1>
           <p className="text-base text-white/50 leading-relaxed mb-8 max-w-md">
@@ -76,18 +141,16 @@ export default function App() {
 
       {/* TRUST BAR */}
       <div className="border-y border-white/6 bg-white/2">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-          {[
-            { num: '3', label: 'Counties served — Clinton, Essex & Franklin' },
-            { num: 'Same-day', label: 'Callback for emergencies' },
-            { num: '100%', label: 'Owner-supervised' },
-            { num: 'Certified', label: 'Installer' },
-          ].map(stat => (
-            <div key={stat.num} className="flex items-baseline gap-2">
-              <span className="font-serif text-2xl text-white">{stat.num}</span>
-              <span className="text-xs text-white/35 tracking-wide">{stat.label}</span>
-            </div>
-          ))}
+        <div className="max-w-7xl mx-auto px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-x-10">          {[
+          { num: '3', label: 'Counties served — Clinton, Essex & Franklin' },
+          { num: 'Same-day', label: 'Callback for emergencies' },
+          { num: '100%', label: 'Owner-supervised' },
+          { num: 'Certified', label: 'Installer' },
+        ].map(stat => (
+          <div key={stat.num} className="flex flex-col md:flex-row items-center md:items-baseline gap-1 md:gap-2 text-center md:text-left">            <span className="font-serif text-2xl text-white">{stat.num}</span>
+            <span className="text-xs text-white/35 tracking-wide">{stat.label}</span>
+          </div>
+        ))}
         </div>
       </div>
 
@@ -241,9 +304,10 @@ export default function App() {
 
           <div>
             <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">Get in touch</p>
-            <h2 className="font-serif text-4xl font-normal text-white mb-4">Call for service</h2>
+            <h2 className="font-serif text-4xl font-normal text-white mb-4">Call for service.</h2>
             <p className="text-sm text-white/50 leading-relaxed mb-8">
-              Call, text, or drop us a message. We're out in the field dawn to dusk — and whatever time you reach us, you'll always get our standard rate. No after-hours markup, ever            </p>
+              Call, text, or drop us a message. We're out in the field dawn to dusk — and whatever time you reach us, you'll always get our standard rate. No after-hours markup, ever.
+            </p>
             <ul className="list-none flex flex-col gap-4 p-0">
               <li className="flex items-center gap-3 text-sm text-white/55">
                 <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#6daee0] shrink-0">
@@ -261,32 +325,12 @@ export default function App() {
                 <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#6daee0] shrink-0">
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" /></svg>
                 </span>
-                Clinton · Franklin · Essex · Counties
+                Clinton · Franklin · Essex Counties
               </li>
             </ul>
           </div>
 
-          <div className="flex flex-col gap-4">
-            {[
-              { id: 'name', label: 'Your name', type: 'input', placeholder: 'Jane Smith' },
-              { id: 'phone', label: 'Phone or email', type: 'input', placeholder: '(518) 555-0100' },
-              { id: 'message', label: "What's going on?", type: 'textarea', placeholder: 'No water, strange smell, slow drain...' },
-            ].map(f => (
-              <div key={f.id} className="flex flex-col gap-1.5">
-                <label htmlFor={f.id} className="text-[11px] tracking-widest uppercase text-white/35">{f.label}</label>
-                {f.type === 'textarea' ? (
-                  <textarea id={f.id} placeholder={f.placeholder} className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none h-28 resize-y focus:border-[#176cc8] transition-colors placeholder:text-white/20" />
-                ) : (
-                  <input id={f.id} type="text" placeholder={f.placeholder} className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-[#176cc8] transition-colors placeholder:text-white/20" />
-                )}
-              </div>
-            ))}
-            <button type="button" className="w-full bg-[#176cc8] hover:bg-[#1a7de0] text-white py-3 rounded-xl text-sm font-semibold cursor-pointer transition-colors active:scale-[0.98]">
-              Send message
-            </button>
-          </div>
-
-
+          <ContactForm />
 
         </div>
       </section>

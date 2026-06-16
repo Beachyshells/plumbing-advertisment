@@ -108,15 +108,13 @@ export default function App() {
       {/* HERO */}
       <section id="home" className="relative min-h-screen flex overflow-hidden md:overflow-visible">
         {/* MOBILE BACKGROUND — full image with overlay */}
-        <div className="md:hidden fixed inset-0 -z-10">
+        <div className="md:hidden fixed top-0 left-0 w-full h-full z-0">
           <img
             src={heroImage}
             alt="Crystal clear Adirondack mountain water"
             className="w-full h-full object-cover object-top"
           />
-          <div className="absolute inset-0 bg-[#0a1628]" style={{
-            opacity: 0.6 + Math.min(scrollY / 600, 0.35)
-          }} />
+          <div className="absolute inset-0 bg-[#0a1628]/70" />
         </div>
 
         {/* DESKTOP — left image panel with diagonal slash */}

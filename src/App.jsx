@@ -12,13 +12,15 @@ export default function App() {
         <div className="max-w-9xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex flex-col leading-none">
             <span className="font-serif text-2xl text-white">Adirondack Advanced</span>
-            <span className="text-[13px] tracking-[0.14em] uppercase text-[#6daee0] mt-0.5">Water Systems</span>
+            <span className="text-[13px] tracking-[0.14em] uppercase text-[#6daee0] mt-0.5">Water Solutions</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#home" className="text-white/50 text-base hover:text-white transition-colors no-underline">Home</a>
             <a href="#services" className="text-white/50 text-base hover:text-white transition-colors no-underline">Services</a>
+            <a href="#products" className="text-white/50 text-base hover:text-white transition-colors no-underline">Products</a>
             <a href="#about" className="text-white/50 text-base hover:text-white transition-colors no-underline">About</a>
-            <a href="tel:+15185349949" className="bg-[#176cc8] text-white px-4 py-2 rounded-full text-sm font-semibold no-underline hover:bg-[#1a7de0] transition-colors">24/7 Emergency</a>
+            <a href="#contact" className="text-white/50 text-base hover:text-white transition-colors no-underline">Contact</a>
+            <a href="tel:+15185349949" className="bg-[#176cc8] text-white px-4 py-2 rounded-full text-sm font-semibold no-underline hover:bg-[#1a7de0] transition-colors">Emergency</a>
           </nav>
           <button className="md:hidden text-white/70" onClick={() => setIsMenuOpen(o => !o)}>
             <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
@@ -29,42 +31,39 @@ export default function App() {
       </header>
 
       {/* HERO */}
-      {/* HERO */}
       <section id="home" className="min-h-screen flex relative overflow-hidden">
         {/* LEFT — image */}
-        <div className="w-1/2 top-0 h-screen hidden md:block relative">
+        <div className="w-1/2 top-0 h-screen hidden md:block relative" style={{
+          clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)'
+        }}>
           <img
             src={heroImage}
             alt="Crystal clear Adirondack mountain water"
             className="w-full h-full object-cover object-center"
           />
-          {/* DIAGONAL SLASH */}
-          <div className="absolute top-0 right-0 h-full w-32 bg-[#0a1628]" style={{
-            clipPath: 'polygon(100% 0, 100% 100%, 0 100%)'
-          }} />
         </div>
 
         {/* RIGHT — content */}
         <div className="flex-1 flex flex-col justify-center px-14 pt-24 pb-16">
           <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-4">
-            Owner-operated · Licensed &amp; insured · North Country
+            Owner-operated · Certified · North Country
           </p>
           <h1 className="font-serif text-6xl font-normal leading-tight text-white mb-6">
-            Water you can<br />trust <em className="italic text-[#6daee0]">completely.</em>
+            Pure as the mountains.<br /><em className="italic text-[#6daee0]">Right from your tap.</em>
           </h1>
           <p className="text-base text-white/50 leading-relaxed mb-8 max-w-md">
-            Well pumps, advanced filtration, and drain service — built for the Adirondacks. When something goes wrong, we answer.
+            Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
           </p>
           <div className="flex gap-3 flex-wrap">
-            <a href="tel:+15185349949" className="inline-flex items-center gap-2 bg-[#176cc8] hover:bg-[#1a7de0] text-white px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">
-              Call now — 24/7
+            <a href="#contact" className="inline-flex items-center gap-2 bg-[#176cc8] hover:bg-[#1a7de0] text-white px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">
+              Get service
             </a>
             <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/7 text-white/70 border border-white/12 hover:bg-white/12 transition-colors">
               Text us
             </a>
           </div>
           <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
-            {['Free estimates', 'Flat-rate diagnostics', 'Plattsburgh · Lake Placid · Saranac Lake'].map(item => (
+            {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
               <li key={item} className="flex items-center gap-1.5 text-xs text-white/35">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1a9e4a] shrink-0" />
                 {item}
@@ -79,10 +78,10 @@ export default function App() {
       <div className="border-y border-white/6 bg-white/2">
         <div className="max-w-7xl mx-auto px-6 py-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
           {[
-            { num: '24/7', label: 'Emergency response' },
-            { num: '100%', label: 'Owner on every job' },
-            { num: 'Same-day', label: 'Service for emergencies' },
-            { num: '3+', label: 'Counties served' },
+            { num: '3', label: 'Counties served — Clinton, Essex & Franklin' },
+            { num: 'Same-day', label: 'Callback for emergencies' },
+            { num: '100%', label: 'Owner-supervised' },
+            { num: 'Certified', label: 'Installer' },
           ].map(stat => (
             <div key={stat.num} className="flex items-baseline gap-2">
               <span className="font-serif text-2xl text-white">{stat.num}</span>
@@ -91,6 +90,32 @@ export default function App() {
           ))}
         </div>
       </div>
+
+      <section className="max-w-7xl mx-auto py-20 px-6">
+        <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">What neighbors say</p>
+        <h2 className="font-serif text-4xl font-normal text-white mb-12">Don't take our word for it</h2>
+
+        <div className="grid grid-cols-2 gap-6 max-md:grid-cols-1">
+          {[
+            { quote: "Add review here.", initials: 'XX', name: 'Name', loc: 'Location' },
+            { quote: "Add review here.", initials: 'XX', name: 'Name', loc: 'Location' },
+          ].map(t => (
+            <div key={t.initials} className="bg-white/3 border border-white/7 rounded-2xl p-6">
+              <p className="text-sm text-white/55 leading-relaxed mb-5">"{t.quote}"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#176cc8]/20 flex items-center justify-center text-xs font-semibold text-[#6daee0] shrink-0">
+                  {t.initials}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white/70">{t.name}</p>
+                  <p className="text-xs text-white/30 mt-0.5">{t.loc}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
 
 
       {/* SERVICES */}
@@ -124,8 +149,7 @@ export default function App() {
               items: [
                 { bold: 'Drain cleaning:', text: ' Professional snaking for stubborn clogs.' },
                 { bold: 'Camera inspection:', text: ' HD video to find pipe issues without guesswork.' },
-                { bold: 'North Country support:', text: ' Mountain wells and city lines — we handle both.' },
-              ]
+                { bold: 'Well blowouts:', text: ' Clearing blockages and restoring flow to your well.' },]
             },
           ].map(service => (
             <div key={service.title} className="bg-white/3 border border-white/7 rounded-2xl p-6 hover:border-white/14 transition-colors">
@@ -142,6 +166,52 @@ export default function App() {
               </ul>
             </div>
           ))}
+        </div>
+        <p className="text-sm text-white/35 mt-10 border-t border-white/6 pt-8">
+          Also available for pipe repairs, fixture installations, and general plumbing throughout Clinton, Essex &amp; Franklin Counties.
+        </p>
+      </section>
+
+
+
+      {/* PRODUCTS */}
+      <section id="products" className="border-t border-white/6 bg-white/2">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">What we install</p>
+          <h2 className="font-serif text-4xl font-normal text-white mb-12">Water solutions for every home</h2>
+
+          <div className="grid grid-cols-3 gap-6 max-md:grid-cols-1">
+            {[
+              {
+                title: 'Traditional Water Softener',
+                description: 'Removes the hard water minerals that cause limescale buildup, stained fixtures, spotty dishes, and damage to your pipes and appliances.',
+                badge: 'Most popular',
+              },
+              {
+                title: 'Salt-Free Water Conditioner',
+                description: 'No salt, no electricity, no maintenance. Conditions your water and prevents scale buildup for 5-6 years — a true set it and forget it solution.',
+                badge: null,
+              },
+              {
+                title: 'Chloramine Reduction Solution',
+                description: 'Filters chloramines, chlorine, hydrogen sulfide, and other chemicals from every tap in your home — drinking, cooking, and bathing.',
+                badge: null,
+              },
+            ].map(product => (
+              <div key={product.title} className="bg-white/3 border border-white/7 rounded-2xl p-6 flex flex-col gap-4 hover:border-white/14 transition-colors">
+                {product.badge && (
+                  <span className="self-start text-[11px] font-semibold tracking-wide uppercase bg-[#176cc8]/20 text-[#6daee0] px-3 py-1 rounded-full">
+                    {product.badge}
+                  </span>
+                )}
+                <h3 className="font-serif text-xl font-normal text-white">{product.title}</h3>
+                <p className="text-sm text-white/45 leading-relaxed flex-1">{product.description}</p>
+                <a href="#contact" className="inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-sm font-medium py-2.5 rounded-xl no-underline transition-colors">
+                  Get a quote
+                </a>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -164,7 +234,7 @@ export default function App() {
       </div>
 
       {/* CONTACT */}
-      <section className="border-t border-white/6">
+      <section id="contact" className="border-t border-white/6">
         <div className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-2 gap-14 items-start max-md:grid-cols-1 max-md:gap-10">
 
           <div>
@@ -223,11 +293,11 @@ export default function App() {
       <footer className="border-t border-white/6">
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col items-center text-center gap-1">
           <h3 className="font-serif text-xl font-normal text-white">Adirondack Advanced</h3>
-          <p className="text-[11px] tracking-[0.14em] uppercase text-[#6daee0] mb-4">Water Systems</p>
-          <p className="text-sm text-white/40">Serving Plattsburgh, Lake Placid, Saranac Lake &amp; The High Peaks</p>
+          <p className="text-[11px] tracking-[0.14em] uppercase text-[#6daee0] mb-4">Water Solutions</p>
+          <p className="text-sm text-white/40">Serving Clinton, Essex and Franklin counties</p>
           <p className="text-sm text-white/40 mb-4">(518) 534-9949 · adkadvancedwatersolutions@gmail.com</p>
           <div className="flex gap-4 text-xs text-white/25">
-            <span>© 2026 Adirondack Advanced Water Systems</span>
+            <span>© 2026 Adirondack Advanced Water Solutions</span>
             <span>·</span>
             <span>Owner-Operated</span>
           </div>

@@ -132,7 +132,7 @@ export default function App() {
             <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-4">
               Owner-operated · Certified · North Country
             </p>
-            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-6">
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-6">
               Pure as the mountains.<br /><em className="italic text-[#6daee0]">Right from your tap.</em>
             </h1>
             <p className="text-sm sm:text-base text-white/50 leading-relaxed mb-8">

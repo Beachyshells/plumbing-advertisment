@@ -91,6 +91,7 @@ export default function App() {
         </div>
       </div>
 
+      {/*TESTIMONIALS
       <section className="max-w-7xl mx-auto py-20 px-6">
         <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">What neighbors say</p>
         <h2 className="font-serif text-4xl font-normal text-white mb-12">Don't take our word for it</h2>
@@ -115,6 +116,7 @@ export default function App() {
           ))}
         </div>
       </section>
+      */}
 
 
 

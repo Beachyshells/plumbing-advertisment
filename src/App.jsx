@@ -104,10 +104,12 @@ export default function App() {
       </div>
 
       {/* HERO */}
-      <section id="home" className="relative h-screen w-full">
+      <section id="home" className="hero">
 
         {/* FIXED BACKGROUND */}
-        <div className="fixed inset-0 z-0">
+        <div className="fixed-background">
+
+
           {/* MOBILE/TABLET — full image */}
           <div className="lg:hidden w-full h-full">
             <img src={heroImage} alt="Crystal clear Adirondack mountain water" className="w-full h-full object-cover object-top" />
@@ -121,7 +123,7 @@ export default function App() {
             </div>
           </div>
           {/* MOBILE/TABLET — bottom gradient so text is readable */}
-          <div className="lg:hidden absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/70 to-transparent" />
+          <div className="lg:hidden absolute inset-0 bg-linear-to-t from-[#0a1628] via-[#0a1628]/70 to-transparent" />
           {/* DESKTOP — scroll-reactive overlay */}
           <div className="hidden lg:block absolute inset-0 bg-[#0a1628]" style={{ opacity: 0.35 + Math.min(scrollY / 600, 0.45) }} />
         </div>

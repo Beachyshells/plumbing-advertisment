@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import heroImage from './assets/hero-image.png'
+import heroImage from './assets/hero-image.webp'
 import emailjs from '@emailjs/browser'
 
 function ContactForm() {

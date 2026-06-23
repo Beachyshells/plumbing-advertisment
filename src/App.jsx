@@ -128,7 +128,7 @@ export default function App() {
           <div
             className="absolute inset-0 lg:hidden"
             style={{
-              background: 'linear-gradient(to bottom, rgba(10,22,40,0) 0%, rgba(10,22,40,0) 30%, rgba(10,22,40,0.25) 50%, rgba(10,22,40,0.6) 70%, rgba(10,22,40,0.9) 100%)',
+              background: 'linear-gradient(to bottom, rgba(10,22,40,0) 0%, rgba(10,22,40,0) 25%, rgba(10,22,40,0.5) 50%, rgba(10,22,40,0.85) 70%, rgba(10,22,40,1) 100%)',
             }}
           />
         </div>

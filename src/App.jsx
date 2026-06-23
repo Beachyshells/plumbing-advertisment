@@ -124,31 +124,30 @@ export default function App() {
             style={{ pointerEvents: 'none' }}
           />
           {/* Gradient overlay: clear at top, dark at bottom */}
-          <div className="absolute inset-0 lg:hidden bg-linear-to-b from-transparent via-35% via-[#0a1628]/70 to-[#0a1628]" />        </div>
-
-        {/* TEXT — scrolls over the fixed image */}
-        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto">
-          <div className="max-w-xl lg:ml-auto">
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-6">
-              Pure as the mountains.<br /><em className="italic text-[#6daee0]">Right from your tap.</em>
-            </h1>
-            <p className="text-sm sm:text-base text-white/50 leading-relaxed mb-8">
-              Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
-            </p>
-            <div className="flex gap-3 flex-wrap">
-              <a href="#contact" className="inline-flex items-center gap-2 bg-[#176cc8] hover:bg-[#1a7de0] text-white px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
-              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/20 text-white/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
+          <div className="absolute inset-0 lg:hidden bg-linear-to-b from-transparent from-50% via-[#0a1628]/70 via-75% to-[#0a1628]" />
+          {/* TEXT — scrolls over the fixed image */}
+          <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto">
+            <div className="max-w-xl lg:ml-auto">
+              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-6">
+                Pure as the mountains.<br /><em className="italic text-[#6daee0]">Right from your tap.</em>
+              </h1>
+              <p className="text-sm sm:text-base text-white/50 leading-relaxed mb-8">
+                Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
+              </p>
+              <div className="flex gap-3 flex-wrap">
+                <a href="#contact" className="inline-flex items-center gap-2 bg-[#176cc8] hover:bg-[#1a7de0] text-white px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
+                <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/20 text-white/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
+              </div>
+              <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
+                {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
+                  <li key={item} className="flex items-center gap-1.5 text-xs text-white/35">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1a9e4a] shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
-              {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
-                <li key={item} className="flex items-center gap-1.5 text-xs text-white/35">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#1a9e4a] shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
           </div>
-        </div>
       </section>
 
       {/* SCROLLING SECTIONS LAYER */}

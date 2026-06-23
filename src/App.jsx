@@ -102,6 +102,8 @@ export default function App() {
           <a href="tel:+15185349949" className="mt-4 bg-[#176cc8] text-white text-center py-3.5 rounded-xl font-semibold text-sm no-underline hover:bg-[#1a7de0] transition-colors" onClick={() => setIsMenuOpen(false)}>Emergency</a>
         </div>
       </div>
+
+
       {/* HERO */}
       <section
         id="home"
@@ -118,9 +120,7 @@ export default function App() {
           <img
             src={heroImage}
             alt="Adirondack Advanced Water Solutions"
-            className="w-full h-full object-cover object-right
-           lg:object-cover lg:object-right
-           lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
+            className="w-full h-full object-cover object-right lg:object-cover lg:object-right lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
             style={{ pointerEvents: 'none' }}
           />
           {/* Gradient overlay: clear at top, dark at bottom */}
@@ -128,14 +128,8 @@ export default function App() {
         </div>
 
         {/* TEXT — scrolls over the fixed image */}
-        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:w-1/2 lg:ml-auto
-                before:absolute before:inset-x-0 before:bottom-0 before:h-3/4 before:-z-10
-                before:bg-linear-to-t before:from-[#0a1628] before:via-[#0a1628]/80 before:to-transparent
-                lg:before:hidden">
+        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto">
           <div className="max-w-xl lg:ml-auto">
-            <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-4">
-              Owner-operated · Certified · North Country
-            </p>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-6">
               Pure as the mountains.<br /><em className="italic text-[#6daee0]">Right from your tap.</em>
             </h1>
@@ -163,18 +157,23 @@ export default function App() {
 
         {/* TRUST BAR */}
         <div className="border-y border-white/6 bg-[#0a1628]">
-          <div className="max-w-7xl px-6 py-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-            {[
-              { num: '3', label: 'Counties served' },
-              { num: 'Same-day', label: 'Callbacks' },
-              { num: '100%', label: 'Owner-supervised' },
-              { num: 'Certified', label: 'Installer' },
-            ].map(stat => (
-              <div key={stat.num} className="flex items-baseline gap-2">
-                <span className="font-serif text-2xl text-white">{stat.num}</span>
-                <span className="text-sm text-[#6daee0]">{stat.label}</span>
-              </div>
-            ))}
+          <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col items-center gap-3">
+            <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0]">
+              Owner-operated · Certified · North Country
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+              {[
+                { num: '3', label: 'Counties served' },
+                { num: 'Same-day', label: 'Callbacks' },
+                { num: '100%', label: 'Owner-supervised' },
+                { num: 'Certified', label: 'Installer' },
+              ].map(stat => (
+                <div key={stat.num} className="flex items-baseline gap-2">
+                  <span className="font-serif text-2xl text-white">{stat.num}</span>
+                  <span className="text-sm text-[#6daee0]">{stat.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

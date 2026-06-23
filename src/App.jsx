@@ -104,28 +104,25 @@ export default function App() {
       </div>
 
       {/* HERO */}
-      <section id="home" className="relative h-[85dvh] w-full">
-        <div className="fixed inset-0 z-0">
-          {/* MOBILE/TABLET — full image */}
-          <div className="lg:hidden w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }}></div>
+      <section id="home" className="relative h-[85dvh] lg:h-screen w-full lg:grid lg:grid-cols-2 overflow-hidden bg-[#0a1628]">
 
-          {/* DESKTOP — diagonal split */}
-          <div className="hidden lg:block w-full h-full">
-            <div className="absolute inset-0 flex">
-              <div className="w-1/2 h-full shrink-0" style={{ clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)', backgroundImage: `url(${heroImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
-            </div>
-          </div>
-
-          {/* MOBILE/TABLET — bottom gradient so text is readable */}
-          <div className="lg:hidden absolute inset-0 bg-linear-to-t from-[#0a1628] via-[#0a1628]/70 to-transparent"></div>
-
-          {/* DESKTOP — scroll-reactive overlay */}
-          <div className="hidden lg:block absolute inset-0 bg-[#0a1628]" style={{ opacity: 0.35 + Math.min(scrollY / 600, 0.45) }}></div>
+        {/* LEFT COLUMN: THE IMAGE */}
+        <div className="absolute inset-0 lg:relative w-full h-full z-0 lg:z-10">
+          <img
+            src={heroImage}
+            alt="Adirondack Advanced Water Solutions"
+            className="w-full h-full object-cover object-left"
+            style={{
+              clipPath: window.innerWidth >= 1024 ? 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' : 'none'
+            }}
+          />
+          {/* Mobile Overlay for text readability */}
+          <div className="absolute inset-0 lg:hidden bg-gradient-to-t from-[#0a1628] via-[#0a1628]/70 to-transparent" />
         </div>
 
-        {/* HERO CONTENT */}
-        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-screen px-6 lg:px-0 lg:pl-[50%] lg:pr-14">
-          <div className="max-w-xl">
+        {/* RIGHT COLUMN: THE TEXT */}
+        <div className="relative z-10 flex flex-col justify-end pb-10 h-full px-6 lg:px-14 lg:justify-center">
+          <div className="max-w-xl lg:ml-auto">
             <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-4">
               Owner-operated · Certified · North Country
             </p>
@@ -149,6 +146,7 @@ export default function App() {
             </ul>
           </div>
         </div>
+
       </section>
 
       {/* SCROLLING SECTIONS LAYER */}

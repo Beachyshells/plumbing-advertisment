@@ -105,7 +105,7 @@ export default function App() {
       {/* HERO */}
       <section
         id="home"
-        className="relative min-h-[65svh] w-full overflow-hidden bg-[#0a1628]"
+        className="relative min-h-[80svh] w-full overflow-hidden bg-[#0a1628]"
       >
         {/* FIXED IMAGE LAYER — stable height, won't jump with the address bar */}
         <div
@@ -128,7 +128,7 @@ export default function App() {
         </div>
 
         {/* TEXT — scrolls over the fixed image */}
-        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-svh px-6 lg:px-14 lg:justify-center lg:w-1/2 lg:ml-auto">
+        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] px-6 lg:px-14 lg:justify-center lg:w-1/2 lg:ml-auto">
           <div className="max-w-xl lg:ml-auto">
             <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-4">
               Owner-operated · Certified · North Country

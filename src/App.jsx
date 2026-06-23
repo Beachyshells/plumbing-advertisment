@@ -105,27 +105,30 @@ export default function App() {
       {/* HERO */}
       <section
         id="home"
-        className="relative h-dvh w-full lg:grid lg:grid-cols-2 overflow-hidden bg-[#0a1628]"
-        style={{ contain: 'layout size' }}
+        className="relative min-h-svh w-full overflow-hidden bg-[#0a1628]"
       >
-
-        {/* LEFT COLUMN: THE IMAGE */}
-        <div className="absolute inset-0 lg:relative w-full h-full z-0 lg:z-10">
+        {/* FIXED IMAGE LAYER — pinned to viewport, fades as you scroll */}
+        <div
+          className="fixed inset-0 z-0 lg:w-1/2"
+          style={{
+            opacity: Math.max(1 - scrollY / (window.innerHeight * 0.85), 0),
+            transition: 'opacity 0.1s linear',
+          }}
+        >
           <img
             src={heroImage}
             alt="Adirondack Advanced Water Solutions"
-            className="w-full h-full object-cover object-left"
-            style={{
-              clipPath: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' : 'none',
-              pointerEvents: 'none'
-            }}
+            className="w-full h-full object-contain object-center
+               lg:object-cover lg:object-right
+               lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
+            style={{ pointerEvents: 'none' }}
           />
-          {/* Mobile Overlay for text readability */}
-          <div className="absolute inset-0 lg:hidden bg-linear-to-t from-[#0a1628] via-[#0a1628]/70 to-transparent" />
+          {/* Gradient overlay: clear at top, dark at bottom */}
+          <div className="absolute inset-0 lg:hidden bg-linear-to-b from-transparent via-[#0a1628]/40 to-[#0a1628]" />
         </div>
 
-        {/* RIGHT COLUMN: THE TEXT */}
-        <div className="relative z-10 flex flex-col justify-end pb-10 h-full px-6 lg:px-14 lg:justify-center">
+        {/* TEXT — scrolls over the fixed image */}
+        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-svh px-6 lg:px-14 lg:justify-center lg:w-1/2 lg:ml-auto">
           <div className="max-w-xl lg:ml-auto">
             <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-4">
               Owner-operated · Certified · North Country
@@ -150,7 +153,6 @@ export default function App() {
             </ul>
           </div>
         </div>
-
       </section>
 
       {/* SCROLLING SECTIONS LAYER */}

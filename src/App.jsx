@@ -105,7 +105,7 @@ export default function App() {
       {/* HERO */}
       <section
         id="home"
-        className="relative min-h-svh w-full overflow-hidden bg-[#0a1628]"
+        className="relative min-h-[65svh] w-full overflow-hidden bg-[#0a1628]"
       >
         {/* FIXED IMAGE LAYER — stable height, won't jump with the address bar */}
         <div

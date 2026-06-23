@@ -124,7 +124,7 @@ export default function App() {
             style={{ pointerEvents: 'none' }}
           />
           {/* Gradient overlay: clear at top, dark at bottom */}
-          <div className="absolute inset-0 lg:hidden bg-linear-to-b from-transparent via-30% via-[#0a1628]/60 to-[#0a1628]" />        </div>
+          <div className="absolute inset-0 lg:hidden bg-linear-to-b from-transparent via-20% via-[#0a1628]/60 to-[#0a1628]" />        </div>
 
         {/* TEXT — scrolls over the fixed image */}
         <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto">

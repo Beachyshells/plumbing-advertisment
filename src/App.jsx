@@ -120,11 +120,10 @@ export default function App() {
           <img
             src={heroImage}
             alt="Adirondack Advanced Water Solutions"
-            className="w-full h-full object-cover object-center lg:object-cover lg:object-right lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
+            className="w-full h-full object-contain object-center lg:object-cover lg:object-right lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
             style={{ pointerEvents: 'none' }}
           />
           {/* Gradient overlay: clear at top, dark at bottom */}
-          {/* Gradient overlay: soft fade, image stays bright */}
           <div
             className="absolute inset-0 lg:hidden"
             style={{

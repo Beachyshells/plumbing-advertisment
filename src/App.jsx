@@ -104,10 +104,11 @@ export default function App() {
       </div>
 
       {/* HERO */}
-      <section id="home" className="hero">
+      <section id="home" className="relative h-screen w-full">
 
         {/* FIXED BACKGROUND */}
-        <div className="fixed-background">
+        <div className="fixed inset-0 z-0">
+
 
 
           {/* MOBILE/TABLET — full image */}

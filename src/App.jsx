@@ -141,7 +141,7 @@ export default function App() {
             </p>
             <div className="flex gap-3 flex-wrap">
               <a href="#contact" className="inline-flex items-center gap-2 bg-[#176cc8] hover:bg-[#1a7de0] text-white px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
-              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/7 text-white/70 border border-white/12 hover:bg-white/12 transition-colors">Text us</a>
+              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/20 text-white/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
             </div>
             <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
               {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (

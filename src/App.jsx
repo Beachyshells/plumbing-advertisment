@@ -107,9 +107,9 @@ export default function App() {
         id="home"
         className="relative min-h-svh w-full overflow-hidden bg-[#0a1628]"
       >
-        {/* FIXED IMAGE LAYER — pinned to viewport, fades as you scroll */}
+        {/* FIXED IMAGE LAYER — stable height, won't jump with the address bar */}
         <div
-          className="fixed inset-0 z-0 lg:w-1/2"
+          className="fixed top-0 left-0 right-0 h-lvh z-0 lg:w-1/2"
           style={{
             opacity: Math.max(1 - scrollY / (window.innerHeight * 0.85), 0),
             transition: 'opacity 0.1s linear',

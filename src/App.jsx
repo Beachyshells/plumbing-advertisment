@@ -125,7 +125,12 @@ export default function App() {
           />
           {/* Gradient overlay: clear at top, dark at bottom */}
           {/* Gradient overlay: soft fade, image stays bright */}
-          <div className="absolute inset-0 lg:hidden bg-linear-to-b from-transparent from-65% to-[#0a1628]/85" />
+          <div
+            className="absolute inset-0 lg:hidden"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(10,22,40,0) 0%, rgba(10,22,40,0) 30%, rgba(10,22,40,0.25) 50%, rgba(10,22,40,0.6) 70%, rgba(10,22,40,0.9) 100%)',
+            }}
+          />
         </div>
         {/* TEXT — scrolls over the fixed image */}
         <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto">

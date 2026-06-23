@@ -118,7 +118,7 @@ export default function App() {
           <img
             src={heroImage}
             alt="Adirondack Advanced Water Solutions"
-            className="w-full h-full object-cover object-top
+            className="w-full h-full object-cover object-right
            lg:object-cover lg:object-right
            lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
             style={{ pointerEvents: 'none' }}

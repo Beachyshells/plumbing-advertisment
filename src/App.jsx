@@ -104,7 +104,7 @@ export default function App() {
       </div>
 
       {/* HERO */}
-      <section id="home" className="relative h-[100dvh] w-full">
+      <section id="home" className="relative h-[85dvh] w-full">
         <div className="fixed inset-0 z-0">
           {/* MOBILE/TABLET — full image */}
           <div className="lg:hidden w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }}></div>

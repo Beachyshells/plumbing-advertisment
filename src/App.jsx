@@ -102,9 +102,12 @@ export default function App() {
           <a href="tel:+15185349949" className="mt-4 bg-[#176cc8] text-white text-center py-3.5 rounded-xl font-semibold text-sm no-underline hover:bg-[#1a7de0] transition-colors" onClick={() => setIsMenuOpen(false)}>Emergency</a>
         </div>
       </div>
-
       {/* HERO */}
-      <section id="home" className="relative h-[85dvh] lg:h-screen w-full lg:grid lg:grid-cols-2 overflow-hidden bg-[#0a1628]">
+      <section
+        id="home"
+        className="relative h-dvh w-full lg:grid lg:grid-cols-2 overflow-hidden bg-[#0a1628]"
+        style={{ contain: 'layout size' }}
+      >
 
         {/* LEFT COLUMN: THE IMAGE */}
         <div className="absolute inset-0 lg:relative w-full h-full z-0 lg:z-10">
@@ -113,11 +116,12 @@ export default function App() {
             alt="Adirondack Advanced Water Solutions"
             className="w-full h-full object-cover object-left"
             style={{
-              clipPath: window.innerWidth >= 1024 ? 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' : 'none'
+              clipPath: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' : 'none',
+              pointerEvents: 'none'
             }}
           />
           {/* Mobile Overlay for text readability */}
-          <div className="absolute inset-0 lg:hidden bg-gradient-to-t from-[#0a1628] via-[#0a1628]/70 to-transparent" />
+          <div className="absolute inset-0 lg:hidden bg-linear-to-t from-[#0a1628] via-[#0a1628]/70 to-transparent" />
         </div>
 
         {/* RIGHT COLUMN: THE TEXT */}

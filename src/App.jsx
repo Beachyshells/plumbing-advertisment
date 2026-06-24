@@ -119,10 +119,11 @@ export default function App() {
         >
           <img
             src={heroImage}
-            alt="Adirondack Advanced Water Solutions"
+            alt="Adirondack Advanced Water Solutions Image"
             className="w-full h-full object-cover object-right lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
             style={{ pointerEvents: 'none' }}
           />
+
           {/* Gradient overlay: clear at top, dark at bottom */}
           <div
             className="absolute inset-0 lg:hidden"
@@ -131,6 +132,7 @@ export default function App() {
             }}
           />
         </div>
+
         {/* TEXT — scrolls over the fixed image */}
         <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto">
           <div className="max-w-xl lg:ml-auto">
@@ -181,7 +183,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* SERVICES */}
+        {/*FILTRATION SERVICES */}
         <section id="services" className="max-w-7xl mx-auto py-16 md:py-24 px-6">
           <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">What we do</p>
           <h2 className="font-serif text-3xl md:text-4xl font-normal text-white mb-10 md:mb-12">Full-service water solutions</h2>
@@ -201,7 +203,7 @@ export default function App() {
                 icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>,
                 items: [
                   { bold: 'Custom systems:', text: " Engineered for the North Country's unique mineral profile." },
-                  { bold: 'UV sterilization:', text: ' Hospital-grade tech — 99.9% of pathogens eliminated.' },
+                  { bold: 'UV sterilization:', text: ' 99.9% of pathogens eliminated.' },
                   { bold: 'Iron & sulfur:', text: ' Our fix for rotten egg smells and orange staining.' },
                 ]
               },
@@ -228,12 +230,57 @@ export default function App() {
               </div>
             ))}
           </div>
-          <p className="text-sm text-white/35 mt-10 border-t border-white/5 pt-8">
-            Also available for pipe repairs, fixture installations, and general plumbing throughout Clinton, Essex &amp; Franklin Counties.
-          </p>
         </section>
 
-        {/* PRODUCTS */}
+        {/*PLUMBING SERVICES*/}
+        <section id="plumbing" className="max-w-7xl mx-auto py-16 md:py-24 px-6">
+          <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">Plumbing services</p>
+          <h2 className="font-serif text-3xl md:text-4xl font-normal text-white mb-10 md:mb-12">Plumbing & pipe work</h2>          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                title: 'Repairs & leaks',
+                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12h4l3 8 4-16 3 8h4" /></svg>,
+                items: [
+                  { bold: 'Leak detection:', text: ' Pinpointing hidden leaks before they cause damage.' },
+                  { bold: 'Pipe repair:', text: ' Burst, frozen, or corroded lines fixed fast.' },
+                  { bold: 'Emergency calls:', text: ' Same-day response when water is where it shouldn\'t be.' },
+                ]
+              },
+              {
+                title: 'Fixtures & installs',
+                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 2v6M9 5h6M6 11h12v3a6 6 0 01-12 0z" /><line x1="12" y1="20" x2="12" y2="22" /></svg>,
+                items: [
+                  { bold: 'Faucets & sinks:', text: ' Supply and install for kitchen and bath.' },
+                  { bold: 'Toilets & vanities:', text: ' Upgrades and replacements done clean.' },
+                  { bold: 'Water heaters:', text: ' Tank and tankless installs and service.' },
+                ]
+              },
+              {
+                title: 'Lines & remodels',
+                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 4v16M4 8h10a3 3 0 013 3v0a3 3 0 01-3 3H8" /></svg>,
+                items: [
+                  { bold: 'Repipes:', text: ' Full or partial replacement of aging plumbing.' },
+                  { bold: 'New construction:', text: ' Rough-in and finish work for builds and additions.' },
+                  { bold: 'Remodel plumbing:', text: ' Relocating lines for kitchen and bath projects.' },
+                ]
+              },
+            ].map(service => (
+              <div key={service.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-[#176cc8]/15 flex items-center justify-center text-[#6daee0] mb-4">{service.icon}</div>
+                <h3 className="font-serif text-xl font-normal text-white mb-4">{service.title}</h3>
+                <ul className="list-none flex flex-col gap-2.5 p-0">
+                  {service.items.map(item => (
+                    <li key={item.bold} className="text-sm text-white/45 leading-relaxed">
+                      <strong className="text-white/70 font-semibold">{item.bold}</strong>{item.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* PRODUCT DESCRIPTIONS */}
         <section id="products" className="border-t border-white/5 bg-[#091324]">
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
             <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">What we install</p>
@@ -266,7 +313,7 @@ export default function App() {
             <div className="text-center md:text-left">
               <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">The man behind it all</p>
               <p className="text-white/70 text-sm md:text-base leading-relaxed max-w-2xl">
-                Born and raised in the North Country — I know these mountains, these wells, and these winters. I'm on every job personally, and no matter what it takes, we stay on it until it's solved. No shortcuts, no runaround.
+                Born and raised in the North Country — I know these mountains, these wells, and these winters. I'm on every job personally, and no matter what it takes, we stay on it until it's solved.
               </p>
             </div>
           </div>
@@ -302,18 +349,24 @@ export default function App() {
                 </li>
               </ul>
             </div>
+
+            {/*CONTACT FORM*/}
             <div className="bg-white/3 border border-white/5 rounded-2xl p-6">
               <ContactForm />
             </div>
           </div>
         </section>
 
+        {/*COMMENT FORM*/}
+
+
+
         {/* FOOTER */}
         <footer className="border-t border-white/5 bg-[#081022]">
           <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col items-center text-center gap-1">
             <h3 className="font-serif text-xl font-normal text-white">Adirondack Advanced</h3>
             <p className="text-[11px] tracking-[0.14em] uppercase text-[#6daee0] mb-4">Water Solutions</p>
-            <p className="text-sm text-white/40">Serving Clinton, Essex and Franklin counties</p>
+            <p className="text-sm text-white/40">Serving counties — Clinton · Essex · Franklin</p>
             <p className="text-sm text-white/40 mb-4">(518) 534-9949 · adkadvancedwatersolutions@gmail.com</p>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs text-white/25">
               <span>© 2026 Adirondack Advanced Water Solutions</span>

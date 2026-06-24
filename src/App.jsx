@@ -333,7 +333,7 @@ export default function App() {
                   <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#6daee0] shrink-0">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" /></svg>
                   </span>
-                  (518) 534-9949
+                  <a href="tel:+15185349949" className="no-underline text-white/60 hover:text-white transition-colors">(518) 534-9949</a>
                 </li>
                 <li className="flex items-center gap-3 text-sm text-white/60">
                   <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#6daee0] shrink-0">
@@ -367,7 +367,11 @@ export default function App() {
             <h3 className="font-serif text-xl font-normal text-white">Adirondack Advanced</h3>
             <p className="text-[11px] tracking-[0.14em] uppercase text-[#6daee0] mb-4">Water Solutions</p>
             <p className="text-sm text-white/40">Serving counties — Clinton · Essex · Franklin</p>
-            <p className="text-sm text-white/40 mb-4">(518) 534-9949 · adkadvancedwatersolutions@gmail.com</p>
+            <p className="text-sm text-white/40 mb-4">
+              <a href="tel:+15185349949" className="no-underline text-white/40 hover:text-white transition-colors">(518) 534-9949</a>
+              {' · '}
+              <a href="mailto:contact@adkadvancedwatersolutions.com" className="no-underline text-white/40 hover:text-white transition-colors">contact@adkadvancedwatersolutions.com</a>
+            </p>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs text-white/25">
               <span>© 2026 Adirondack Advanced Water Solutions</span>
               <span className="hidden sm:inline">·</span>

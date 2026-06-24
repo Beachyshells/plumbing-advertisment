@@ -323,9 +323,9 @@ export default function App() {
         <section id="contact" className="border-t border-white/5 bg-[#0a1628]">
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-14 items-start">
             <div>
-              <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">Get in touch</p>
+              <p className="text-xs tracking-[0.18em] uppercase text-[#6daee0] mb-2">Get in touch</p>
               <h2 className="font-serif text-3xl md:text-4xl font-normal text-white mb-4">Call for service.</h2>
-              <p className="text-sm text-white/50 leading-relaxed mb-6 md:mb-8">
+              <p className="text-sm text-white/60 leading-relaxed mb-6 md:mb-8">
                 Call, text, or drop us a message. We're out in the field dawn to dusk — and whatever time you reach us, you'll always get our standard rate. No after-hours markup, ever.
               </p>
               <ul className="list-none flex flex-col gap-4 p-0">
@@ -339,8 +339,7 @@ export default function App() {
                   <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#6daee0] shrink-0">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" /></svg>
                   </span>
-                  adkadvancedwatersolutions@gmail.com
-                </li>
+                  <a href="mailto:contact@adkadvancedwatersolutions.com" className="no-underline text-white/60 hover:text-white transition-colors">contact@adkadvancedwatersolutions.com</a>                </li>
                 <li className="flex items-center gap-3 text-sm text-white/60">
                   <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#6daee0] shrink-0">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" /></svg>
@@ -365,7 +364,7 @@ export default function App() {
         <footer className="border-t border-white/5 bg-[#081022]">
           <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col items-center text-center gap-1">
             <h3 className="font-serif text-xl font-normal text-white">Adirondack Advanced</h3>
-            <p className="text-[11px] tracking-[0.14em] uppercase text-[#6daee0] mb-4">Water Solutions</p>
+            <p className="text-xs tracking-[0.14em] uppercase text-[#6daee0] mb-4">Water Solutions</p>
             <p className="text-sm text-white/40">Serving counties — Clinton · Essex · Franklin</p>
             <p className="text-sm text-white/40 mb-4">
               <a href="tel:+15185349949" className="no-underline text-white/40 hover:text-white transition-colors">(518) 534-9949</a>

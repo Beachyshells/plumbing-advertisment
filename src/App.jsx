@@ -1,26 +1,31 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import heroImage from './assets/hero-image.webp'
 import emailjs from '@emailjs/browser'
 
 function ContactForm() {
-  const formRef = useRef()
   const [status, setStatus] = useState(null)
+  const [form, setForm] = useState({ from_name: '', from_contact: '', message: '' })
 
-  const handleSubmit = async () => {
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
     setStatus('sending')
-    const form = formRef.current
     try {
       await emailjs.send(
         'ADK_SERVICES',
         'template_oz9fl65',
         {
-          from_name: form.querySelector('[name="from_name"]').value,
-          from_contact: form.querySelector('[name="from_contact"]').value,
-          message: form.querySelector('[name="message"]').value,
+          from_name: form.from_name,
+          from_contact: form.from_contact,
+          message: form.message,
         },
         '7derGOKaoYJKZFxce'
       )
       setStatus('success')
+      setForm({ from_name: '', from_contact: '', message: '' })
     } catch (err) {
       console.log(err)
       setStatus('error')
@@ -28,28 +33,53 @@ function ContactForm() {
   }
 
   return (
-    <div ref={formRef} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] tracking-widest uppercase text-white/35">Your name</label>
-        <input name="from_name" type="text" placeholder="Jane Smith" className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-[#176cc8] transition-colors placeholder:text-white/20" />
+        <label htmlFor="from_name" className="text-[11px] tracking-widest uppercase text-white/35">Your name</label>
+        <input
+          id="from_name"
+          name="from_name"
+          type="text"
+          required
+          value={form.from_name}
+          onChange={handleChange}
+          placeholder="Jane Smith"
+          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-[#176cc8] transition-colors placeholder:text-white/20"
+        />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] tracking-widest uppercase text-white/35">Phone or email</label>
-        <input name="from_contact" type="text" placeholder="(518) 555-0100" className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-[#176cc8] transition-colors placeholder:text-white/20" />
+        <label htmlFor="from_contact" className="text-[11px] tracking-widest uppercase text-white/35">Phone or email</label>
+        <input
+          id="from_contact"
+          name="from_contact"
+          type="text"
+          required
+          value={form.from_contact}
+          onChange={handleChange}
+          placeholder="(518) 555-0100"
+          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-[#176cc8] transition-colors placeholder:text-white/20"
+        />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] tracking-widest uppercase text-white/35">What's going on?</label>
-        <textarea name="message" placeholder="No water, strange smell, slow drain..." className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none h-28 resize-y focus:border-[#176cc8] transition-colors placeholder:text-white/20" />
+        <label htmlFor="message" className="text-[11px] tracking-widest uppercase text-white/35">What's going on?</label>
+        <textarea
+          id="message"
+          name="message"
+          required
+          value={form.message}
+          onChange={handleChange}
+          placeholder="No water, strange smell, slow drain..."
+          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none h-28 resize-y focus:border-[#176cc8] transition-colors placeholder:text-white/20"
+        />
       </div>
       <button
-        type="button"
-        onClick={handleSubmit}
+        type="submit"
         disabled={status === 'sending'}
         className="w-full bg-[#176cc8] hover:bg-[#1a7de0] text-white py-3 rounded-xl text-sm font-semibold cursor-pointer transition-colors active:scale-[0.98] disabled:opacity-50"
       >
         {status === 'sending' ? 'Sending...' : status === 'success' ? 'Message sent!' : status === 'error' ? 'Something went wrong' : 'Send message'}
       </button>
-    </div>
+    </form>
   )
 }
 
@@ -81,7 +111,7 @@ export default function App() {
             <a href="#contact" className="text-white/50 text-base hover:text-white transition-colors no-underline">Contact</a>
             <a href="tel:+15185349949" className="bg-[#176cc8] text-white px-4 py-2 rounded-full text-sm font-semibold no-underline hover:bg-[#1a7de0] transition-colors">Emergency</a>
           </nav>
-          <button className="md:hidden text-white/70 focus:outline-none" onClick={() => setIsMenuOpen(o => !o)}>
+          <button className="md:hidden text-white/70 focus:outline-none" onClick={() => setIsMenuOpen(o => !o)} aria-label={isMenuOpen ? "Close menu" : "Open menu"}>
             <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
               <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
             </svg>

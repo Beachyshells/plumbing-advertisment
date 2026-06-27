@@ -86,11 +86,27 @@ function ContactForm() {
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const [viewportH, setViewportH] = useState(0)
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    let ticking = false
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrollY(window.scrollY)
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    const handleResize = () => setViewportH(window.innerHeight)
+    handleResize()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
 
   return (
@@ -143,13 +159,12 @@ export default function App() {
         <div
           className="fixed top-0 left-0 right-0 h-lvh z-0 lg:w-1/2"
           style={{
-            opacity: Math.max(1 - scrollY / (window.innerHeight * 0.85), 0),
-            transition: 'opacity 0.1s linear',
+            opacity: Math.max(1 - scrollY / ((viewportH || 800) * 0.85), 0), transition: 'opacity 0.1s linear',
           }}
         >
           <img
             src={heroImage}
-            alt="Adirondack Advanced Water Solutions Image"
+            alt="Faucet flowing into an Adirondack mountain river"
             className="w-full h-full object-cover object-right lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
             style={{ pointerEvents: 'none' }}
           />

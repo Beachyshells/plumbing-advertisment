@@ -222,10 +222,13 @@ export default function App() {
         {/* TRUST BAR */}
         <div className="border-y border-white/6 bg-navy">
           <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col items-center gap-3">
+
             <p className="text-xs tracking-[0.18em] uppercase text-accent">
               Owner-operated · Certified · North Country
             </p>
+
             <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+
               {[
                 { num: '3', label: 'Counties served' },
                 { num: 'Same-day', label: 'Callbacks' },
@@ -242,105 +245,110 @@ export default function App() {
         </div>
 
         {/*FILTRATION SERVICES */}
-        <section id="services" className="max-w-7xl mx-auto py-16 md:py-24 px-6 bg-navy-600">
-          <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">What we do</p>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Full-service water solutions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                title: 'Well & pump',
-                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
-                items: [
-                  { bold: 'Emergency pump service:', text: ' No water? We diagnose and replace failing pumps fast.' },
-                  { bold: 'Pressure tanks:', text: ' Constant pressure solutions for consistent flow.' },
-                  { bold: 'Well sanitization:', text: ' Professional treatments to eliminate bacteria and odors.' },
-                ]
-              },
-              {
-                title: 'Filtration',
-                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>,
-                items: [
-                  { bold: 'Custom systems:', text: " Engineered for the North Country's unique mineral profile." },
-                  { bold: 'UV sterilization:', text: ' 99.9% of pathogens eliminated.' },
-                  { bold: 'Iron & sulfur:', text: ' Our fix for rotten egg smells and orange staining.' },
-                ]
-              },
-              {
-                title: 'Drains & inspection',
-                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
-                items: [
-                  { bold: 'Drain cleaning:', text: ' Professional snaking for stubborn clogs.' },
-                  { bold: 'Camera inspection:', text: ' HD video to find pipe issues without guesswork.' },
-                  { bold: 'Well blowouts:', text: ' Clearing blockages and restoring flow to your well.' },
-                ]
-              },
-            ].map(service => (
-              <div key={service.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
-                <h3 className="font-serif text-xl font-normal text-body mb-4">{service.title}</h3>
-                <ul className="list-none flex flex-col gap-2.5 p-0">
-                  {service.items.map(item => (
-                    <li key={item.bold} className="text-sm text-body/55 leading-relaxed">
-                      <strong className="text-body/70 font-semibold">{item.bold}</strong>{item.text}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+        <section id="services" className="bg-navy">
+          <div className="max-w-7xl mx-auto py-16 md:py-24 px-6">
+            <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">What we do</p>
+            <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Full-service water solutions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                {
+                  title: 'Well & pump',
+                  icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+                  items: [
+                    { bold: 'Emergency pump service:', text: ' No water? We diagnose and replace failing pumps fast.' },
+                    { bold: 'Pressure tanks:', text: ' Constant pressure solutions for consistent flow.' },
+                    { bold: 'Well sanitization:', text: ' Professional treatments to eliminate bacteria and odors.' },
+                  ]
+                },
+                {
+                  title: 'Filtration',
+                  icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>,
+                  items: [
+                    { bold: 'Custom systems:', text: " Engineered for the North Country's unique mineral profile." },
+                    { bold: 'UV sterilization:', text: ' 99.9% of pathogens eliminated.' },
+                    { bold: 'Iron & sulfur:', text: ' Our fix for rotten egg smells and orange staining.' },
+                  ]
+                },
+                {
+                  title: 'Drains & inspection',
+                  icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
+                  items: [
+                    { bold: 'Drain cleaning:', text: ' Professional snaking for stubborn clogs.' },
+                    { bold: 'Camera inspection:', text: ' HD video to find pipe issues without guesswork.' },
+                    { bold: 'Well blowouts:', text: ' Clearing blockages and restoring flow to your well.' },
+                  ]
+                },
+              ].map(service => (
+                <div key={service.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
+                  <h3 className="font-serif text-xl font-normal text-body mb-4">{service.title}</h3>
+                  <ul className="list-none flex flex-col gap-2.5 p-0">
+                    {service.items.map(item => (
+                      <li key={item.bold} className="text-sm text-body/55 leading-relaxed">
+                        <strong className="text-body/70 font-semibold">{item.bold}</strong>{item.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/*PLUMBING SERVICES*/}
-        <section id="plumbing" className="max-w-7xl mx-auto py-16 md:py-24 px-6 bg-navy">
-          <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Plumbing services</p>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Plumbing & pipe work</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                title: 'Repairs & leaks',
-                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12h4l3 8 4-16 3 8h4" /></svg>,
-                items: [
-                  { bold: 'Leak detection:', text: ' Pinpointing hidden leaks before they cause damage.' },
-                  { bold: 'Pipe repair:', text: ' Burst, frozen, or corroded lines fixed fast.' },
-                  { bold: 'Emergency calls:', text: ' Same-day response when water is where it shouldn\'t be.' },
-                ]
-              },
-              {
-                title: 'Fixtures & installs',
-                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 2v6M9 5h6M6 11h12v3a6 6 0 01-12 0z" /><line x1="12" y1="20" x2="12" y2="22" /></svg>,
-                items: [
-                  { bold: 'Faucets & sinks:', text: ' Supply and install for kitchen and bath.' },
-                  { bold: 'Toilets & vanities:', text: ' Upgrades and replacements done clean.' },
-                  { bold: 'Water heaters:', text: ' Tank and tankless installs and service.' },
-                ]
-              },
-              {
-                title: 'Lines & remodels',
-                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 4v16M4 8h10a3 3 0 013 3v0a3 3 0 01-3 3H8" /></svg>,
-                items: [
-                  { bold: 'Repipes:', text: ' Full or partial replacement of aging plumbing.' },
-                  { bold: 'New construction:', text: ' Rough-in and finish work for builds and additions.' },
-                  { bold: 'Remodel plumbing:', text: ' Relocating lines for kitchen and bath projects.' },
-                ]
-              },
-            ].map(service => (
-              <div key={service.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
-                <h3 className="font-serif text-xl font-normal text-body mb-4">{service.title}</h3>
-                <ul className="list-none flex flex-col gap-2.5 p-0">
-                  {service.items.map(item => (
-                    <li key={item.bold} className="text-sm text-body/55 leading-relaxed">
-                      <strong className="text-body/70 font-semibold">{item.bold}</strong>{item.text}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+        <section id="plumbing" className="bg-navy-600">
+          <div className="max-w-7xl mx-auto py-16 md:py-24 px-6">
+
+            <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Plumbing services</p>
+            <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Plumbing & pipe work</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                {
+                  title: 'Repairs & leaks',
+                  icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12h4l3 8 4-16 3 8h4" /></svg>,
+                  items: [
+                    { bold: 'Leak detection:', text: ' Pinpointing hidden leaks before they cause damage.' },
+                    { bold: 'Pipe repair:', text: ' Burst, frozen, or corroded lines fixed fast.' },
+                    { bold: 'Emergency calls:', text: ' Same-day response when water is where it shouldn\'t be.' },
+                  ]
+                },
+                {
+                  title: 'Fixtures & installs',
+                  icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 2v6M9 5h6M6 11h12v3a6 6 0 01-12 0z" /><line x1="12" y1="20" x2="12" y2="22" /></svg>,
+                  items: [
+                    { bold: 'Faucets & sinks:', text: ' Supply and install for kitchen and bath.' },
+                    { bold: 'Toilets & vanities:', text: ' Upgrades and replacements done clean.' },
+                    { bold: 'Water heaters:', text: ' Tank and tankless installs and service.' },
+                  ]
+                },
+                {
+                  title: 'Lines & remodels',
+                  icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 4v16M4 8h10a3 3 0 013 3v0a3 3 0 01-3 3H8" /></svg>,
+                  items: [
+                    { bold: 'Repipes:', text: ' Full or partial replacement of aging plumbing.' },
+                    { bold: 'New construction:', text: ' Rough-in and finish work for builds and additions.' },
+                    { bold: 'Remodel plumbing:', text: ' Relocating lines for kitchen and bath projects.' },
+                  ]
+                },
+              ].map(service => (
+                <div key={service.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
+                  <h3 className="font-serif text-xl font-normal text-body mb-4">{service.title}</h3>
+                  <ul className="list-none flex flex-col gap-2.5 p-0">
+                    {service.items.map(item => (
+                      <li key={item.bold} className="text-sm text-body/55 leading-relaxed">
+                        <strong className="text-body/70 font-semibold">{item.bold}</strong>{item.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* PRODUCT DESCRIPTIONS */}
-        <section id="products" className="border-t border-white/5 bg-navy-600">
+        <section id="products" className="border-t border-white/5 bg-navy">
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
             <p className="text-sm tracking-[0.18em] uppercase text-accent mb-2">What we install</p>
             <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Water solutions for every home</h2>
@@ -443,6 +451,6 @@ export default function App() {
         </footer>
 
       </div>
-    </div>
+    </div >
   )
 }

@@ -109,6 +109,16 @@ export default function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!isMenuOpen) return
+    const handleKey = (e) => {
+
+      if (e.key === 'Escape') setIsMenuOpen(false)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [isMenuOpen])
+
   return (
     <div className="bg-[#0a1628] text-[#e0e7f1] min-h-screen font-sans overflow-x-hidden">
 
@@ -137,7 +147,10 @@ export default function App() {
 
       {/* MOBILE DRAWER */}
       {isMenuOpen && <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />}
-      <div className={`fixed top-0 right-0 h-screen w-72 bg-[#0d1f3c] border-l border-white/10 z-50 flex flex-col pt-20 px-8 pb-8 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div
+        aria-hidden={!isMenuOpen}
+        inert={!isMenuOpen ? true : undefined}
+        className={`fixed top-0 right-0 h-screen w-72 bg-[#0d1f3c] border-l border-white/10 z-50 flex flex-col pt-20 px-8 pb-8 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <button className="absolute top-5 right-5 text-white/50 hover:text-white text-2xl" onClick={() => setIsMenuOpen(false)}>✕</button>
         <div className="flex flex-col gap-6 mt-4">
           <a href="#home" className="text-white/70 text-lg no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>Home</a>

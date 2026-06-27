@@ -239,8 +239,9 @@ export default function App() {
           <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col items-center gap-3">
 
             <p className="text-xs tracking-[0.18em] uppercase text-accent">
-              Owner-operated · Certified · North Country
+              Owner-operated · Certified
             </p>
+            <p>North Country Area</p>
 
             <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
 

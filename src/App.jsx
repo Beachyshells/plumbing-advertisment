@@ -27,7 +27,6 @@ function ContactForm() {
       setStatus('success')
       setForm({ from_name: '', from_contact: '', message: '' })
     } catch (err) {
-      console.log(err)
       setStatus('error')
     }
   }
@@ -178,6 +177,7 @@ export default function App() {
           <img
             src={heroImage}
             alt="Faucet flowing into an Adirondack mountain river"
+            fetchpriority="high"
             className="w-full h-full object-cover object-right lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
             style={{ pointerEvents: 'none' }}
           />
@@ -249,7 +249,7 @@ export default function App() {
             {[
               {
                 title: 'Well & pump',
-                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
                 items: [
                   { bold: 'Emergency pump service:', text: ' No water? We diagnose and replace failing pumps fast.' },
                   { bold: 'Pressure tanks:', text: ' Constant pressure solutions for consistent flow.' },
@@ -258,7 +258,7 @@ export default function App() {
               },
               {
                 title: 'Filtration',
-                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>,
+                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>,
                 items: [
                   { bold: 'Custom systems:', text: " Engineered for the North Country's unique mineral profile." },
                   { bold: 'UV sterilization:', text: ' 99.9% of pathogens eliminated.' },
@@ -267,7 +267,7 @@ export default function App() {
               },
               {
                 title: 'Drains & inspection',
-                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
+                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
                 items: [
                   { bold: 'Drain cleaning:', text: ' Professional snaking for stubborn clogs.' },
                   { bold: 'Camera inspection:', text: ' HD video to find pipe issues without guesswork.' },

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Adirondack Advanced Water Solutions — Style Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a1628;
+    --navy-dark: #081024;
+    --navy-600: #0c1f3f;
+    --navy-drawer: #0d1f3c;
+    --blue: #176cc8;
+    --blue-light: #1a7de0;
+    --accent: #6daee0;
+    --brand-green: #1a9e4a;
+    --body: #e0e7f1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--navy);
+    color: var(--body);
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    padding: 48px 24px 96px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  .serif { font-family: 'DM Serif Display', Georgia, serif; }
+
+  header { margin-bottom: 56px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 32px; }
+  header h1 { font-size: 36px; font-weight: 400; color: #fff; margin-bottom: 6px; }
+  header .eyebrow { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
+  header p { font-size: 14px; color: rgba(224,231,241,0.6); margin-top: 16px; max-width: 60ch; }
+
+  section { margin-bottom: 56px; }
+  .section-label { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .section-title { font-size: 24px; font-weight: 400; color: #fff; margin-bottom: 24px; }
+
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .swatch { border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .swatch .chip { height: 80px; }
+  .swatch .meta { padding: 12px 14px; background: rgba(255,255,255,0.02); }
+  .swatch .name { font-size: 14px; font-weight: 500; color: #fff; }
+  .swatch .token { font-size: 12px; color: var(--accent); font-family: ui-monospace, monospace; margin-top: 2px; }
+  .swatch .hex { font-size: 12px; color: rgba(224,231,241,0.55); font-family: ui-monospace, monospace; }
+  .swatch .use { font-size: 12px; color: rgba(224,231,241,0.5); margin-top: 6px; }
+
+  .type-row { padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; flex-wrap: wrap; align-items: baseline; gap: 16px; }
+  .type-row:last-child { border-bottom: none; }
+  .type-spec { font-size: 12px; color: var(--accent); font-family: ui-monospace, monospace; min-width: 180px; }
+
+  .card-demo { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; }
+  .card .icon-box { width: 40px; height: 40px; border-radius: 12px; background: rgba(23,108,200,0.15); display: flex; align-items: center; justify-content: center; color: var(--accent); margin-bottom: 16px; font-size: 20px; }
+  .card h3 { font-size: 20px; font-weight: 400; color: var(--body); margin-bottom: 12px; }
+  .card li { list-style: none; font-size: 14px; color: rgba(224,231,241,0.55); margin-bottom: 8px; }
+  .card li strong { color: rgba(224,231,241,0.7); font-weight: 600; }
+
+  .btn-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .btn { padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; display: inline-block; border: none; cursor: default; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-pill { background: var(--blue); color: #fff; border-radius: 999px; padding: 8px 16px; }
+  .btn-ghost { background: rgba(255,255,255,0.1); color: rgba(224,231,241,0.7); border: 1px solid rgba(255,255,255,0.12); }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(23,108,200,0.2); color: var(--accent); padding: 4px 12px; border-radius: 999px; }
+
+  .bg-demo { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .bg-box { height: 72px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: flex-end; padding: 10px; font-size: 11px; font-family: ui-monospace, monospace; color: rgba(224,231,241,0.6); }
+
+  .note { font-size: 13px; color: rgba(224,231,241,0.5); margin-top: 16px; padding: 14px 16px; background: rgba(255,255,255,0.02); border-left: 2px solid var(--accent); border-radius: 0 8px 8px 0; }
+  code { font-family: ui-monospace, monospace; font-size: 12px; background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Brand reference</div>
+    <h1 class="serif">Adirondack Advanced Water Solutions</h1>
+    <p>The visual system for the website. Open this file in a browser to see the live colors, type, and components. All colors are defined once as tokens in <code>src/index.css</code> under the <code>@theme</code> block.</p>
+  </header>
+
+  <section>
+    <div class="section-label">Color</div>
+    <h2 class="section-title serif">Palette</h2>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:#0a1628"></div><div class="meta"><div class="name">Navy</div><div class="token">bg-navy</div><div class="hex">#0a1628</div><div class="use">Main background, hero, contact</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#081024"></div><div class="meta"><div class="name">Navy dark</div><div class="token">bg-navy-dark</div><div class="hex">#081024</div><div class="use">Header & footer</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#0c1f3f"></div><div class="meta"><div class="name">Navy 600</div><div class="token">bg-navy-600</div><div class="hex">#0c1f3f</div><div class="use">Alternating sections</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#0d1f3c"></div><div class="meta"><div class="name">Navy drawer</div><div class="token">bg-navy-drawer</div><div class="hex">#0d1f3c</div><div class="use">Mobile drawer & about</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#176cc8"></div><div class="meta"><div class="name">Blue</div><div class="token">bg-blue</div><div class="hex">#176cc8</div><div class="use">Buttons, primary actions</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#1a7de0"></div><div class="meta"><div class="name">Blue light</div><div class="token">bg-blue-light</div><div class="hex">#1a7de0</div><div class="use">Button hover state</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#6daee0"></div><div class="meta"><div class="name">Accent</div><div class="token">text-accent</div><div class="hex">#6daee0</div><div class="use">Eyebrows, accent text, icons</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#1a9e4a"></div><div class="meta"><div class="name">Brand green</div><div class="token">bg-brand-green</div><div class="hex">#1a9e4a</div><div class="use">Status dots</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#e0e7f1"></div><div class="meta"><div class="name">Body</div><div class="token">text-body</div><div class="hex">#e0e7f1</div><div class="use">Body & heading text</div></div></div>
+    </div>
+    <div class="note">To change any color across the whole site, edit its value once in the <code>@theme</code> block in <code>src/index.css</code>. Every <code>bg-navy</code>, <code>text-accent</code>, etc. updates automatically.</div>
+  </section>
+
+  <section>
+    <div class="section-label">Typography</div>
+    <h2 class="section-title serif">Type system</h2>
+    <div class="type-row"><div class="type-spec">DM Serif Display<br>Headings</div><div class="serif" style="font-size:36px;color:#fff;">Pure as the mountains.</div></div>
+    <div class="type-row"><div class="type-spec">System sans<br>Body text · text-sm</div><div style="font-size:14px;color:rgba(224,231,241,0.6);">Well pumps, advanced filtration, and water solutions — built for the Adirondacks.</div></div>
+    <div class="type-row"><div class="type-spec">Eyebrow · text-xs<br>uppercase · tracking-wide</div><div style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:var(--accent);">What we do</div></div>
+    <div class="type-row"><div class="type-spec">Card title · serif xl</div><div class="serif" style="font-size:20px;color:var(--body);">Well &amp; pump</div></div>
+    <div class="note">Headings and the brand name use <code>font-serif</code> (DM Serif Display). Body and UI text use the default system sans. Eyebrow labels are uppercase, letter-spaced, in the accent color.</div>
+  </section>
+
+  <section>
+    <div class="section-label">Surfaces</div>
+    <h2 class="section-title serif">Section backgrounds</h2>
+    <div class="bg-demo">
+      <div class="bg-box" style="background:#0a1628">navy</div>
+      <div class="bg-box" style="background:#081024">navy-dark</div>
+      <div class="bg-box" style="background:#0c1f3f">navy-600</div>
+      <div class="bg-box" style="background:#0d1f3c">navy-drawer</div>
+    </div>
+    <div class="note">Sections alternate between <code>navy</code> and <code>navy-600</code> to create subtle rhythm. Cards and inputs sit on semi-transparent <code>white</code> overlays (e.g. <code>bg-white/3</code>) — these stay true white, not the body off-white.</div>
+  </section>
+
+  <section>
+    <div class="section-label">Components</div>
+    <h2 class="section-title serif">Buttons & labels</h2>
+    <div class="btn-row">
+      <span class="btn btn-primary">Get service</span>
+      <span class="btn btn-ghost">Text us</span>
+      <span class="btn-pill">Emergency</span>
+      <span class="badge">Most popular</span>
+    </div>
+    <div class="note">Primary buttons use <code>bg-blue</code> with a <code>hover:bg-blue-light</code> state. The Emergency pill is the same blue, rounded full. Ghost buttons are a faint white overlay with a thin border.</div>
+  </section>
+
+  <section>
+    <div class="section-label">Pattern</div>
+    <h2 class="section-title serif">Service card</h2>
+    <div class="card-demo">
+      <div class="card">
+        <div class="icon-box">◆</div>
+        <h3 class="serif">Well &amp; pump</h3>
+        <ul>
+          <li><strong>Emergency pump service:</strong> No water? We diagnose and replace failing pumps fast.</li>
+          <li><strong>Pressure tanks:</strong> Constant pressure for consistent flow.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="icon-box">◆</div>
+        <h3 class="serif">Filtration</h3>
+        <ul>
+          <li><strong>Custom systems:</strong> Engineered for the North Country's mineral profile.</li>
+          <li><strong>UV sterilization:</strong> 99.9% of pathogens eliminated.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">The card is the repeating unit across the Services and Plumbing sections: a rounded icon box in <code>blue/15</code>, a serif title, and a bulleted list with bold leads. Sits on <code>bg-white/3</code> with a thin border that brightens on hover.</div>
+  </section>
+
+  <footer style="border-top:1px solid rgba(255,255,255,0.08);padding-top:24px;font-size:12px;color:rgba(224,231,241,0.4);">
+    Reference document · Adirondack Advanced Water Solutions · open in any browser
+  </footer>
+
+</div>
+</body>
+</html>

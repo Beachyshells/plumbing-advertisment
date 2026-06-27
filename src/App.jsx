@@ -98,6 +98,7 @@ export default function App() {
         ticking = true
       }
     }
+
     const handleResize = () => setViewportH(window.innerHeight)
     handleResize()
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -117,6 +118,20 @@ export default function App() {
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [isMenuOpen])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('recovered')) {
+      url.searchParams.delete('recovered')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [])
+
+  useEffect(() => {
+    if (window.location.pathname !== '/') {
+      window.history.replaceState({}, '', '/')
+    }
+  }, [])
 
   return (
     <div className="bg-navy text-body min-h-screen font-sans overflow-x-hidden">

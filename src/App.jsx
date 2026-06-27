@@ -43,7 +43,7 @@ function ContactForm() {
           value={form.from_name}
           onChange={handleChange}
           placeholder="Jane Smith"
-          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-[#176cc8] transition-colors placeholder:text-white/20"
+          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-blue transition-colors placeholder:text-white/20"
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -56,7 +56,7 @@ function ContactForm() {
           value={form.from_contact}
           onChange={handleChange}
           placeholder="(518) 555-0100"
-          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-[#176cc8] transition-colors placeholder:text-white/20"
+          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-blue transition-colors placeholder:text-white/20"
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -68,13 +68,13 @@ function ContactForm() {
           value={form.message}
           onChange={handleChange}
           placeholder="No water, strange smell, slow drain..."
-          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none h-28 resize-y focus:border-[#176cc8] transition-colors placeholder:text-white/20"
+          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none h-28 resize-y focus:border-blue transition-colors placeholder:text-white/20"
         />
       </div>
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="w-full bg-[#176cc8] hover:bg-[#1a7de0] text-white py-3 rounded-xl text-sm font-semibold cursor-pointer transition-colors active:scale-[0.98] disabled:opacity-50"
+        className="w-full bg-blue hover:bg-blue-light text-white py-3 rounded-xl text-sm font-semibold cursor-pointer transition-colors active:scale-[0.98] disabled:opacity-50"
       >
         {status === 'sending' ? 'Sending...' : status === 'success' ? 'Message sent!' : status === 'error' ? 'Something went wrong' : 'Send message'}
       </button>
@@ -119,24 +119,24 @@ export default function App() {
   }, [isMenuOpen])
 
   return (
-    <div className="bg-[#0a1628] text-[#e0e7f1] min-h-screen font-sans overflow-x-hidden">
+    <div className="bg-navy text-body min-h-screen font-sans overflow-x-hidden">
 
       {/* HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#081024]/80 backdrop-blur-md border-b border-white/5">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-navy-dark/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex flex-col leading-none">
-            <span className="font-serif text-xl md:text-2xl text-white">Adirondack Advanced</span>
-            <span className="text-[11px] md:text-[13px] tracking-[0.14em] uppercase text-[#6daee0] mt-0.5">Water Solutions</span>
+            <span className="font-serif text-xl md:text-2xl text-body">Adirondack Advanced</span>
+            <span className="text-xs md:text-[13px] tracking-[0.14em] uppercase text-accent mt-0.5">Water Solutions</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#home" className="text-white/50 text-base hover:text-white transition-colors no-underline">Home</a>
-            <a href="#services" className="text-white/50 text-base hover:text-white transition-colors no-underline">Services</a>
-            <a href="#products" className="text-white/50 text-base hover:text-white transition-colors no-underline">Products</a>
-            <a href="#about" className="text-white/50 text-base hover:text-white transition-colors no-underline">About</a>
-            <a href="#contact" className="text-white/50 text-base hover:text-white transition-colors no-underline">Contact</a>
-            <a href="tel:+15185349949" className="bg-[#176cc8] text-white px-4 py-2 rounded-full text-sm font-semibold no-underline hover:bg-[#1a7de0] transition-colors">Emergency</a>
+            <a href="#home" className="text-body/50 text-base hover:text-body transition-colors no-underline">Home</a>
+            <a href="#services" className="text-body/50 text-base hover:text-body transition-colors no-underline">Services</a>
+            <a href="#products" className="text-body/50 text-base hover:text-body transition-colors no-underline">Products</a>
+            <a href="#about" className="text-body/50 text-base hover:text-body transition-colors no-underline">About</a>
+            <a href="#contact" className="text-body/50 text-base hover:text-body transition-colors no-underline">Contact</a>
+            <a href="tel:+15185349949" className="bg-blue text-body px-4 py-2 rounded-full text-base font-semibold no-underline hover:bg-blue-light transition-colors">Emergency</a>
           </nav>
-          <button className="md:hidden text-white/70 focus:outline-none" onClick={() => setIsMenuOpen(o => !o)} aria-label={isMenuOpen ? "Close menu" : "Open menu"}>
+          <button className="md:hidden text-body/70 focus:outline-none" onClick={() => setIsMenuOpen(o => !o)} aria-label={isMenuOpen ? "Close menu" : "Open menu"}>
             <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
               <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
             </svg>
@@ -149,15 +149,15 @@ export default function App() {
       <div
         aria-hidden={!isMenuOpen}
         inert={!isMenuOpen ? true : undefined}
-        className={`fixed top-0 right-0 h-screen w-72 bg-[#0d1f3c] border-l border-white/10 z-50 flex flex-col pt-20 px-8 pb-8 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <button className="absolute top-5 right-5 text-white/50 hover:text-white text-2xl" onClick={() => setIsMenuOpen(false)}>✕</button>
+        className={`fixed top-0 right-0 h-screen w-72 bg-navy-drawer border-l border-white/10 z-50 flex flex-col pt-20 px-8 pb-8 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <button className="absolute top-5 right-5 text-body/50 hover:text-body text-2xl" onClick={() => setIsMenuOpen(false)}>✕</button>
         <div className="flex flex-col gap-6 mt-4">
-          <a href="#home" className="text-white/70 text-lg no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>Home</a>
-          <a href="#services" className="text-white/70 text-lg no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>Services</a>
-          <a href="#products" className="text-white/70 text-lg no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>Products</a>
-          <a href="#about" className="text-white/70 text-lg no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>About</a>
-          <a href="#contact" className="text-white/70 text-lg no-underline hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>Contact</a>
-          <a href="tel:+15185349949" className="mt-4 bg-[#176cc8] text-white text-center py-3.5 rounded-xl font-semibold text-sm no-underline hover:bg-[#1a7de0] transition-colors" onClick={() => setIsMenuOpen(false)}>Emergency</a>
+          <a href="#home" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>Home</a>
+          <a href="#services" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>Services</a>
+          <a href="#products" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>Products</a>
+          <a href="#about" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>About</a>
+          <a href="#contact" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>Contact</a>
+          <a href="tel:+15185349949" className="mt-4 bg-blue text-body text-center py-3.5 rounded-xl font-semibold text-sm no-underline hover:bg-blue-light transition-colors" onClick={() => setIsMenuOpen(false)}>Emergency</a>
         </div>
       </div>
 
@@ -165,7 +165,7 @@ export default function App() {
       {/* HERO */}
       <section
         id="home"
-        className="relative min-h-[80svh] lg:min-h-svh w-full overflow-hidden bg-[#0a1628]"
+        className="relative min-h-[80svh] lg:min-h-svh w-full overflow-hidden bg-navy"
       >
         {/* FIXED IMAGE LAYER — stable height, won't jump with the address bar */}
         <div
@@ -194,20 +194,20 @@ export default function App() {
         {/* TEXT — scrolls over the fixed image */}
         <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto">
           <div className="max-w-xl lg:ml-auto">
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-white mb-6">
-              Pure as the mountains.<br /><em className="italic text-[#6daee0]">Right from your tap.</em>
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-body mb-6">
+              Pure as the mountains.<br /><em className="italic text-accent">Right from your tap.</em>
             </h1>
-            <p className="text-sm sm:text-base text-white/50 leading-relaxed mb-8">
+            <p className="text-sm text-body lg:text-body/60 leading-relaxed mb-8">
               Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
             </p>
             <div className="flex gap-3 flex-wrap">
-              <a href="#contact" className="inline-flex items-center gap-2 bg-[#176cc8] hover:bg-[#1a7de0] text-white px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
-              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/20 text-white/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
+              <a href="#contact" className="inline-flex items-center gap-2 bg-blue hover:bg-blue-light text-body px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
+              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/10 text-body/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
             </div>
             <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
               {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
-                <li key={item} className="flex items-center gap-1.5 text-xs text-white/35">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#1a9e4a] shrink-0" />
+                <li key={item} className="flex items-center gap-1.5 text-xs text-body/55">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-green shrink-0" />
                   {item}
                 </li>
               ))}
@@ -217,12 +217,12 @@ export default function App() {
       </section>
 
       {/* SCROLLING SECTIONS LAYER */}
-      <div className="relative z-20 bg-[#0a1628]">
+      <div className="relative z-20 bg-navy">
 
         {/* TRUST BAR */}
-        <div className="border-y border-white/6 bg-[#0a1628]">
+        <div className="border-y border-white/6 bg-navy">
           <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col items-center gap-3">
-            <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0]">
+            <p className="text-xs tracking-[0.18em] uppercase text-accent">
               Owner-operated · Certified · North Country
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
@@ -233,8 +233,8 @@ export default function App() {
                 { num: 'Certified', label: 'Installer' },
               ].map(stat => (
                 <div key={stat.num} className="flex items-baseline gap-2">
-                  <span className="font-serif text-2xl text-white">{stat.num}</span>
-                  <span className="text-sm text-[#6daee0]">{stat.label}</span>
+                  <span className="font-serif text-2xl text-body">{stat.num}</span>
+                  <span className="text-sm text-accent">{stat.label}</span>
                 </div>
               ))}
             </div>
@@ -242,9 +242,9 @@ export default function App() {
         </div>
 
         {/*FILTRATION SERVICES */}
-        <section id="services" className="max-w-7xl mx-auto py-16 md:py-24 px-6">
-          <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">What we do</p>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal text-white mb-10 md:mb-12">Full-service water solutions</h2>
+        <section id="services" className="max-w-7xl mx-auto py-16 md:py-24 px-6 bg-navy-600">
+          <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">What we do</p>
+          <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Full-service water solutions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
@@ -276,12 +276,12 @@ export default function App() {
               },
             ].map(service => (
               <div key={service.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-[#176cc8]/15 flex items-center justify-center text-[#6daee0] mb-4">{service.icon}</div>
-                <h3 className="font-serif text-xl font-normal text-white mb-4">{service.title}</h3>
+                <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
+                <h3 className="font-serif text-xl font-normal text-body mb-4">{service.title}</h3>
                 <ul className="list-none flex flex-col gap-2.5 p-0">
                   {service.items.map(item => (
-                    <li key={item.bold} className="text-sm text-white/45 leading-relaxed">
-                      <strong className="text-white/70 font-semibold">{item.bold}</strong>{item.text}
+                    <li key={item.bold} className="text-sm text-body/55 leading-relaxed">
+                      <strong className="text-body/70 font-semibold">{item.bold}</strong>{item.text}
                     </li>
                   ))}
                 </ul>
@@ -291,9 +291,10 @@ export default function App() {
         </section>
 
         {/*PLUMBING SERVICES*/}
-        <section id="plumbing" className="max-w-7xl mx-auto py-16 md:py-24 px-6">
-          <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">Plumbing services</p>
-          <h2 className="font-serif text-3xl md:text-4xl font-normal text-white mb-10 md:mb-12">Plumbing & pipe work</h2>          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section id="plumbing" className="max-w-7xl mx-auto py-16 md:py-24 px-6 bg-navy">
+          <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Plumbing services</p>
+          <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Plumbing & pipe work</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 title: 'Repairs & leaks',
@@ -324,12 +325,12 @@ export default function App() {
               },
             ].map(service => (
               <div key={service.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-[#176cc8]/15 flex items-center justify-center text-[#6daee0] mb-4">{service.icon}</div>
-                <h3 className="font-serif text-xl font-normal text-white mb-4">{service.title}</h3>
+                <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
+                <h3 className="font-serif text-xl font-normal text-body mb-4">{service.title}</h3>
                 <ul className="list-none flex flex-col gap-2.5 p-0">
                   {service.items.map(item => (
-                    <li key={item.bold} className="text-sm text-white/45 leading-relaxed">
-                      <strong className="text-white/70 font-semibold">{item.bold}</strong>{item.text}
+                    <li key={item.bold} className="text-sm text-body/55 leading-relaxed">
+                      <strong className="text-body/70 font-semibold">{item.bold}</strong>{item.text}
                     </li>
                   ))}
                 </ul>
@@ -339,38 +340,42 @@ export default function App() {
         </section>
 
         {/* PRODUCT DESCRIPTIONS */}
-        <section id="products" className="border-t border-white/5 bg-[#091324]">
+        <section id="products" className="border-t border-white/5 bg-navy-600">
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
-            <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">What we install</p>
-            <h2 className="font-serif text-3xl md:text-4xl font-normal text-white mb-10 md:mb-12">Water solutions for every home</h2>
+            <p className="text-sm tracking-[0.18em] uppercase text-accent mb-2">What we install</p>
+            <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Water solutions for every home</h2>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 { title: 'Traditional Water Softener', description: 'Removes the hard water minerals that cause limescale buildup, stained fixtures, spotty dishes, and damage to your pipes and appliances.', badge: 'Most popular' },
                 { title: 'Salt-Free Water Conditioner', description: 'No salt, no electricity, no maintenance. Conditions your water and prevents scale buildup for 5-6 years — a true set it and forget it solution.', badge: null },
                 { title: 'Chloramine Reduction Solution', description: 'Filters chloramines, chlorine, hydrogen sulfide, and other chemicals from every tap in your home — drinking, cooking, and bathing.', badge: null },
               ].map(product => (
+
                 <div key={product.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 flex flex-col gap-4 hover:border-white/10 transition-colors">
-                  {product.badge && <span className="self-start text-[11px] font-semibold tracking-wide uppercase bg-[#176cc8]/20 text-[#6daee0] px-3 py-1 rounded-full">{product.badge}</span>}
-                  <h3 className="font-serif text-xl font-normal text-white">{product.title}</h3>
-                  <p className="text-sm text-white/45 leading-relaxed flex-1">{product.description}</p>
-                  <a href="#contact" className="inline-flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-sm font-medium py-2.5 rounded-xl no-underline transition-colors">Get a quote</a>
+                  {product.badge && <span className="self-start text-[11px] font-semibold tracking-wide uppercase bg-blue/20 text-accent px-3 py-1 rounded-full">{product.badge}</span>}
+
+                  <h3 className="font-serif text-xl font-normal text-body">{product.title}</h3>
+                  <p className="text-xs text-body/55 leading-relaxed flex-1">{product.description}</p>
+                  <a href="#contact" className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/15 text-body/70 text-sm font-medium py-2.5 rounded-xl no-underline transition-colors">Get a quote</a>
                 </div>
+
               ))}
             </div>
           </div>
         </section>
 
         {/* ABOUT */}
-        <div id="about" className="border-t border-white/5 bg-[#0c1f3f]">
+        <div id="about" className="border-t border-white/5 bg-navy-drawer">
           <div className="max-w-7xl mx-auto px-6 py-16 flex gap-6 md:gap-12 items-center flex-col md:flex-row">
-            <div className="shrink-0 w-16 h-16 rounded-2xl bg-[#176cc8]/20 flex items-center justify-center text-[#6daee0]">
+            <div className="shrink-0 w-16 h-16 rounded-2xl bg-blue/20 flex items-center justify-center text-accent">
               <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
               </svg>
             </div>
             <div className="text-center md:text-left">
-              <p className="text-[11px] tracking-[0.18em] uppercase text-[#6daee0] mb-2">The man behind it all</p>
-              <p className="text-white/70 text-sm md:text-base leading-relaxed max-w-2xl">
+              <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">The man behind it all</p>
+              <p className="text-body/70 text-sm md:text-base leading-relaxed max-w-2xl">
                 Born and raised in the North Country — I know these mountains, these wells, and these winters. I'm on every job personally, and no matter what it takes, we stay on it until it's solved.
               </p>
             </div>
@@ -378,28 +383,28 @@ export default function App() {
         </div>
 
         {/* CONTACT */}
-        <section id="contact" className="border-t border-white/5 bg-[#0a1628]">
+        <section id="contact" className="border-t border-white/5 bg-navy">
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-14 items-start">
             <div>
-              <p className="text-xs tracking-[0.18em] uppercase text-[#6daee0] mb-2">Get in touch</p>
-              <h2 className="font-serif text-3xl md:text-4xl font-normal text-white mb-4">Call for service.</h2>
-              <p className="text-sm text-white/60 leading-relaxed mb-6 md:mb-8">
+              <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Get in touch</p>
+              <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-4">Call for service.</h2>
+              <p className="text-sm text-body/60 leading-relaxed mb-6 md:mb-8">
                 Call, text, or drop us a message. We're out in the field dawn to dusk — and whatever time you reach us, you'll always get our standard rate. No after-hours markup, ever.
               </p>
               <ul className="list-none flex flex-col gap-4 p-0">
-                <li className="flex items-center gap-3 text-sm text-white/60">
-                  <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#6daee0] shrink-0">
+                <li className="flex items-center gap-3 text-sm text-body/60">
+                  <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-accent shrink-0">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" /></svg>
                   </span>
-                  <a href="tel:+15185349949" className="no-underline text-white/60 hover:text-white transition-colors">(518) 534-9949</a>
+                  <a href="tel:+15185349949" className="no-underline text-body/60 hover:text-body transition-colors">(518) 534-9949</a>
                 </li>
-                <li className="flex items-center gap-3 text-sm text-white/60">
-                  <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#6daee0] shrink-0">
+                <li className="flex items-center gap-3 text-sm text-body/60">
+                  <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-accent shrink-0">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" /></svg>
                   </span>
-                  <a href="mailto:contact@adkadvancedwatersolutions.com" className="no-underline text-white/60 hover:text-white transition-colors">contact@adkadvancedwatersolutions.com</a>                </li>
-                <li className="flex items-center gap-3 text-sm text-white/60">
-                  <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-[#6daee0] shrink-0">
+                  <a href="mailto:contact@adkadvancedwatersolutions.com" className="no-underline text-body/60 hover:text-body transition-colors">contact@adkadvancedwatersolutions.com</a>                </li>
+                <li className="flex items-center gap-3 text-sm text-body/60">
+                  <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-accent shrink-0">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" /></svg>
                   </span>
                   Clinton · Franklin · Essex Counties
@@ -419,17 +424,17 @@ export default function App() {
 
 
         {/* FOOTER */}
-        <footer className="border-t border-white/5 bg-[#081022]">
+        <footer className="border-t border-white/5 bg-navy-dark">
           <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col items-center text-center gap-1">
-            <h3 className="font-serif text-xl font-normal text-white">Adirondack Advanced</h3>
-            <p className="text-xs tracking-[0.14em] uppercase text-[#6daee0] mb-4">Water Solutions</p>
-            <p className="text-sm text-white/40">Serving counties — Clinton · Essex · Franklin</p>
-            <p className="text-sm text-white/40 mb-4">
-              <a href="tel:+15185349949" className="no-underline text-white/40 hover:text-white transition-colors">(518) 534-9949</a>
+            <h3 className="font-serif text-xl font-normal text-body">Adirondack Advanced</h3>
+            <p className="text-xs tracking-[0.14em] uppercase text-accent mb-4">Water Solutions</p>
+            <p className="text-sm text-body/50">Serving counties — Clinton · Essex · Franklin</p>
+            <p className="text-sm text-body/50 mb-4">
+              <a href="tel:+15185349949" className="no-underline text-body/60 hover:text-body transition-colors">(518) 534-9949</a>
               {' · '}
-              <a href="mailto:contact@adkadvancedwatersolutions.com" className="no-underline text-white/40 hover:text-white transition-colors">contact@adkadvancedwatersolutions.com</a>
+              <a href="mailto:contact@adkadvancedwatersolutions.com" className="no-underline text-body/60 hover:text-body transition-colors">contact@adkadvancedwatersolutions.com</a>
             </p>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs text-white/25">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs text-body/25">
               <span>© 2026 Adirondack Advanced Water Solutions</span>
               <span className="hidden sm:inline">·</span>
               <span>Owner-Operated</span>

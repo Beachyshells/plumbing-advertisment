@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import heroImage from './assets/hero-image.webp'
 import emailjs from '@emailjs/browser'
+import Testimonials from './Testimonials'
+// import CommentForm from './CommentForm'
 
 function ContactForm() {
   const [status, setStatus] = useState(null)
@@ -192,7 +194,7 @@ export default function App() {
           <img
             src={heroImage}
             alt="Faucet flowing into an Adirondack mountain river"
-            fetchpriority="high"
+            fetchPriority="high"
             className="w-full h-full object-cover object-right lg:[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]"
             style={{ pointerEvents: 'none' }}
           />
@@ -257,6 +259,12 @@ export default function App() {
                 </div>
               ))}
             </div>
+
+            {/* Fading testimonials */}
+            <div className="border-t border-white/6 py-6">
+              <Testimonials />
+            </div>
+
           </div>
         </div>
 
@@ -443,8 +451,18 @@ export default function App() {
           </div>
         </section>
 
-        {/*COMMENT FORM*/}
 
+        {/*
+        <section className="border-t border-white/5 bg-navy-600">
+          <div className="max-w-2xl mx-auto px-6 py-16 md:py-24">
+            <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2 text-center">Share your story</p>
+            <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-3 text-center">Leave a comment</h2>
+            <p className="text-sm text-body/60 leading-relaxed mb-8 text-center">
+              Had work done? Tell your neighbors about it.
+            </p>
+            <CommentForm />
+          </div>
+        </section> COMMENT FORM */}
 
 
         {/* FOOTER */}

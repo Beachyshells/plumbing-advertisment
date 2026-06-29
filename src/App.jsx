@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import heroImage from './assets/hero-image.webp'
 import emailjs from '@emailjs/browser'
 import Testimonials from './Testimonials'
-// import CommentForm from './CommentForm'
+import CommentForm from './CommentForm'
 
 function ContactForm() {
   const [status, setStatus] = useState(null)
@@ -452,7 +452,7 @@ export default function App() {
         </section>
 
 
-        {/*
+        {/*COMMENT FORM */}
         <section className="border-t border-white/5 bg-navy-600">
           <div className="max-w-2xl mx-auto px-6 py-16 md:py-24">
             <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2 text-center">Share your story</p>
@@ -462,7 +462,7 @@ export default function App() {
             </p>
             <CommentForm />
           </div>
-        </section> COMMENT FORM */}
+        </section>
 
 
         {/* FOOTER */}

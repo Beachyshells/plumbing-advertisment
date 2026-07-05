@@ -3,6 +3,7 @@ import heroImage from './assets/hero-image.webp'
 import emailjs from '@emailjs/browser'
 import Testimonials from './Testimonials'
 import CommentForm from './CommentForm'
+import { motion } from 'framer-motion'
 
 function ContactForm() {
   const [status, setStatus] = useState(null)
@@ -88,6 +89,11 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const [viewportH, setViewportH] = useState(0)
+
+  const fadeUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
+  }
 
   useEffect(() => {
     let ticking = false
@@ -209,34 +215,41 @@ export default function App() {
         </div>
 
         {/* TEXT — scrolls over the fixed image */}
-        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto landscape:justify-center landscape:pt-24 landscape:pb-16">          <div className="max-w-xl lg:ml-auto">
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-body mb-6">
-            Pure as the mountains.<br /><em className="italic text-accent">Right from your tap.</em>
-          </h1>
-          <p className="text-sm text-body lg:text-body/60 leading-relaxed mb-8">
-            Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
-          </p>
-          <div className="flex gap-3 flex-wrap">
-            <a href="#contact" className="inline-flex items-center gap-2 bg-blue hover:bg-blue-light text-body px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
-            <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/10 text-body/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
-          </div>
-          <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
-            {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
-              <li key={item} className="flex items-center gap-1.5 text-xs text-body/55">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-green shrink-0" />
-                {item}
-              </li>
-            ))}
-          </ul>
+        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto landscape:justify-center landscape:pt-24 landscape:pb-16">
+          <motion.div
+            className="max-w-xl lg:ml-auto"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.2, delayChildren: 0.15 } } }}
+          >
+            <motion.h1 variants={fadeUp} className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-body mb-6">
+              Pure as the mountains.<br />
+              <motion.em variants={fadeUp} className="italic text-accent">Right from your tap.</motion.em>
+            </motion.h1>
+            <motion.p variants={fadeUp} className="text-sm text-body lg:text-body/60 leading-relaxed mb-8">
+              Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
+            </motion.p>
+            <motion.div variants={fadeUp} className="flex gap-3 flex-wrap">
+              <a href="#contact" className="inline-flex items-center gap-2 bg-blue hover:bg-blue-light text-body px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
+              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/10 text-body/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
+            </motion.div>
+            <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
+              {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
+                <li key={item} className="flex items-center gap-1.5 text-xs text-body/55">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-green shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
         </div>
-        </div>
-      </section>
+      </section >
 
       {/* SCROLLING SECTIONS LAYER */}
-      <div className="relative z-20 bg-navy">
+      <div className="relative z-20 bg-navy" >
 
         {/* TRUST BAR */}
-        <div className="border-y border-white/6 bg-navy">
+        <div className="border-y border-white/6 bg-navy" >
           <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col items-center gap-3">
 
             <p className="text-xs tracking-[0.18em] uppercase text-accent">
@@ -265,14 +278,22 @@ export default function App() {
             </div>
 
           </div>
-        </div>
+        </div >
 
         {/*FILTRATION SERVICES */}
-        <section id="services" className="bg-navy">
+        < section id="services" className="bg-navy" >
           <div className="max-w-7xl mx-auto py-16 md:py-24 px-6">
             <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">What we do</p>
             <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Full-service water solutions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.55 } }
+              }}
+            >
               {[
                 {
                   title: 'Well & pump',
@@ -302,8 +323,14 @@ export default function App() {
                   ]
                 },
               ].map(service => (
-                <div key={service.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
+                <motion.div
+                  key={service.title}
+                  className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors"
+                  variants={{
+                    hidden: { opacity: 0, x: 60 },
+                    visible: { opacity: 1, x: 0, transition: { duration: 1.2, ease: 'easeOut' } }
+                  }}
+                >                  <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
                   <h3 className="font-serif text-xl font-normal text-body mb-4">{service.title}</h3>
                   <ul className="list-none flex flex-col gap-2.5 p-0">
                     {service.items.map(item => (
@@ -312,92 +339,118 @@ export default function App() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </section >
 
         {/*PLUMBING SERVICES*/}
-        <section id="plumbing" className="bg-navy-600">
+        < section id="plumbing" className="bg-navy-600" >
           <div className="max-w-7xl mx-auto py-16 md:py-24 px-6">
 
             <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Plumbing services</p>
             <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Plumbing & pipe work</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: 'Repairs & leaks',
-                  icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12h4l3 8 4-16 3 8h4" /></svg>,
-                  items: [
-                    { bold: 'Leak detection:', text: ' Pinpointing hidden leaks before they cause damage.' },
-                    { bold: 'Pipe repair:', text: ' Burst, frozen, or corroded lines fixed fast.' },
-                    { bold: 'Emergency calls:', text: ' Same-day response when water is where it shouldn\'t be.' },
-                  ]
-                },
-                {
-                  title: 'Fixtures & installs',
-                  icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 2v6M9 5h6M6 11h12v3a6 6 0 01-12 0z" /><line x1="12" y1="20" x2="12" y2="22" /></svg>,
-                  items: [
-                    { bold: 'Faucets & sinks:', text: ' Supply and install for kitchen and bath.' },
-                    { bold: 'Toilets & vanities:', text: ' Upgrades and replacements done clean.' },
-                    { bold: 'Water heaters:', text: ' Tank and tankless installs and service.' },
-                  ]
-                },
-                {
-                  title: 'Lines & remodels',
-                  icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 4v16M4 8h10a3 3 0 013 3v0a3 3 0 01-3 3H8" /></svg>,
-                  items: [
-                    { bold: 'Repipes:', text: ' Full or partial replacement of aging plumbing.' },
-                    { bold: 'New construction:', text: ' Rough-in and finish work for builds and additions.' },
-                    { bold: 'Remodel plumbing:', text: ' Relocating lines for kitchen and bath projects.' },
-                  ]
-                },
-              ].map(service => (
-                <div key={service.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
-                  <h3 className="font-serif text-xl font-normal text-body mb-4">{service.title}</h3>
-                  <ul className="list-none flex flex-col gap-2.5 p-0">
-                    {service.items.map(item => (
-                      <li key={item.bold} className="text-sm text-body/55 leading-relaxed">
-                        <strong className="text-body/70 font-semibold">{item.bold}</strong>{item.text}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.55 } }
+              }}
+            >              {[
+              {
+                title: 'Repairs & leaks',
+                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12h4l3 8 4-16 3 8h4" /></svg>,
+                items: [
+                  { bold: 'Leak detection:', text: ' Pinpointing hidden leaks before they cause damage.' },
+                  { bold: 'Pipe repair:', text: ' Burst, frozen, or corroded lines fixed fast.' },
+                  { bold: 'Emergency calls:', text: ' Same-day response when water is where it shouldn\'t be.' },
+                ]
+              },
+              {
+                title: 'Fixtures & installs',
+                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 2v6M9 5h6M6 11h12v3a6 6 0 01-12 0z" /><line x1="12" y1="20" x2="12" y2="22" /></svg>,
+                items: [
+                  { bold: 'Faucets & sinks:', text: ' Supply and install for kitchen and bath.' },
+                  { bold: 'Toilets & vanities:', text: ' Upgrades and replacements done clean.' },
+                  { bold: 'Water heaters:', text: ' Tank and tankless installs and service.' },
+                ]
+              },
+              {
+                title: 'Lines & remodels',
+                icon: <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 4v16M4 8h10a3 3 0 013 3v0a3 3 0 01-3 3H8" /></svg>,
+                items: [
+                  { bold: 'Repipes:', text: ' Full or partial replacement of aging plumbing.' },
+                  { bold: 'New construction:', text: ' Rough-in and finish work for builds and additions.' },
+                  { bold: 'Remodel plumbing:', text: ' Relocating lines for kitchen and bath projects.' },
+                ]
+              },
+            ].map(service => (
+              <motion.div
+                key={service.title}
+                className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors"
+                variants={{
+                  hidden: { opacity: 0, x: 60 },
+                  visible: { opacity: 1, x: 0, transition: { duration: 1.2, ease: 'easeOut' } }
+                }}
+              >                   <div className="w-10 h-10 rounded-xl bg-blue/15 flex items-center justify-center text-accent mb-4">{service.icon}</div>
+                <h3 className="font-serif text-xl font-normal text-body mb-4">{service.title}</h3>
+                <ul className="list-none flex flex-col gap-2.5 p-0">
+                  {service.items.map(item => (
+                    <li key={item.bold} className="text-sm text-body/55 leading-relaxed">
+                      <strong className="text-body/70 font-semibold">{item.bold}</strong>{item.text}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+            </motion.div>
           </div>
-        </section>
+        </section >
 
         {/* PRODUCT DESCRIPTIONS */}
-        <section id="products" className="border-t border-white/5 bg-navy">
+        < section id="products" className="border-t border-white/5 bg-navy" >
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
             <p className="text-sm tracking-[0.18em] uppercase text-accent mb-2">What we install</p>
             <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Water solutions for every home</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { title: 'Traditional Water Softener', description: 'Removes the hard water minerals that cause limescale buildup, stained fixtures, spotty dishes, and damage to your pipes and appliances.', badge: 'Most popular' },
-                { title: 'Salt-Free Water Conditioner', description: 'No salt, no electricity, no maintenance. Conditions your water and prevents scale buildup for 5-6 years — a true set it and forget it solution.', badge: null },
-                { title: 'Chloramine Reduction Solution', description: 'Filters chloramines, chlorine, hydrogen sulfide, and other chemicals from every tap in your home — drinking, cooking, and bathing.', badge: null },
-              ].map(product => (
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.55 } }
+              }}
+            >               {[
+              { title: 'Traditional Water Softener', description: 'Removes the hard water minerals that cause limescale buildup, stained fixtures, spotty dishes, and damage to your pipes and appliances.', badge: 'Most popular' },
+              { title: 'Salt-Free Water Conditioner', description: 'No salt, no electricity, no maintenance. Conditions your water and prevents scale buildup for 5-6 years — a true set it and forget it solution.', badge: null },
+              { title: 'Chloramine Reduction Solution', description: 'Filters chloramines, chlorine, hydrogen sulfide, and other chemicals from every tap in your home — drinking, cooking, and bathing.', badge: null },
+            ].map(product => (
 
-                <div key={product.title} className="bg-white/3 border border-white/5 rounded-2xl p-6 flex flex-col gap-4 hover:border-white/10 transition-colors">
-                  {product.badge && <span className="self-start text-[11px] font-semibold tracking-wide uppercase bg-blue/20 text-accent px-3 py-1 rounded-full">{product.badge}</span>}
+              <motion.div
+                key={product.title}
+                className="bg-white/3 border border-white/5 rounded-2xl p-6  hover:border-white/10 transition-colors"
+                variants={{
+                  hidden: { opacity: 0, x: 60 },
+                  visible: { opacity: 1, x: 0, transition: { duration: 1.2, ease: 'easeOut' } }
+                }}
+              >
+                {product.badge && <span className="self-start text-[11px] font-semibold tracking-wide uppercase bg-blue/20 text-accent px-3 py-1 rounded-full">{product.badge}</span>}
 
-                  <h3 className="font-serif text-xl font-normal text-body">{product.title}</h3>
-                  <p className="text-xs text-body/55 leading-relaxed flex-1">{product.description}</p>
-                  <a href="#contact" className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/15 text-body/70 text-sm font-medium py-2.5 rounded-xl no-underline transition-colors">Get a quote</a>
-                </div>
+                <h3 className="font-serif text-xl font-normal text-body pt-2">{product.title}</h3>
+                <p className="text-xs text-body/55 leading-relaxed flex-1">{product.description}</p>
+                <a href="#contact" className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/15 text-body/70 text-sm font-medium px-4 py-2 mt-2 rounded-xl no-underline transition-colors">Get a quote</a>              </motion.div>
 
-              ))}
-            </div>
+            ))}
+            </motion.div>
           </div>
-        </section>
+        </section >
 
         {/* ABOUT */}
-        <div id="about" className="border-t border-white/5 bg-navy-drawer">
+        < div id="about" className="border-t border-white/5 bg-navy-drawer" >
           <div className="max-w-7xl mx-auto px-6 py-16 flex gap-6 md:gap-12 items-center flex-col md:flex-row">
             <div className="shrink-0 w-16 h-16 rounded-2xl bg-blue/20 flex items-center justify-center text-accent">
               <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -411,10 +464,10 @@ export default function App() {
               </p>
             </div>
           </div>
-        </div>
+        </div >
 
         {/* CONTACT */}
-        <section id="contact" className="border-t border-white/5 bg-navy">
+        < section id="contact" className="border-t border-white/5 bg-navy" >
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-14 items-start">
             <div>
               <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Get in touch</p>
@@ -448,11 +501,11 @@ export default function App() {
               <ContactForm />
             </div>
           </div>
-        </section>
+        </section >
 
 
         {/*COMMENT FORM */}
-        <section className="border-t border-white/5 bg-navy-600">
+        < section className="border-t border-white/5 bg-navy-600" >
           <div className="max-w-2xl mx-auto px-6 py-16 md:py-24">
             <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2 text-center">Share your story</p>
             <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-3 text-center">Leave a comment</h2>
@@ -461,11 +514,11 @@ export default function App() {
             </p>
             <CommentForm />
           </div>
-        </section>
+        </section >
 
 
         {/* FOOTER */}
-        <footer className="border-t border-white/5 bg-navy-dark">
+        < footer className="border-t border-white/5 bg-navy-dark" >
           <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col items-center text-center gap-1">
             <h3 className="font-serif text-xl font-normal text-body">Adirondack Advanced</h3>
             <p className="text-xs tracking-[0.14em] uppercase text-accent mb-4">Water Solutions</p>
@@ -481,9 +534,9 @@ export default function App() {
               <span>Owner-Operated</span>
             </div>
           </div>
-        </footer>
+        </footer >
 
-      </div>
+      </div >
     </div >
   )
 }

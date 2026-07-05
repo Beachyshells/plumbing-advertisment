@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -12,6 +12,7 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@sanity/client": "^7.23.0",
+    "framer-motion": "^12.42.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },

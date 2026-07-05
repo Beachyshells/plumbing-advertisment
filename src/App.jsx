@@ -209,27 +209,26 @@ export default function App() {
         </div>
 
         {/* TEXT — scrolls over the fixed image */}
-        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto">
-          <div className="max-w-xl lg:ml-auto">
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-body mb-6">
-              Pure as the mountains.<br /><em className="italic text-accent">Right from your tap.</em>
-            </h1>
-            <p className="text-sm text-body lg:text-body/60 leading-relaxed mb-8">
-              Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
-            </p>
-            <div className="flex gap-3 flex-wrap">
-              <a href="#contact" className="inline-flex items-center gap-2 bg-blue hover:bg-blue-light text-body px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
-              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/10 text-body/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
-            </div>
-            <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
-              {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
-                <li key={item} className="flex items-center gap-1.5 text-xs text-body/55">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-green shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto landscape:justify-center landscape:pt-24 landscape:pb-16">          <div className="max-w-xl lg:ml-auto">
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-body mb-6">
+            Pure as the mountains.<br /><em className="italic text-accent">Right from your tap.</em>
+          </h1>
+          <p className="text-sm text-body lg:text-body/60 leading-relaxed mb-8">
+            Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
+          </p>
+          <div className="flex gap-3 flex-wrap">
+            <a href="#contact" className="inline-flex items-center gap-2 bg-blue hover:bg-blue-light text-body px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
+            <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/10 text-body/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
           </div>
+          <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
+            {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
+              <li key={item} className="flex items-center gap-1.5 text-xs text-body/55">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-green shrink-0" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
         </div>
       </section>
 

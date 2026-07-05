@@ -4,6 +4,7 @@ import emailjs from '@emailjs/browser'
 import Testimonials from './Testimonials'
 import CommentForm from './CommentForm'
 import { motion } from 'framer-motion'
+import Gallery from './Gallery'
 
 function ContactForm() {
   const [status, setStatus] = useState(null)
@@ -170,6 +171,7 @@ export default function App() {
             <a href="#home" className="text-body/50 text-base hover:text-body transition-colors no-underline">Home</a>
             <a href="#services" className="text-body/50 text-base hover:text-body transition-colors no-underline">Services</a>
             <a href="#products" className="text-body/50 text-base hover:text-body transition-colors no-underline">Products</a>
+            <a href="#gallery" className="text-body/50 text-base hover:text-body transition-colors no-underline">Gallery</a>
             <a href="#about" className="text-body/50 text-base hover:text-body transition-colors no-underline">About</a>
             <a href="#contact" className="text-body/50 text-base hover:text-body transition-colors no-underline">Contact</a>
             <a href="tel:+15185349949" className="bg-blue hover:bg-blue-light text-body px-5 py-3 rounded-full font-semibold text-lg shadow-lg no-underline flex items-center gap-2 transition-colors">
@@ -216,6 +218,7 @@ export default function App() {
           <a href="#home" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>Home</a>
           <a href="#services" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>Services</a>
           <a href="#products" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>Products</a>
+          <a href="#gallery" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>Gallery</a>
           <a href="#about" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>About</a>
           <a href="#contact" className="text-body/70 text-lg no-underline hover:text-body transition-colors" onClick={() => setIsMenuOpen(false)}>Contact</a>
           <a href="tel:+15185349949" className="mt-4 bg-blue text-body text-center py-3.5 rounded-xl font-semibold text-sm no-underline hover:bg-blue-light transition-colors" onClick={() => setIsMenuOpen(false)}>Emergency</a>
@@ -260,7 +263,7 @@ export default function App() {
             animate="visible"
             variants={{ visible: { transition: { staggerChildren: 0.2, delayChildren: 0.15 } } }}
           >
-            <motion.h1 variants={fadeUp} className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-body mb-6">
+            <motion.h1 variants={fadeUp} className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-body my-6">
               Pure as the mountains.<br />
               <motion.em variants={fadeUp} className="italic text-accent">Right from your tap.</motion.em>
             </motion.h1>
@@ -533,6 +536,15 @@ export default function App() {
                 </li>
               </ul>
             </div>
+
+            {/* GALLERY */}
+            <section id="gallery" className="border-t border-white/5 bg-navy-600">
+              <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+                <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Recent work</p>
+                <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">See the difference</h2>
+                <Gallery />
+              </div>
+            </section>
 
             {/*CONTACT FORM*/}
             <div className="bg-white/3 border border-white/5 rounded-2xl p-6">

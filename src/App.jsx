@@ -5,6 +5,8 @@ import Testimonials from './Testimonials'
 import CommentForm from './CommentForm'
 import { motion } from 'framer-motion'
 import Gallery from './Gallery'
+import vanFull from './assets/van-full.webp'
+import vanBrand from './assets/van-brand.webp'
 
 function ContactForm() {
   const [status, setStatus] = useState(null)
@@ -537,14 +539,7 @@ export default function App() {
               </ul>
             </div>
 
-            {/* GALLERY */}
-            <section id="gallery" className="border-t border-white/5 bg-navy-600">
-              <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
-                <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Recent work</p>
-                <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">See the difference</h2>
-                <Gallery />
-              </div>
-            </section>
+
 
             {/*CONTACT FORM*/}
             <div className="bg-white/3 border border-white/5 rounded-2xl p-6">
@@ -552,6 +547,21 @@ export default function App() {
             </div>
           </div>
         </section >
+
+        {/* GALLERY */}
+        <section id="gallery" className="border-t border-white/5 bg-navy-600">
+          {/* VAN BANNER */}
+          <div className="relative w-full h-56 md:h-80 overflow-hidden">
+            <img src={vanFull} alt="Adirondack Advanced Water Solutions service van" className="w-full h-full object-cover object-center" />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy-600 via-navy-600/30 to-transparent" />
+          </div>
+
+          <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+            <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Our work</p>
+            <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-10 md:mb-12">Serving our neighbors, one job at a time</h2>
+            <Gallery />
+          </div>
+        </section>
 
 
         {/*COMMENT FORM */}

@@ -40,7 +40,7 @@ export default function Gallery() {
                                 ) : (
                                     images[0] && (
                                         <img
-                                            src={urlFor(images[0]).width(800).url()}
+                                            src={urlFor(img).width(600).format('webp').quality(75).url()}
                                             alt={caption || 'Service photo'}
                                             className="w-full h-full object-cover"
                                         />
@@ -56,7 +56,7 @@ export default function Gallery() {
                                     return (
                                         <img
                                             key={i}
-                                            src={urlFor(img).width(isLastOdd ? 800 : 400).url()}
+                                            src={urlFor(img).width(600).format('webp').quality(75).url()}
                                             alt={caption || 'Service photo'}
                                             className={`w-full h-full object-cover rounded-xl ${isLastOdd ? 'col-span-2 aspect-video' : 'aspect-square'}`}
                                         />

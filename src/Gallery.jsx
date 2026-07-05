@@ -50,14 +50,18 @@ export default function Gallery() {
 
                             {/* Small images */}
                             <div className="grid grid-cols-2 gap-4">
-                                {smallImages.map((img, i) => (
-                                    <img
-                                        key={i}
-                                        src={urlFor(img).width(400).url()}
-                                        alt={caption || 'Service photo'}
-                                        className="w-full h-full object-cover rounded-xl aspect-square"
-                                    />
-                                ))}
+                                {smallImages.map((img, i) => {
+                                    // If there's an odd one out (3rd image), make it span full width
+                                    const isLastOdd = smallImages.length % 2 === 1 && i === smallImages.length - 1
+                                    return (
+                                        <img
+                                            key={i}
+                                            src={urlFor(img).width(isLastOdd ? 800 : 400).url()}
+                                            alt={caption || 'Service photo'}
+                                            className={`w-full h-full object-cover rounded-xl ${isLastOdd ? 'col-span-2 aspect-video' : 'aspect-square'}`}
+                                        />
+                                    )
+                                })}
                             </div>
                         </div>
 

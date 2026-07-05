@@ -88,6 +88,7 @@ function ContactForm() {
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const [isScrolling, setIsScrolling] = useState(false)
   const [viewportH, setViewportH] = useState(0)
 
   const fadeUp = {
@@ -114,6 +115,20 @@ export default function App() {
     return () => {
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  useEffect(() => {
+    let scrollTimer
+    const onScroll = () => {
+      setIsScrolling(true)
+      clearTimeout(scrollTimer)
+      scrollTimer = setTimeout(() => setIsScrolling(false), 200)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      clearTimeout(scrollTimer)
     }
   }, [])
 
@@ -157,7 +172,12 @@ export default function App() {
             <a href="#products" className="text-body/50 text-base hover:text-body transition-colors no-underline">Products</a>
             <a href="#about" className="text-body/50 text-base hover:text-body transition-colors no-underline">About</a>
             <a href="#contact" className="text-body/50 text-base hover:text-body transition-colors no-underline">Contact</a>
-            <a href="tel:+15185349949" className="bg-blue text-body px-4 py-2 rounded-full text-base font-semibold no-underline hover:bg-blue-light transition-colors">Emergency</a>
+            <a href="tel:+15185349949" className="bg-blue hover:bg-blue-light text-body px-5 py-3 rounded-full font-semibold text-lg shadow-lg no-underline flex items-center gap-2 transition-colors">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" />
+              </svg>
+              Emergency
+            </a>
           </nav>
           <button className="md:hidden text-body/70 focus:outline-none" onClick={() => setIsMenuOpen(o => !o)} aria-label={isMenuOpen ? "Close menu" : "Open menu"}>
             <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
@@ -166,6 +186,24 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* FLOATING EMERGENCY BUTTON (mobile only) */}
+      <motion.a
+        href="tel:+15185349949"
+        className="md:hidden fixed bottom-15 right-5 z-50 bg-blue text-body px-5 py-3 rounded-full font-semibold text-lg shadow-lg no-underline flex items-center gap-2"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{
+          opacity: isScrolling ? 0 : 1,
+          scale: isScrolling ? 0.8 : 1,
+          pointerEvents: isScrolling ? 'none' : 'auto',
+        }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" />
+        </svg>
+        Emergency
+      </motion.a>
 
       {/* MOBILE DRAWER */}
       {isMenuOpen && <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />}
@@ -231,7 +269,7 @@ export default function App() {
             </motion.p>
             <motion.div variants={fadeUp} className="flex gap-3 flex-wrap">
               <a href="#contact" className="inline-flex items-center gap-2 bg-blue hover:bg-blue-light text-body px-6 py-3.5 rounded-xl font-semibold text-sm no-underline transition-colors">Get service</a>
-              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/10 text-body/70 border border-white/12 hover:bg-white/32 transition-colors">Text us</a>
+              <a href="sms:+15185349949" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium no-underline bg-white/15 text-body border border-blue hover:bg-white/32 transition-colors">Text us</a>
             </motion.div>
             <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
               {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
@@ -518,7 +556,7 @@ export default function App() {
 
 
         {/* FOOTER */}
-        < footer className="border-t border-white/5 bg-navy-dark" >
+        < footer className="pb-30 border-t border-white/5 bg-navy-dark" >
           <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col items-center text-center gap-1">
             <h3 className="font-serif text-xl font-normal text-body">Adirondack Advanced</h3>
             <p className="text-xs tracking-[0.14em] uppercase text-accent mb-4">Water Solutions</p>

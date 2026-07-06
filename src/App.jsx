@@ -1,92 +1,13 @@
 import { useState, useEffect } from 'react'
 import heroImage from './assets/hero-image.webp'
-import emailjs from '@emailjs/browser'
 import Testimonials from './Testimonials'
 import CommentForm from './CommentForm'
 import { motion } from 'framer-motion'
 import Gallery from './Gallery'
 import vanFull from './assets/van-full.webp'
 import vanBrand from './assets/van-brand.webp'
+import ContactForm from './ContactForm'
 
-function ContactForm() {
-  const [status, setStatus] = useState(null)
-  const [form, setForm] = useState({ from_name: '', from_contact: '', message: '' })
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setStatus('sending')
-    try {
-      await emailjs.send(
-        'ADK_SERVICES',
-        'template_oz9fl65',
-        {
-          from_name: form.from_name,
-          from_contact: form.from_contact,
-          message: form.message,
-        },
-        '7derGOKaoYJKZFxce'
-      )
-      setStatus('success')
-      setForm({ from_name: '', from_contact: '', message: '' })
-    } catch (err) {
-      setStatus('error')
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="from_name" className="text-[11px] tracking-widest uppercase text-white/35">Your name</label>
-        <input
-          id="from_name"
-          name="from_name"
-          type="text"
-          required
-          value={form.from_name}
-          onChange={handleChange}
-          placeholder="Jane Smith"
-          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-blue transition-colors placeholder:text-white/20"
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="from_contact" className="text-[11px] tracking-widest uppercase text-white/35">Phone or email</label>
-        <input
-          id="from_contact"
-          name="from_contact"
-          type="text"
-          required
-          value={form.from_contact}
-          onChange={handleChange}
-          placeholder="(518) 555-0100"
-          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none focus:border-blue transition-colors placeholder:text-white/20"
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="message" className="text-[11px] tracking-widest uppercase text-white/35">What's going on?</label>
-        <textarea
-          id="message"
-          name="message"
-          required
-          value={form.message}
-          onChange={handleChange}
-          placeholder="No water, strange smell, slow drain..."
-          className="bg-white/5 border border-white/10 rounded-xl text-white/85 text-sm py-3 px-4 outline-none h-28 resize-y focus:border-blue transition-colors placeholder:text-white/20"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={status === 'sending'}
-        className="w-full bg-blue hover:bg-blue-light text-white py-3 rounded-xl text-sm font-semibold cursor-pointer transition-colors active:scale-[0.98] disabled:opacity-50"
-      >
-        {status === 'sending' ? 'Sending...' : status === 'success' ? 'Message sent!' : status === 'error' ? 'Something went wrong' : 'Send message'}
-      </button>
-    </form>
-  )
-}
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -269,7 +190,7 @@ export default function App() {
               Pure as the mountains.<br />
               <motion.em variants={fadeUp} className="italic text-accent">Right from your tap.</motion.em>
             </motion.h1>
-            <motion.p variants={fadeUp} className="text-sm text-body lg:text-body/60 leading-relaxed mb-8">
+            <motion.p variants={fadeUp} className="text-sm text-body lg:text-body leading-relaxed mb-8">
               Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.
             </motion.p>
             <motion.div variants={fadeUp} className="flex gap-3 flex-wrap">
@@ -278,7 +199,7 @@ export default function App() {
             </motion.div>
             <ul className="list-none flex flex-wrap gap-4 mt-8 p-0">
               {['Call for estimates', 'Clinton · Essex · Franklin Counties'].map(item => (
-                <li key={item} className="flex items-center gap-1.5 text-xs text-body/55">
+                <li key={item} className="flex items-center gap-1.5 text-xs text-body/75">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-green shrink-0" />
                   {item}
                 </li>
@@ -368,7 +289,7 @@ export default function App() {
               ].map(service => (
                 <motion.div
                   key={service.title}
-                  className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors"
+                  className="bg-white/3 border border-white/10 rounded-2xl p-6 hover:border-white/25 transition-colors"
                   variants={{
                     hidden: { opacity: 0, x: 60 },
                     visible: { opacity: 1, x: 0, transition: { duration: 1.2, ease: 'easeOut' } }
@@ -433,7 +354,7 @@ export default function App() {
             ].map(service => (
               <motion.div
                 key={service.title}
-                className="bg-white/3 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors"
+                className="bg-white/3 border border-white/10 rounded-2xl p-6 hover:border-white/25 transition-colors"
                 variants={{
                   hidden: { opacity: 0, x: 60 },
                   visible: { opacity: 1, x: 0, transition: { duration: 1.2, ease: 'easeOut' } }
@@ -475,7 +396,7 @@ export default function App() {
 
               <motion.div
                 key={product.title}
-                className="bg-white/3 border border-white/5 rounded-2xl p-6  hover:border-white/10 transition-colors"
+                className="bg-white/3 border border-white/10 rounded-2xl p-6  hover:border-white/25 transition-colors"
                 variants={{
                   hidden: { opacity: 0, x: 60 },
                   visible: { opacity: 1, x: 0, transition: { duration: 1.2, ease: 'easeOut' } }
@@ -484,7 +405,7 @@ export default function App() {
                 {product.badge && <span className="self-start text-[11px] font-semibold tracking-wide uppercase bg-blue/20 text-accent px-3 py-1 rounded-full">{product.badge}</span>}
 
                 <h3 className="font-serif text-xl font-normal text-body pt-2">{product.title}</h3>
-                <p className="text-xs text-body/55 leading-relaxed flex-1">{product.description}</p>
+                <p className="text-xs text-body/65 leading-relaxed flex-1">{product.description}</p>
                 <a href="#contact" className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/15 text-body/70 text-sm font-medium px-4 py-2 mt-2 rounded-xl no-underline transition-colors">Get a quote</a>              </motion.div>
 
             ))}
@@ -502,7 +423,7 @@ export default function App() {
             </div>
             <div className="text-center md:text-left">
               <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">The man behind it all</p>
-              <p className="text-body/70 text-sm md:text-base leading-relaxed max-w-2xl">
+              <p className="text-body/80 text-sm md:text-base leading-relaxed max-w-2xl">
                 Born and raised in the North Country — I know these mountains, these wells, and these winters. I'm on every job personally, and no matter what it takes, we stay on it until it's solved.
               </p>
             </div>
@@ -515,11 +436,11 @@ export default function App() {
             <div>
               <p className="text-xs tracking-[0.18em] uppercase text-accent mb-2">Get in touch</p>
               <h2 className="font-serif text-3xl md:text-4xl font-normal text-body mb-4">Call for service.</h2>
-              <p className="text-sm text-body/60 leading-relaxed mb-6 md:mb-8">
+              <p className="text-sm text-body/80 leading-relaxed mb-6 md:mb-8">
                 Call, text, or drop us a message. We're out in the field dawn to dusk — and whatever time you reach us, you'll always get our standard rate. No after-hours markup, ever.
               </p>
               <ul className="list-none flex flex-col gap-4 p-0">
-                <li className="flex items-center gap-3 text-sm text-body/60">
+                <li className="flex items-center gap-3 text-sm text-body/65">
                   <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-accent shrink-0">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" /></svg>
                   </span>

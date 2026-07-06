@@ -8,6 +8,16 @@ import vanFull from './assets/van-full.webp'
 import vanBrand from './assets/van-brand.webp'
 import ContactForm from './ContactForm'
 
+// Preload the hero image as early as possible
+if (typeof document !== 'undefined') {
+  const link = document.createElement('link')
+  link.rel = 'preload'
+  link.as = 'image'
+  link.href = heroImage
+  link.fetchPriority = 'high'
+  document.head.appendChild(link)
+}
+
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)

@@ -67,7 +67,7 @@ export default function IntakeWizard() {
                 body: JSON.stringify(answers),
             })
             if (!res.ok) throw new Error('Save failed')
-            generatePdf(answers)
+            await generatePdf(answers)
             setStep(TOTAL + 1)
             setStatus('idle')
         } catch (err) {
@@ -219,103 +219,283 @@ export default function IntakeWizard() {
 }
 
 // ---- PDF generation ---------------------------------------------------------
-function generatePdf(a) {
-    const NAVY = [10, 22, 40]
-    const BLUE = [23, 108, 200]
-    const doc = new jsPDF({ unit: 'pt', format: 'letter' })
-    const pageW = 612
-    const margin = 42
-    let y = 50
+// Matches the real customer-profile-template.pdf: same logo, same navy
+// branding, same section names/order/columns, and the exact equipment +
+// service history grids (those already fit typed text fine). The customer
+// info rows are spaced for legible typed text rather than the template's
+// literal handwriting-width rows, which are too tight for printed labels.
+async function generatePdf(a) {
+    const NAVY = [19, 53, 94]
+    const GRAY_LABEL = [130, 130, 130]
+    const GRAY_LINE = [190, 190, 190]
+    const BLACK = [20, 20, 20]
 
-    // Header
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' })
+
+    // ---- Logo (fetched from /logo-icon.png, same file used elsewhere on the site) ----
+    const logoDataUrl = await loadImageAsDataUrl('/logo-icon.png')
+    if (logoDataUrl) {
+        doc.addImage(logoDataUrl, 'PNG', 36, 30, 60, 60)
+    }
+
+    // ---- Header ----
+    const headerX = logoDataUrl ? 108 : 36
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(18)
+    doc.setFontSize(16)
     doc.setTextColor(...NAVY)
-    doc.text('Adirondack Advanced Water Solutions', margin, y)
-    doc.setFont('helvetica', 'italic')
-    doc.setFontSize(10)
-    doc.setTextColor(...BLUE)
-    y += 18
-    doc.text('Plumbing  •  Water Filtration  •  Pumps', margin, y)
+    doc.text('Adirondack Advanced Water Solutions', headerX, 50)
 
     doc.setFont('helvetica', 'normal')
+    doc.setFontSize(10)
+    doc.setTextColor(...NAVY)
+    doc.text('Plumbing  •  Water Filtration  •  Pumps', headerX, 66)
+
     doc.setFontSize(9)
-    doc.setTextColor(120, 120, 120)
-    y += 14
-    doc.text('(518) 534-9949', margin, y)
+    doc.setTextColor(...GRAY_LABEL)
+    doc.text('(518) 534-9949', headerX, 80)
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(13)
     doc.setTextColor(...NAVY)
-    doc.text('CUSTOMER PROFILE', pageW - margin, 50, { align: 'right' })
+    doc.text('CUSTOMER PROFILE', 576, 50, { align: 'right' })
+
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9)
-    doc.setTextColor(120, 120, 120)
-    doc.text(`Customer since: ${new Date().toLocaleDateString()}`, pageW - margin, 66, { align: 'right' })
+    doc.setTextColor(...GRAY_LABEL)
+    doc.text(`Customer since  ${new Date().toLocaleDateString()}`, 576, 66, { align: 'right' })
 
-    y += 24
+    let y = 118
     doc.setDrawColor(...NAVY)
-    doc.setLineWidth(1.2)
-    doc.line(margin, y, pageW - margin, y)
-    y += 30
+    doc.setLineWidth(1)
+    doc.line(36, y, 576, y)
+    y += 24
 
-    const sectionBar = (title) => {
+    // ---- Section bar helper ----
+    const sectionBar = (label) => {
         doc.setFillColor(...NAVY)
-        doc.rect(margin, y - 14, pageW - margin * 2, 20, 'F')
+        doc.rect(36, y - 13, 540, 20, 'F')
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(10)
         doc.setTextColor(255, 255, 255)
-        doc.text(title, margin + 8, y)
-        y += 26
+        doc.text(label, 41, y + 1)
+        y += 28
     }
 
-    const field = (label, value, widthFraction = 1, xOffset = 0) => {
-        const usableWidth = pageW - margin * 2
-        const x = margin + xOffset * usableWidth
+    // ---- Field: label above, value below, generous spacing ----
+    const field = (label, value, x, colWidth) => {
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(7.5)
-        doc.setTextColor(130, 130, 130)
+        doc.setTextColor(...GRAY_LABEL)
         doc.text(label.toUpperCase(), x, y)
+
         doc.setFont('helvetica', 'normal')
-        doc.setFontSize(10.5)
-        doc.setTextColor(20, 20, 20)
+        doc.setFontSize(10)
+        doc.setTextColor(...BLACK)
         const text = value && value.trim() ? value : '—'
-        const lines = doc.splitTextToSize(text, usableWidth * widthFraction - 10)
-        doc.text(lines, x, y + 13)
-        return lines.length
+        const fitted = doc.splitTextToSize(text, colWidth)
+        doc.text(fitted, x, y + 13)
+        return fitted.length
     }
 
-    const rowGap = 40
+    const rowGap = 38
 
+    // ===== CUSTOMER =====
     sectionBar('CUSTOMER')
-    field('Name', a.name, 0.4)
-    field('Best Phone', a.bestPhone, 0.3, 0.4)
-    field('Alt Phone', a.altPhone, 0.3, 0.7)
+    field('Name', a.name, 36, 220)
+    field('Best Phone', a.bestPhone, 264, 150)
+    field('Alt Phone', a.altPhone, 422, 154)
     y += rowGap
-    field('Service Address', a.serviceAddress, 0.6)
-    field('Well / Municipal', a.wellOrMunicipal, 0.4, 0.6)
-    y += rowGap
-    field('Billing Address (if different)', a.billingAddress, 0.6)
-    field('Email', a.email, 0.4, 0.6)
-    y += rowGap + 10
 
+    field('Service Address', a.serviceAddress, 36, 350)
+    field('Well / Municipal', a.wellOrMunicipal, 394, 182)
+    y += rowGap
+
+    field('Billing Address (if different)', a.billingAddress, 36, 350)
+    field('Email', a.email, 394, 182)
+    y += rowGap + 8
+
+    // ===== SITE ACCESS & CAUTIONS =====
     sectionBar('SITE ACCESS & CAUTIONS')
-    field('Gate Code / Key / Entry', a.gateCodeKeyEntry, 0.34)
-    field('Dog?', a.dog, 0.16, 0.34)
-    field('Main Shutoff Location', a.mainShutoffLocation, 0.5, 0.5)
+    field('Gate Code / Key / Entry', a.gateCodeKeyEntry, 36, 220)
+    field('Dog?', a.dog, 264, 100)
+    field('Main Shutoff Location', a.mainShutoffLocation, 372, 204)
     y += rowGap
-    field('Notes (parking, stairs, tenant, best time to call)', a.notes, 1)
-    y += rowGap + 10
 
-    doc.setFont('helvetica', 'italic')
-    doc.setFontSize(8.5)
-    doc.setTextColor(150, 150, 150)
-    doc.text(
-        'Equipment details, service history, and water test results are added during site visits.',
-        margin,
-        y
-    )
+    field('Notes (parking, stairs, tenant, best time to call)', a.notes, 36, 540)
+    y += rowGap + 8
+
+    // ===== EQUIPMENT AT A GLANCE (matches template's exact grid — empty, filled at site visits) =====
+    sectionBar('EQUIPMENT AT A GLANCE')
+    const equipTop = y - 13
+    doc.setFillColor(245, 245, 245)
+    doc.rect(36, equipTop, 540, 15, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7.5)
+    doc.setTextColor(...GRAY_LABEL)
+    doc.text('TYPE', 41, y - 2)
+    doc.text('MAKE / MODEL', 161, y - 2)
+    doc.text('LOCATION IN HOME', 331, y - 2)
+    doc.text('INSTALLED', 481, y - 2)
+
+    doc.setDrawColor(...GRAY_LINE)
+    doc.setLineWidth(0.5)
+    const equipRowH = 22
+    const equipBottom = equipTop + 15 + equipRowH * 4
+    for (let i = 0; i <= 4; i++) {
+        const ry = equipTop + 15 + equipRowH * i
+        doc.line(36, ry, 576, ry)
+    }
+    ;[36, 156, 326, 476, 576].forEach((cx) => doc.line(cx, equipTop, cx, equipBottom))
+    y = equipBottom + 24
+
+    // ===== SERVICE HISTORY =====
+    sectionBar('SERVICE HISTORY')
+    const histTop = y - 13
+    doc.setFillColor(245, 245, 245)
+    doc.rect(36, histTop, 540, 15, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7.5)
+    doc.setTextColor(...GRAY_LABEL)
+    doc.text('DATE', 41, y - 2)
+    doc.text('TECH', 116, y - 2)
+    doc.text('WORK PERFORMED / PARTS USED', 201, y - 2)
+    doc.text('INVOICE #', 496, y - 2)
+
+    const histRowH = 22
+    const histRows = 6
+    const histBottom = histTop + 15 + histRowH * histRows
+    for (let i = 0; i <= histRows; i++) {
+        const ry = histTop + 15 + histRowH * i
+        doc.line(36, ry, 576, ry)
+    }
+    ;[36, 111, 196, 491, 576].forEach((cx) => doc.line(cx, histTop, cx, histBottom))
 
     const safeName = (a.name || 'customer').replace(/[^a-z0-9]+/gi, '-').toLowerCase()
+
+    // ===== PAGE 2: Equipment Record — Serials & Warranty (blank, pen-fill on site) =====
+    doc.addPage()
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(14)
+    doc.setTextColor(...NAVY)
+    doc.text('Equipment Record — Serials & Warranty', 36, 46)
+
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(10)
+    doc.setTextColor(...GRAY_LABEL)
+    doc.text(`Customer: ${a.name || ''}`, 36, 64)
+
+    doc.setFontSize(9)
+    doc.text(`File No. ____________`, 576, 55, { align: 'right' })
+
+    const unitBar = (label, top) => {
+        doc.setFillColor(...NAVY)
+        doc.rect(36, top, 540, 15.5, 'F')
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(9.5)
+        doc.setTextColor(255, 255, 255)
+        doc.text(label, 41, top + 11)
+    }
+
+    const unitSubrow = (topY, labels) => {
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(6.5)
+        doc.setTextColor(...GRAY_LABEL)
+        labels.forEach(([text, x]) => doc.text(text, x, topY))
+        doc.setDrawColor(...GRAY_LINE)
+        doc.setLineWidth(0.5)
+        doc.line(36, topY + 4.5, 576, topY + 4.5)
+    }
+
+    unitBar('UNIT 1', 102.7)
+    unitSubrow(126.5, [['EQUIPMENT TYPE', 38.1], ['MAKE', 218.1], ['MODEL', 398.1]])
+    unitSubrow(138.6, [['SERIAL NUMBER', 38.1], ['INSTALL DATE', 218.1], ['INSTALLED BY', 353.1], ['WARRANTY EXPIRES', 488.1]])
+    unitSubrow(150.8, [['FILTER / CARTRIDGE PART NO.', 38.1], ['SIZE', 218.1], ['REPLACE EVERY', 353.1], ['LAST CHANGED', 488.1]])
+
+    unitBar('UNIT 2', 175.5)
+    unitSubrow(199.2, [['EQUIPMENT TYPE', 38.1], ['MAKE', 218.1], ['MODEL', 398.1]])
+    unitSubrow(211.4, [['SERIAL NUMBER', 38.1], ['INSTALL DATE', 218.1], ['INSTALLED BY', 353.1], ['WARRANTY EXPIRES', 488.1]])
+    unitSubrow(223.5, [['FILTER / CARTRIDGE PART NO.', 38.1], ['SIZE', 218.1], ['REPLACE EVERY', 353.1], ['LAST CHANGED', 488.1]])
+
+    unitBar('UNIT 3', 248.2)
+    unitSubrow(272.0, [['EQUIPMENT TYPE', 38.1], ['MAKE', 218.1], ['MODEL', 398.1]])
+    unitSubrow(284.1, [['SERIAL NUMBER', 38.1], ['INSTALL DATE', 218.1], ['INSTALLED BY', 353.1], ['WARRANTY EXPIRES', 488.1]])
+    unitSubrow(296.3, [['FILTER / CARTRIDGE PART NO.', 38.1], ['SIZE', 218.1], ['REPLACE EVERY', 353.1], ['LAST CHANGED', 488.1]])
+
+    // Water Test Results
+    doc.setFillColor(...NAVY)
+    doc.rect(36, 321.0, 540, 15.5, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.setTextColor(255, 255, 255)
+    doc.text('WATER TEST RESULTS', 41, 332)
+
+    doc.setFillColor(245, 245, 245)
+    doc.rect(36, 336.6, 540, 14.6, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7.5)
+    doc.setTextColor(...GRAY_LABEL)
+    doc.text('DATE', 41, 346.3)
+    doc.text('HARDNESS', 121, 346.3)
+    doc.text('IRON', 196.1, 346.3)
+    doc.text('PH', 271.1, 346.3)
+    doc.text('TDS', 336.1, 346.3)
+    doc.text('NOTES', 401.1, 346.3)
+
+    doc.setDrawColor(...GRAY_LINE)
+    doc.setLineWidth(0.5)
+        ;[351.8, 373.8, 395.8, 417.8].forEach((yy) => doc.line(36, yy, 576, yy))
+        ;[36, 116, 191, 266, 331, 396, 576].forEach((xx) => doc.line(xx, 336.6, xx, 417.8))
+
+    // Consumables — Call-back Schedule
+    doc.setFillColor(...NAVY)
+    doc.rect(36, 438.5, 540, 15.5, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.setTextColor(255, 255, 255)
+    doc.text('CONSUMABLES — CALL-BACK SCHEDULE', 41, 449.5)
+
+    doc.setFillColor(245, 245, 245)
+    doc.rect(36, 454.1, 540, 14.8, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7.5)
+    doc.setTextColor(...GRAY_LABEL)
+    doc.text('ITEM / PART NO.', 41, 464)
+    doc.text('UNIT IT BELONGS TO', 201, 464)
+    doc.text('INTERVAL', 331, 464)
+    doc.text('LAST DONE', 416, 464)
+    doc.text('NEXT DUE', 501, 464)
+
+    const consumableRows = [469.4, 491.4, 513.4, 535.4, 557.4, 579.4, 601.4]
+    consumableRows.forEach((yy) => doc.line(36, yy, 576, yy))
+        ;[36, 196, 326, 411, 496, 576].forEach((xx) => doc.line(xx, 454.1, xx, 601.9))
+
+    // Notes
+    doc.setFillColor(...NAVY)
+    doc.rect(36, 622.1, 540, 15.5, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.setTextColor(255, 255, 255)
+    doc.text('NOTES', 41, 633)
+
+    doc.setFillColor(245, 245, 245)
+    doc.rect(36, 637.7, 540, 14.7, 'F')
+    const notesRows = [652.9, 675.6, 698.3, 721.0]
+    notesRows.forEach((yy) => doc.line(36, yy, 576, yy))
+
     doc.save(`customer-profile-${safeName}.pdf`)
+}
+
+function loadImageAsDataUrl(url) {
+    return new Promise((resolve) => {
+        fetch(url)
+            .then((res) => res.blob())
+            .then((blob) => {
+                const reader = new FileReader()
+                reader.onloadend = () => resolve(reader.result)
+                reader.onerror = () => resolve(null)
+                reader.readAsDataURL(blob)
+            })
+            .catch(() => resolve(null))
+    })
 }

@@ -1,4 +1,10 @@
 {
+    "rewrites": [
+        {
+            "source": "/invoice",
+            "destination": "/invoice.html"
+        }
+    ],
     "headers": [
         {
             "source": "/(.*)",

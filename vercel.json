@@ -3,6 +3,10 @@
         {
             "source": "/invoice",
             "destination": "/invoice.html"
+        },
+        {
+            "source": "/desktop",
+            "destination": "/desktop.html"
         }
     ],
     "headers": [

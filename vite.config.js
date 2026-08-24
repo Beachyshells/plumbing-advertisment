@@ -13,6 +13,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         invoice: resolve(__dirname, 'invoice.html'),
+        desktop: resolve(__dirname, 'desktop.html'),
+
       },
     },
   },

@@ -110,7 +110,7 @@ export async function syncPendingData() {
     const pendingCustomers = await getPendingCustomers()
     for (const pending of pendingCustomers) {
         try {
-            const res = await fetch('/api/submit-customer-profile', {
+            const res = await fetch('/api/customers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(pending.payload),
@@ -133,7 +133,7 @@ export async function syncPendingData() {
             payload.customerId = realId
         }
         try {
-            const res = await fetch('/api/submit-customer-invoice', {
+            const res = await fetch('/api/invoices', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

@@ -21,7 +21,7 @@ export default function Desktop() {
     useEffect(() => {
         const addJobFor = new URLSearchParams(window.location.search).get('addJobFor')
         if (!addJobFor) return
-        fetch(`/api/fetch-customer?id=${encodeURIComponent(addJobFor)}`)
+        fetch(`/api/customers?id=${encodeURIComponent(addJobFor)}`)
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
                 if (data?.customer) {
@@ -122,14 +122,14 @@ function CustomersView({ onBack, onAddJob }) {
             setSelected(null)
             return
         }
-        fetch(`/api/fetch-customer?id=${encodeURIComponent(selectedId)}`)
+        fetch(`/api/customers?id=${encodeURIComponent(selectedId)}`)
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => setSelected(data?.customer || null))
             .catch(() => setSelected(null))
     }, [selectedId])
 
     useEffect(() => {
-        fetch('/api/get-customers')
+        fetch('/api/customers')
             .then((res) => {
                 if (!res.ok) throw new Error('Failed to load')
                 return res.json()
@@ -140,7 +140,7 @@ function CustomersView({ onBack, onAddJob }) {
             })
             .catch(() => setStatus('error'))
 
-        fetch('/api/get-properties')
+        fetch('/api/properties')
             .then((res) => (res.ok ? res.json() : { properties: [] }))
             .then((data) => setProperties(data.properties || []))
             .catch(() => { })
@@ -286,7 +286,7 @@ function CustomerCard({ customer, onBack, onAddJob }) {
 
     function fetchInvoices() {
         setInvoiceStatus('loading')
-        fetch(`/api/get-customer-invoices?customerId=${encodeURIComponent(customer._id)}`)
+        fetch(`/api/invoices?customerId=${encodeURIComponent(customer._id)}`)
             .then((res) => {
                 if (!res.ok) throw new Error('Failed to load')
                 return res.json()
@@ -454,7 +454,7 @@ function PropertyDetail({ property: initialProperty, onBack }) {
         }
         setSaveStatus('saving')
         try {
-            const res = await fetch('/api/update-property', {
+            const res = await fetch('/api/properties', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -485,7 +485,7 @@ function PropertyDetail({ property: initialProperty, onBack }) {
 
     function fetchInvoices() {
         setStatus('loading')
-        fetch(`/api/get-property-invoices?propertyId=${encodeURIComponent(property._id)}`)
+        fetch(`/api/invoices?propertyId=${encodeURIComponent(property._id)}`)
             .then((res) => {
                 if (!res.ok) throw new Error('Failed to load')
                 return res.json()
@@ -670,7 +670,7 @@ function InvoicesView({ onBack }) {
     const [selected, setSelected] = useState(null)
 
     function fetchInvoices() {
-        fetch('/api/get-invoices')
+        fetch('/api/invoices')
             .then((res) => {
                 if (!res.ok) throw new Error('Failed to load')
                 return res.json()
@@ -824,10 +824,10 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     async function handleApplyCredit() {
         setStatus('saving')
         try {
-            const res = await fetch('/api/apply-credit', {
-                method: 'POST',
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ invoiceId: invoice._id }),
+                body: JSON.stringify({ action: 'credit', invoiceId: invoice._id }),
             })
             if (!res.ok) throw new Error('Failed')
             const data = await res.json()
@@ -848,8 +848,8 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         setEditStatus('loading')
         try {
             const [invoiceRes, inventoryRes] = await Promise.all([
-                fetch(`/api/get-invoice?id=${invoice._id}`),
-                fetch('/api/fetch-inventory'),
+                fetch(`/api/invoices?id=${invoice._id}`),
+                fetch('/api/inventory'),
             ])
             const { invoice: fullInvoice } = await invoiceRes.json()
             const { items } = await inventoryRes.json()
@@ -943,10 +943,11 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     async function handleSaveEdit() {
         setEditStatus('saving')
         try {
-            const res = await fetch('/api/update-invoice', {
+            const res = await fetch('/api/invoices', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    action: 'update',
                     invoiceId: invoice._id,
                     serviceDate: editData.serviceDate,
                     workPerformed: editData.workPerformed,
@@ -991,10 +992,10 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         }
         setStatus('saving')
         try {
-            const res = await fetch('/api/record-payment', {
-                method: 'POST',
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ invoiceId: invoice._id, amount: numericAmount, method, date, note, checkNumber, signee }),
+                body: JSON.stringify({ action: 'payment', invoiceId: invoice._id, amount: numericAmount, method, date, note, checkNumber, signee }),
             })
             if (!res.ok) throw new Error('Failed')
             const data = await res.json()

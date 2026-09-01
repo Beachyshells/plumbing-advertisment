@@ -49,7 +49,7 @@ export default function IntakeWizard() {
 
     useEffect(() => {
         if (stage !== 'property-search') return
-        fetch('/api/get-properties')
+        fetch('/api/properties')
             .then((res) => (res.ok ? res.json() : { properties: [] }))
             .then(({ properties: list }) => setProperties(list || []))
             .catch(() => { })
@@ -62,7 +62,7 @@ export default function IntakeWizard() {
         if (!editId) return
 
         setLoadingExisting(true)
-        fetch(`/api/fetch-customer?id=${encodeURIComponent(editId)}`)
+        fetch(`/api/customers?id=${encodeURIComponent(editId)}`)
             .then((res) => {
                 if (!res.ok) throw new Error('Load failed')
                 return res.json()
@@ -214,7 +214,7 @@ export default function IntakeWizard() {
             let propertyId = selectedPropertyId
 
             if (!propertyId) {
-                const propRes = await fetch('/api/submit-property', {
+                const propRes = await fetch('/api/properties', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -230,7 +230,7 @@ export default function IntakeWizard() {
             }
 
             const payload = { ...customer, propertyId, id: existingCustomerId || undefined }
-            const res = await fetch('/api/submit-customer-profile', {
+            const res = await fetch('/api/customers', {
                 method: existingCustomerId ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

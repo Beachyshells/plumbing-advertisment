@@ -73,8 +73,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         try {
             await syncPendingData()
             const [customersRes, inventoryRes] = await Promise.all([
-                fetch('/api/get-customers'),
-                fetch('/api/fetch-inventory'),
+                fetch('/api/customers'), fetch('/api/inventory'),
             ])
             if (customersRes.ok) {
                 const { customers: freshCustomers } = await customersRes.json()
@@ -123,7 +122,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         setSaveMessage('')
 
         try {
-            const propRes = await fetch('/api/submit-property', {
+            const propRes = await fetch('/api/properties', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -133,7 +132,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
             if (!propRes.ok) throw new Error('Property save failed')
             const { id: propertyId } = await propRes.json()
 
-            const res = await fetch('/api/submit-customer-profile', {
+            const res = await fetch('/api/customers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -229,7 +228,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
 
         if (canSaveLive) {
             try {
-                const res = await fetch('/api/submit-customer-invoice', {
+                const res = await fetch('/api/invoices', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),

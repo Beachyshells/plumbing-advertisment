@@ -15,14 +15,20 @@ export default async function handler(req, res) {
 
     try {
         const customers = await client.fetch(
-            `*[_type == "customerProfile"] | order(createdAt desc){
+            `*[_type == "customerProfile"] | order(lastName asc){
                 _id,
-                name,
+                firstName,
+                lastName,
                 bestPhone,
-                serviceAddress,
-                wellOrMunicipal,
+                billingAddress,
                 email,
-                createdAt
+                status,
+                createdAt,
+                               creditBalance,
+                "property": property->{
+                    _id,
+                    address
+                }
             }`
         )
         return res.status(200).json({ customers })

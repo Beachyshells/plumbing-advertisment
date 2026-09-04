@@ -18,19 +18,30 @@ export default function Desktop() {
     const [view, setView] = useState('hub') // hub | customers | service-call | invoices
     const [invoiceCustomer, setInvoiceCustomer] = useState(null) // pre-selected customer when "Add Job" is used
 
+    const [viewCustomerId, setViewCustomerId] = useState(null)
+
     useEffect(() => {
-        const addJobFor = new URLSearchParams(window.location.search).get('addJobFor')
-        if (!addJobFor) return
-        fetch(`/api/customers?id=${encodeURIComponent(addJobFor)}`)
-            .then((res) => (res.ok ? res.json() : null))
-            .then((data) => {
-                if (data?.customer) {
-                    const fullName = `${data.customer.firstName || ''} ${data.customer.lastName || ''}`.trim()
-                    setInvoiceCustomer({ id: data.customer._id, name: fullName, propertyId: data.customer.property?._id })
-                    setView('service-call')
-                }
-            })
-            .catch(() => { })
+        const params = new URLSearchParams(window.location.search)
+        const addJobFor = params.get('addJobFor')
+        const viewCustomer = params.get('viewCustomer')
+
+        if (addJobFor) {
+            fetch(`/api/customers?id=${encodeURIComponent(addJobFor)}`)
+                .then((res) => (res.ok ? res.json() : null))
+                .then((data) => {
+                    if (data?.customer) {
+                        const fullName = `${data.customer.firstName || ''} ${data.customer.lastName || ''}`.trim()
+                        setInvoiceCustomer({ id: data.customer._id, name: fullName, propertyId: data.customer.property?._id })
+                        setView('service-call')
+                    }
+                })
+                .catch(() => { })
+        }
+
+        if (viewCustomer) {
+            setViewCustomerId(viewCustomer)
+            setView('customers')
+        }
     }, [])
 
     function goToAddJob(customer) {
@@ -45,7 +56,7 @@ export default function Desktop() {
     }
 
     if (view === 'customers') {
-        return <CustomersView onBack={backToHub} onAddJob={goToAddJob} />
+        return <CustomersView onBack={backToHub} onAddJob={goToAddJob} initialSelectedId={viewCustomerId} />
     }
 
     if (view === 'service-call') {
@@ -107,12 +118,12 @@ function Tile({ title, subtitle, onClick, disabled }) {
     )
 }
 
-function CustomersView({ onBack, onAddJob }) {
+function CustomersView({ onBack, onAddJob, initialSelectedId }) {
     const [customers, setCustomers] = useState([])
     const [properties, setProperties] = useState([])
     const [status, setStatus] = useState('loading') // loading | ready | error
     const [search, setSearch] = useState('')
-    const [selectedId, setSelectedId] = useState(null)
+    const [selectedId, setSelectedId] = useState(initialSelectedId || null)
     const [selected, setSelected] = useState(null)
     const [selectedProperty, setSelectedProperty] = useState(null)
     const [searchMode, setSearchMode] = useState('name') // name | address

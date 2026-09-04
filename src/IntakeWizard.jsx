@@ -522,25 +522,37 @@ export default function IntakeWizard() {
                         <p className="text-brand-green text-4xl mb-4">✓</p>
                         <p className="text-white text-xl font-serif mb-2">{existingCustomerId ? 'Customer updated' : 'Customer saved'}</p>
                         <p className="text-white/50 text-sm mb-6">{customer.firstName || 'This customer'}'s profile PDF has been downloaded, and the record is saved.</p>
+                        <a
+                            href={`/desktop?viewCustomer=${savedCustomerId}`}
+                            className="block w-full text-center bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-3"
+                        >
+                            View Customer Profile
+                        </a>
+
+                        <a
+                            href={`/desktop?addJobFor=${savedCustomerId}`}
+                            className="block w-full text-center bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-3"
+                        >
+                            + Add Job
+                        </a>
                         <button
                             onClick={() => generatePdf(customer, propertyDisplay)}
                             className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-3"
                         >
                             Print Profile (PDF)
                         </button>
-                        <a
-                            href={`/desktop?addJobFor=${savedCustomerId}`}
-                            className="block w-full text-center bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-3"
-                        >
-                            + Add Job
-                        </a>
-                        <button onClick={startOver} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]">
+                        <button onClick={startOver} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-3">
                             + Add Another Customer
                         </button>
+                        <a
+                            href="/desktop" className="block text-white/40 hover:text-white/70 text-sm py-2 transition-colors">
+                            ← Back to Desktop
+                        </a>
                     </div>
-                )}
+                )
+                }
             </div>
-        </div>
+        </div >
     )
 }
 

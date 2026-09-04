@@ -21,6 +21,16 @@ function cleanText(value, maxLength = 1000) {
     return value.slice(0, maxLength)
 }
 
+function titleCase(value) {
+    if (typeof value !== 'string') return ''
+    return value
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : word))
+        .join(' ')
+}
+
 export default async function handler(req, res) {
     if (req.method === 'GET') {
         try {
@@ -47,53 +57,58 @@ export default async function handler(req, res) {
         const city = titleCase(cleanText(address.city))
         const state = cleanText(address.state).toUpperCase()
         const zip = cleanText(address.zip)
+
         if (!street || !city || !state) {
             return res.status(400).json({ error: 'Street, city, and state are required' })
         }
+
         try {
-            wellOrMunicipal: cleanText(body.wellOrMunicipal),
-                gateCodeKeyEntry: cleanText(body.gateCodeKeyEntry),
-                    mainShutoffLocation: cleanText(body.mainShutoffLocation),
-                        notes: cleanText(body.notes),
-                            createdAt: new Date().toISOString(),
-            })
-        return res.status(200).json({ success: true, id: created._id })
-    } catch (err) {
-        console.error('Failed to create property:', err)
-        return res.status(500).json({ error: 'Could not save property' })
-    }
-}
-
-if (req.method === 'PATCH') {
-    const body = req.body || {}
-    const propertyId = body.propertyId
-    const address = body.address || {}
-    const street = cleanText(address.street)
-    const city = cleanText(address.city)
-    const state = cleanText(address.state)
-    const zip = cleanText(address.zip)
-
-    if (!propertyId || !street || !city || !state) {
-        return res.status(400).json({ error: 'Property id, street, city, and state are required' })
-    }
-
-    try {
-        await writeClient
-            .patch(propertyId)
-            .set({
+            const created = await writeClient.create({
+                _type: 'property',
                 address: { street, city, state, zip },
                 wellOrMunicipal: cleanText(body.wellOrMunicipal),
                 gateCodeKeyEntry: cleanText(body.gateCodeKeyEntry),
                 mainShutoffLocation: cleanText(body.mainShutoffLocation),
                 notes: cleanText(body.notes),
+                createdAt: new Date().toISOString(),
             })
-            .commit()
-        return res.status(200).json({ success: true })
-    } catch (err) {
-        console.error('Failed to update property:', err)
-        return res.status(500).json({ error: 'Could not update property' })
+            return res.status(200).json({ success: true, id: created._id })
+        } catch (err) {
+            console.error('Failed to create property:', err)
+            return res.status(500).json({ error: 'Could not save property' })
+        }
     }
-}
 
-return res.status(405).json({ error: 'Method not allowed' })
+    if (req.method === 'PATCH') {
+        const body = req.body || {}
+        const propertyId = body.propertyId
+        const address = body.address || {}
+        const street = titleCase(cleanText(address.street))
+        const city = titleCase(cleanText(address.city))
+        const state = cleanText(address.state).toUpperCase()
+        const zip = cleanText(address.zip)
+
+        if (!propertyId || !street || !city || !state) {
+            return res.status(400).json({ error: 'Property id, street, city, and state are required' })
+        }
+
+        try {
+            await writeClient
+                .patch(propertyId)
+                .set({
+                    address: { street, city, state, zip },
+                    wellOrMunicipal: cleanText(body.wellOrMunicipal),
+                    gateCodeKeyEntry: cleanText(body.gateCodeKeyEntry),
+                    mainShutoffLocation: cleanText(body.mainShutoffLocation),
+                    notes: cleanText(body.notes),
+                })
+                .commit()
+            return res.status(200).json({ success: true })
+        } catch (err) {
+            console.error('Failed to update property:', err)
+            return res.status(500).json({ error: 'Could not update property' })
+        }
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' })
 }

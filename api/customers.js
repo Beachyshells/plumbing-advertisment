@@ -18,10 +18,22 @@ const writeClient = createClient({
 
 const MAX_LENGTH = 1000
 
-function cleanText(value) {
+function cleanText(value, maxLength = 1000) {
     if (typeof value !== 'string') return ''
-    return value.slice(0, MAX_LENGTH)
+    return value.slice(0, maxLength)
 }
+
+function titleCase(value) {
+    if (typeof value !== 'string') return ''
+    return value
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : word))
+        .join(' ')
+}
+
+
 
 function cleanAddress(value) {
     if (!value || typeof value !== 'object') return undefined
@@ -103,8 +115,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST' || req.method === 'PATCH') {
         const body = req.body || {}
-        const firstName = cleanText(body.firstName)
-        const lastName = cleanText(body.lastName)
+        const firstName = titleCase(cleanText(body.firstName))
+        const lastName = titleCase(cleanText(body.lastName))
         const bestPhone = cleanText(body.bestPhone)
         const propertyId = body.propertyId
 

@@ -43,62 +43,57 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         const body = req.body || {}
         const address = body.address || {}
-        const street = cleanText(address.street)
-        const city = cleanText(address.city)
-        const state = cleanText(address.state)
+        const street = titleCase(cleanText(address.street))
+        const city = titleCase(cleanText(address.city))
+        const state = cleanText(address.state).toUpperCase()
         const zip = cleanText(address.zip)
-
         if (!street || !city || !state) {
             return res.status(400).json({ error: 'Street, city, and state are required' })
         }
-
         try {
-            const created = await writeClient.create({
-                _type: 'property',
+            wellOrMunicipal: cleanText(body.wellOrMunicipal),
+                gateCodeKeyEntry: cleanText(body.gateCodeKeyEntry),
+                    mainShutoffLocation: cleanText(body.mainShutoffLocation),
+                        notes: cleanText(body.notes),
+                            createdAt: new Date().toISOString(),
+            })
+        return res.status(200).json({ success: true, id: created._id })
+    } catch (err) {
+        console.error('Failed to create property:', err)
+        return res.status(500).json({ error: 'Could not save property' })
+    }
+}
+
+if (req.method === 'PATCH') {
+    const body = req.body || {}
+    const propertyId = body.propertyId
+    const address = body.address || {}
+    const street = cleanText(address.street)
+    const city = cleanText(address.city)
+    const state = cleanText(address.state)
+    const zip = cleanText(address.zip)
+
+    if (!propertyId || !street || !city || !state) {
+        return res.status(400).json({ error: 'Property id, street, city, and state are required' })
+    }
+
+    try {
+        await writeClient
+            .patch(propertyId)
+            .set({
                 address: { street, city, state, zip },
                 wellOrMunicipal: cleanText(body.wellOrMunicipal),
                 gateCodeKeyEntry: cleanText(body.gateCodeKeyEntry),
                 mainShutoffLocation: cleanText(body.mainShutoffLocation),
                 notes: cleanText(body.notes),
-                createdAt: new Date().toISOString(),
             })
-            return res.status(200).json({ success: true, id: created._id })
-        } catch (err) {
-            console.error('Failed to create property:', err)
-            return res.status(500).json({ error: 'Could not save property' })
-        }
+            .commit()
+        return res.status(200).json({ success: true })
+    } catch (err) {
+        console.error('Failed to update property:', err)
+        return res.status(500).json({ error: 'Could not update property' })
     }
+}
 
-    if (req.method === 'PATCH') {
-        const body = req.body || {}
-        const propertyId = body.propertyId
-        const address = body.address || {}
-        const street = cleanText(address.street)
-        const city = cleanText(address.city)
-        const state = cleanText(address.state)
-        const zip = cleanText(address.zip)
-
-        if (!propertyId || !street || !city || !state) {
-            return res.status(400).json({ error: 'Property id, street, city, and state are required' })
-        }
-
-        try {
-            await writeClient
-                .patch(propertyId)
-                .set({
-                    address: { street, city, state, zip },
-                    wellOrMunicipal: cleanText(body.wellOrMunicipal),
-                    gateCodeKeyEntry: cleanText(body.gateCodeKeyEntry),
-                    mainShutoffLocation: cleanText(body.mainShutoffLocation),
-                    notes: cleanText(body.notes),
-                })
-                .commit()
-            return res.status(200).json({ success: true })
-        } catch (err) {
-            console.error('Failed to update property:', err)
-            return res.status(500).json({ error: 'Could not update property' })
-        }
-    }
-
-    return res.status(405).json({ error: 'Method not allowed' })
+return res.status(405).json({ error: 'Method not allowed' })
 }

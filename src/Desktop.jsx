@@ -23,7 +23,8 @@ export default function Desktop() {
 
     useEffect(() => {
         if (navigator.onLine) syncPendingEmails()
-        const params = new URLSearchParams(window.location.search)        const addJobFor = params.get('addJobFor')
+        const params = new URLSearchParams(window.location.search)
+        const addJobFor = params.get('addJobFor')
         const viewCustomer = params.get('viewCustomer')
 
         if (addJobFor) {

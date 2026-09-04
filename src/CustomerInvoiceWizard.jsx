@@ -9,6 +9,8 @@ import {
     syncPendingData,
     countPendingItems,
 } from './offlineQueue'
+import { generateInvoicePdf } from './invoicePdf.js'
+
 
 const EMPTY_NEW_CUSTOMER = { firstName: '', lastName: '', bestPhone: '' }
 
@@ -55,6 +57,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
 
     const [saveMessage, setSaveMessage] = useState('')
     const [status, setStatus] = useState('idle') // idle | saving | error
+    const [savedInvoiceId, setSavedInvoiceId] = useState(null)
 
     // Load cached data immediately (works offline), then refresh from the
     // server whenever we're online, and try to flush anything queued.
@@ -274,6 +277,8 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                     body: JSON.stringify(payload),
                 })
                 if (!res.ok) throw new Error('Save failed')
+                const savedData = await res.json()
+                setSavedInvoiceId(savedData.id)
                 setStatus('idle')
                 setStage('done')
                 setSaveMessage('Invoice saved.')
@@ -722,6 +727,29 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         <p className="text-brand-green text-4xl mb-4">✓</p>
                         <p className="text-white text-xl font-serif mb-2">Invoice saved</p>
                         <p className="text-white/50 text-sm mb-6">{saveMessage}</p>
+                        {(
+                            <button
+                                onClick={() => {
+                                    generateInvoicePdf({
+                                        invoiceNumber: null,
+                                        serviceDate,
+                                        customerName: selectedCustomer?.name,
+                                        workPerformed,
+                                        totalAmount,
+                                        laborCost: Number(laborCost) || 0,
+                                        payments: [],
+                                        lineItems: lineItems.map((li) =>
+                                            li.itemType === 'misc'
+                                                ? { itemType: 'misc', miscName: li.miscName, miscSellPrice: li.miscSellPrice }
+                                                : { itemType: 'catalog', inventoryItemName: li.name, inventoryItemPrice: li.unitPrice, quantity: li.quantity }
+                                        ),
+                                    })
+                                }}
+                                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-3"
+                            >
+                                Print Invoice (PDF)
+                            </button>
+                        )}
                         <button
                             onClick={startOver}
                             className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"

@@ -2,15 +2,17 @@
 // Keeps a local copy of customers + inventory so Michael can search them
 // with no signal, and queues any customer/invoice he saves while offline
 // so it uploads automatically the next time the phone has a connection.
+import emailjs from '@emailjs/browser'
 
 const DATABASE_NAME = 'adk-offline-store'
-const DATABASE_VERSION = 1
+const DATABASE_VERSION = 2
 
 const STORE_NAMES = {
     cachedCustomers: 'cachedCustomers',
     cachedInventory: 'cachedInventory',
     pendingCustomers: 'pendingCustomers',
     pendingInvoices: 'pendingInvoices',
+    pendingEmails: 'pendingEmails',
 }
 
 function openDatabase() {
@@ -30,6 +32,9 @@ function openDatabase() {
             }
             if (!db.objectStoreNames.contains(STORE_NAMES.pendingInvoices)) {
                 db.createObjectStore(STORE_NAMES.pendingInvoices, { keyPath: 'localId', autoIncrement: true })
+            }
+            if (!db.objectStoreNames.contains(STORE_NAMES.pendingEmails)) {
+                db.createObjectStore(STORE_NAMES.pendingEmails, { keyPath: 'localId', autoIncrement: true })
             }
         }
 
@@ -95,6 +100,22 @@ export const queuePendingInvoice = (payload) => addToStore(STORE_NAMES.pendingIn
 export const getPendingInvoices = () => getAllFromStore(STORE_NAMES.pendingInvoices)
 export const removePendingInvoice = (localId) => deleteFromStore(STORE_NAMES.pendingInvoices, localId)
 
+export const queuePendingEmail = (payload) => addToStore(STORE_NAMES.pendingEmails, { payload })
+export const getPendingEmails = () => getAllFromStore(STORE_NAMES.pendingEmails)
+export const removePendingEmail = (localId) => deleteFromStore(STORE_NAMES.pendingEmails, localId)
+
+export async function syncPendingEmails() {
+    const pending = await getPendingEmails()
+    for (const item of pending) {
+        try {
+            await emailjs.send('ADK_SERVICES', 'template_7w7ntzo', item.payload, '7derGOKaoYJKZFxce')
+            await removePendingEmail(item.localId)
+        } catch (err) {
+            console.error('Sync failed for a pending email, will retry later:', err)
+        }
+    }
+}
+
 export async function countPendingItems() {
     const [customers, invoices] = await Promise.all([getPendingCustomers(), getPendingInvoices()])
     return customers.length + invoices.length
@@ -105,6 +126,7 @@ export async function countPendingItems() {
 // temporary "local-..." id until the real customer exists in Sanity, so
 // that swap has to happen before the invoice can go out for real.
 export async function syncPendingData() {
+    await syncPendingEmails()
     const localIdToRealId = {}
 
     const pendingCustomers = await getPendingCustomers()

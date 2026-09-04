@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import emailjs from '@emailjs/browser'
 import CustomerInvoiceWizard from './CustomerInvoiceWizard.jsx'
+import { generateInvoicePdf } from './invoicePdf.js'
+import { queuePendingEmail, syncPendingEmails } from './offlineQueue.js'
 
-// Same approach as the intake wizard — turns { street, city, state, zip }
-// into one display/search-friendly line, so every place that used to treat
-// serviceAddress as a plain string still works now that it's an object.
+
 function formatAddress(address) {
     if (!address || typeof address !== 'object') return ''
     const cityStateZip = [address.city, address.state].filter(Boolean).join(', ')
@@ -21,8 +22,8 @@ export default function Desktop() {
     const [viewCustomerId, setViewCustomerId] = useState(null)
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search)
-        const addJobFor = params.get('addJobFor')
+        if (navigator.onLine) syncPendingEmails()
+        const params = new URLSearchParams(window.location.search)        const addJobFor = params.get('addJobFor')
         const viewCustomer = params.get('viewCustomer')
 
         if (addJobFor) {
@@ -673,6 +674,8 @@ function Field({ label, value }) {
         </div>
     )
 }
+
+
 // ---- Invoices: browsable list + unpaid/partial summary + detail view ----
 function InvoicesView({ onBack }) {
     const [invoices, setInvoices] = useState([])
@@ -819,7 +822,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [checkNumber, setCheckNumber] = useState('')
     const [signee, setSignee] = useState('')
     const [status, setStatus] = useState('idle') // idle | saving | error
-
+    const [emailStatus, setEmailStatus] = useState('idle') // idle | sending | sent | queued | no-email | error
     const [editGate, setEditGate] = useState('none') // none | confirming | editing
     const [confirmText, setConfirmText] = useState('')
     const [editData, setEditData] = useState(null)
@@ -987,6 +990,64 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         } catch (err) {
             console.error(err)
             setEditStatus('error')
+        }
+    }
+
+    async function handleEmailInvoice() {
+        setEmailStatus('sending')
+        try {
+            const res = await fetch(`/api/invoices?id=${invoice._id}`)
+            const { invoice: fullInvoice } = await res.json()
+
+            if (!fullInvoice.customerEmail) {
+                setEmailStatus('no-email')
+                return
+            }
+
+            const items = fullInvoice.lineItems || []
+            const partsTotal = items.reduce((sum, item) => {
+                const price = item.itemType === 'misc' ? item.miscSellPrice : (item.inventoryItemPrice || 0) * (item.quantity || 1)
+                return sum + (Number(price) || 0)
+            }, 0)
+            const totalPaid = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+
+            const templateParams = {
+                email: fullInvoice.customerEmail,
+                invoice_id: fullInvoice.invoiceNumber || '',
+                orders: items.map((item) => ({
+                    name: item.itemType === 'misc' ? item.miscName : item.inventoryItemName,
+                    units: item.itemType === 'misc' ? 1 : item.quantity || 1,
+                    price: (item.itemType === 'misc' ? item.miscSellPrice : (item.inventoryItemPrice || 0) * (item.quantity || 1)).toFixed(2),
+                })),
+                cost: {
+                    labor: (Number(fullInvoice.laborCost) || 0).toFixed(2),
+                    parts: partsTotal.toFixed(2),
+                    total: (Number(fullInvoice.totalAmount) || 0).toFixed(2),
+                    paid: totalPaid.toFixed(2),
+                    balance: Math.max((Number(fullInvoice.totalAmount) || 0) - totalPaid, 0).toFixed(2),
+                },
+            }
+
+            if (navigator.onLine) {
+                await emailjs.send('ADK_SERVICES', 'template_7w7ntzo', templateParams, '7derGOKaoYJKZFxce')
+                setEmailStatus('sent')
+            } else {
+                await queuePendingEmail(templateParams)
+                setEmailStatus('queued')
+            }
+        } catch (err) {
+            console.error(err)
+            setEmailStatus('error')
+        }
+    }
+
+    async function handlePrintInvoice() {
+        try {
+            const res = await fetch(`/api/invoices?id=${invoice._id}`)
+            const { invoice: fullInvoice } = await res.json()
+            generateInvoicePdf({ ...invoice, ...fullInvoice })
+        } catch (err) {
+            console.error(err)
         }
     }
 
@@ -1221,6 +1282,27 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                         </div>
                     </div>
                 )}
+
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                    <button
+                        onClick={handlePrintInvoice}
+                        className="bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+                    >
+                        Print Invoice (PDF)
+                    </button>
+                    <button
+                        onClick={handleEmailInvoice}
+                        disabled={emailStatus === 'sending'}
+                        className="bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
+                    >
+                        {emailStatus === 'sending' ? 'Sending...' : 'Email Invoice'}
+                    </button>
+                </div>
+                {emailStatus === 'sent' && <p className="text-brand-green text-xs text-center mb-6">Emailed to customer.</p>}
+                {emailStatus === 'queued' && <p className="text-accent text-xs text-center mb-6">Offline — will send once you're back online.</p>}
+                {emailStatus === 'no-email' && <p className="text-red-400 text-xs text-center mb-6">This customer has no email on file.</p>}
+                {emailStatus === 'error' && <p className="text-red-400 text-xs text-center mb-6">Something went wrong sending.</p>}
+                {!['sent', 'queued', 'no-email', 'error'].includes(emailStatus) && <div className="mb-6" />}
 
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 mb-6">
                     <Field label="Property Address" value={formatAddress(invoice.propertyAddress)} />

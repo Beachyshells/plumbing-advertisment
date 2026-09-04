@@ -58,7 +58,32 @@ function computeStatus(profile) {
 export default async function handler(req, res) {
     if (req.method === 'GET') {
         const id = req.query.id
+        const propertyId = req.query.propertyId
+        const search = req.query.search
         try {
+            if (search) {
+                const term = `*${search}*`
+                const matches = await readClient.fetch(
+                    `*[_type == "customerProfile" && (firstName match $term || lastName match $term)]{
+                        _id,
+                        firstName,
+                        lastName,
+                        bestPhone,
+                        "property": property->{ _id, address }
+                    }`,
+                    { term }
+                )
+                return res.status(200).json({ customers: matches })
+            }
+
+            if (propertyId) {
+                const customers = await readClient.fetch(
+                    `*[_type == "customerProfile" && property._ref == $propertyId]{ _id, firstName, lastName }`,
+                    { propertyId }
+                )
+                return res.status(200).json({ customers })
+            }
+
             if (id) {
                 const customer = await readClient.fetch(
                     `*[_type == "customerProfile" && _id == $id][0]{

@@ -10,10 +10,16 @@ import {
     countPendingItems,
 } from './offlineQueue'
 
-const EMPTY_NEW_CUSTOMER = { firstName: '', lastName: '', bestPhone: '', street: '', city: '', state: '' }
+const EMPTY_NEW_CUSTOMER = { firstName: '', lastName: '', bestPhone: '' }
 
 function formatMoney(amount) {
     return `$${Number(amount || 0).toFixed(2)}`
+}
+
+function formatAddress(address) {
+    if (!address || (!address.street && !address.city && !address.state && !address.zip)) return ''
+    const cityStateZip = [address.city, address.state].filter(Boolean).join(', ')
+    return [address.street, [cityStateZip, address.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')
 }
 
 export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
@@ -30,7 +36,9 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
             : null
     ) // { id, name, propertyId, isLocal }
     const [newCustomer, setNewCustomer] = useState(EMPTY_NEW_CUSTOMER)
-
+    const [properties, setProperties] = useState([])
+    const [propertySearchTerm, setPropertySearchTerm] = useState('')
+    const [newPropertyDraft, setNewPropertyDraft] = useState({ street: '', city: '', state: '', zip: '' })
     const [serviceDate, setServiceDate] = useState(() => new Date().toISOString().slice(0, 10))
     const [workPerformed, setWorkPerformed] = useState('')
     const [technician, setTechnician] = useState('')
@@ -112,40 +120,33 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         setStage('job-details')
     }
 
-    async function saveNewCustomerAndContinue() {
-        const { firstName, lastName, bestPhone, street, city, state } = newCustomer
-        if (!firstName.trim() || !lastName.trim() || !bestPhone.trim() || !street.trim() || !city.trim() || !state.trim()) {
-            setSaveMessage('First name, last name, phone, street, city, and state are all needed to continue.')
+    function continueToPropertySearch() {
+        const { firstName, lastName, bestPhone } = newCustomer
+        if (!firstName.trim() || !lastName.trim() || !bestPhone.trim()) {
+            setSaveMessage('First name, last name, and phone are all needed to continue.')
             return
         }
-
         setSaveMessage('')
+        setStage('new-customer-property-search')
+    }
 
+    async function createCustomerWithProperty(propertyId) {
+        setSaveMessage('')
         try {
-            const propRes = await fetch('/api/properties', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    address: { street: street.trim(), city: city.trim(), state: state.trim(), zip: '' },
-                }),
-            })
-            if (!propRes.ok) throw new Error('Property save failed')
-            const { id: propertyId } = await propRes.json()
-
             const res = await fetch('/api/customers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    firstName: firstName.trim(),
-                    lastName: lastName.trim(),
-                    bestPhone: bestPhone.trim(),
+                    firstName: newCustomer.firstName.trim(),
+                    lastName: newCustomer.lastName.trim(),
+                    bestPhone: newCustomer.bestPhone.trim(),
                     propertyId,
                     status: 'incomplete',
                 }),
             })
             if (!res.ok) throw new Error('Customer save failed')
             const { id } = await res.json()
-            const fullName = `${firstName.trim()} ${lastName.trim()}`
+            const fullName = `${newCustomer.firstName.trim()} ${newCustomer.lastName.trim()}`
             setSelectedCustomer({ id, name: fullName, propertyId, isLocal: false })
             setStage('job-details')
         } catch (err) {
@@ -153,6 +154,41 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
             setSaveMessage('Could not save — check your connection and try again.')
         }
     }
+
+    function startNewPropertyForCustomer() {
+        setNewPropertyDraft((prev) => ({ ...prev, street: propertySearchTerm }))
+        setStage('new-customer-property-new')
+    }
+
+    async function submitNewPropertyAndCreateCustomer() {
+        const { street, city, state } = newPropertyDraft
+        if (!street.trim() || !city.trim() || !state.trim()) {
+            setSaveMessage('Street, city, and state are needed to continue.')
+            return
+        }
+        setSaveMessage('')
+        try {
+            const propRes = await fetch('/api/properties', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    address: { street: street.trim(), city: city.trim(), state: state.trim(), zip: newPropertyDraft.zip.trim() },
+                }),
+            })
+            if (!propRes.ok) throw new Error('Property save failed')
+            const { id: propertyId } = await propRes.json()
+            await createCustomerWithProperty(propertyId)
+        } catch (err) {
+            console.error(err)
+            setSaveMessage('Could not save — check your connection and try again.')
+        }
+    }
+
+    const propertyMatchesForNewCustomer = properties.filter((p) => {
+        const term = propertySearchTerm.trim().toLowerCase()
+        if (!term) return false
+        return formatAddress(p.address).toLowerCase().includes(term)
+    })
 
     function addCatalogLineItem(item) {
         setLineItems((prev) => [
@@ -357,32 +393,9 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 onChange={(e) => setNewCustomer((prev) => ({ ...prev, bestPhone: e.target.value }))}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
-                            <input
-                                type="text"
-                                placeholder="Street"
-                                value={newCustomer.street}
-                                onChange={(e) => setNewCustomer((prev) => ({ ...prev, street: e.target.value }))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
-                            />
-                            <div className="grid grid-cols-2 gap-3">
-                                <input
-                                    type="text"
-                                    placeholder="City"
-                                    value={newCustomer.city}
-                                    onChange={(e) => setNewCustomer((prev) => ({ ...prev, city: e.target.value }))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="State"
-                                    value={newCustomer.state}
-                                    onChange={(e) => setNewCustomer((prev) => ({ ...prev, state: e.target.value }))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
-                                />
-                            </div>
                             {saveMessage && <p className="text-red-400 text-sm">{saveMessage}</p>}
                             <button
-                                onClick={saveNewCustomerAndContinue}
+                                onClick={continueToPropertySearch}
                                 className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
                             >
                                 Continue
@@ -392,6 +405,100 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 className="w-full text-white/40 hover:text-white/70 text-sm py-2 transition-colors"
                             >
                                 ← Back to search
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* ---- new customer: property search ---- */}
+                {stage === 'new-customer-property-search' && (
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <p className="text-white text-xl font-serif mb-2">Where's the service address?</p>
+                        <p className="text-white/40 text-xs mb-4">
+                            We check first in case this house has been serviced before, so we don't create a duplicate.
+                        </p>
+                        <input
+                            type="text"
+                            value={propertySearchTerm}
+                            onChange={(e) => setPropertySearchTerm(e.target.value)}
+                            placeholder="Start typing the address..."
+                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue mb-3"
+                        />
+                        <div className="flex flex-col gap-2 mb-4">
+                            {propertyMatchesForNewCustomer.map((p) => (
+                                <button
+                                    key={p._id}
+                                    onClick={() => createCustomerWithProperty(p._id)}
+                                    className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                >
+                                    <p className="text-white text-sm">{formatAddress(p.address)}</p>
+                                    <p className="text-white/40 text-xs">Existing property — link to it</p>
+                                </button>
+                            ))}
+                        </div>
+                        {saveMessage && <p className="text-red-400 text-sm mb-3">{saveMessage}</p>}
+                        <button
+                            onClick={startNewPropertyForCustomer}
+                            className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                        >
+                            + This is a new address
+                        </button>
+                        <button
+                            onClick={() => setStage('new-customer')}
+                            className="w-full text-white/40 hover:text-white/70 text-sm mt-4 py-2 transition-colors"
+                        >
+                            ← Back
+                        </button>
+                    </div>
+                )}
+
+                {/* ---- new customer: new property details ---- */}
+                {stage === 'new-customer-property-new' && (
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <p className="text-white text-xl font-serif mb-4">New property details</p>
+                        <div className="flex flex-col gap-3">
+                            <input
+                                type="text"
+                                placeholder="Street"
+                                value={newPropertyDraft.street}
+                                onChange={(e) => setNewPropertyDraft((prev) => ({ ...prev, street: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                            />
+                            <div className="grid grid-cols-2 gap-3">
+                                <input
+                                    type="text"
+                                    placeholder="City"
+                                    value={newPropertyDraft.city}
+                                    onChange={(e) => setNewPropertyDraft((prev) => ({ ...prev, city: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="State"
+                                    value={newPropertyDraft.state}
+                                    onChange={(e) => setNewPropertyDraft((prev) => ({ ...prev, state: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="ZIP (optional)"
+                                value={newPropertyDraft.zip}
+                                onChange={(e) => setNewPropertyDraft((prev) => ({ ...prev, zip: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                            />
+                            {saveMessage && <p className="text-red-400 text-sm">{saveMessage}</p>}
+                            <button
+                                onClick={submitNewPropertyAndCreateCustomer}
+                                className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                            >
+                                Continue
+                            </button>
+                            <button
+                                onClick={() => setStage('new-customer-property-search')}
+                                className="w-full text-white/40 hover:text-white/70 text-sm py-2 transition-colors"
+                            >
+                                ← Back to address search
                             </button>
                         </div>
                     </div>

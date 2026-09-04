@@ -93,6 +93,8 @@ export default async function handler(req, res) {
                         totalAmount,
                         paymentStatus,
                         notes,
+                        "customerEmail": customer->email,
+
                         lineItems[]{
                             itemType,
                             quantity,
@@ -132,6 +134,7 @@ export default async function handler(req, res) {
                     paidDate,
                     payments,
                     "customerName": customer->firstName + " " + customer->lastName,
+                    "customerEmail": customer->email,
                     "customerId": customer->_id,
                     "customerCredit": customer->creditBalance,
                     "propertyAddress": property->address

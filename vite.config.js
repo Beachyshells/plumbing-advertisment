@@ -12,7 +12,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        invoice: resolve(__dirname, 'invoice.html'),
+        pendingCustomer: resolve(__dirname, 'pendingCustomer.html'),
         desktop: resolve(__dirname, 'desktop.html'),
 
       },

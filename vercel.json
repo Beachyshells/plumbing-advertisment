@@ -1,8 +1,8 @@
 {
     "rewrites": [
         {
-            "source": "/invoice",
-            "destination": "/invoice.html"
+            "source": "/pendingcustomer",
+            "destination": "/pendingcustomer.html"
         },
         {
             "source": "/desktop",

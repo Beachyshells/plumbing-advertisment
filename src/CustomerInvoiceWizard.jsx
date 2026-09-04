@@ -127,14 +127,29 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         setStage('job-details')
     }
 
-    function continueToPropertySearch() {
+    const [existingCustomerMatches, setExistingCustomerMatches] = useState([])
+
+    async function checkForExistingCustomer() {
         const { firstName, lastName, bestPhone } = newCustomer
         if (!firstName.trim() || !lastName.trim() || !bestPhone.trim()) {
             setSaveMessage('First name, last name, and phone are all needed to continue.')
             return
         }
         setSaveMessage('')
-        setStage('new-customer-property-search')
+        try {
+            const res = await fetch(`/api/customers?search=${encodeURIComponent(lastName.trim())}`)
+            const data = await res.json()
+            setExistingCustomerMatches(data.customers || [])
+        } catch (err) {
+            setExistingCustomerMatches([])
+        }
+        setStage('new-customer-check')
+    }
+
+    function useExistingCustomer(customer) {
+        const fullName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim()
+        setSelectedCustomer({ id: customer._id, name: fullName, propertyId: customer.property?._id, isLocal: false })
+        setStage('job-details')
     }
 
     async function createCustomerWithProperty(propertyId) {
@@ -404,7 +419,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                             />
                             {saveMessage && <p className="text-red-400 text-sm">{saveMessage}</p>}
                             <button
-                                onClick={continueToPropertySearch}
+                                onClick={checkForExistingCustomer}
                                 className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
                             >
                                 Continue
@@ -416,6 +431,53 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 ← Back to search
                             </button>
                         </div>
+                    </div>
+                )}
+                {/* ---- new customer: check for existing match ---- */}
+                {stage === 'new-customer-check' && (
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        {existingCustomerMatches.length > 0 ? (
+                            <>
+                                <p className="text-white text-xl font-serif mb-2">Is this one of these people?</p>
+                                <p className="text-white/40 text-xs mb-4">
+                                    We found existing customers with a similar last name — tap the right one, or confirm this is someone new.
+                                </p>
+                                <div className="flex flex-col gap-2 mb-4">
+                                    {existingCustomerMatches.map((c) => (
+                                        <button
+                                            key={c._id}
+                                            onClick={() => useExistingCustomer(c)}
+                                            className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                        >
+                                            <p className="text-white text-sm">{c.firstName} {c.lastName}</p>
+                                            <p className="text-white/40 text-xs">{c.bestPhone}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => setStage('new-customer-property-search')}
+                                    className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                                >
+                                    None of these — this is a new customer
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-white text-xl font-serif mb-4">No existing match found</p>
+                                <button
+                                    onClick={() => setStage('new-customer-property-search')}
+                                    className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                                >
+                                    Continue as a new customer
+                                </button>
+                            </>
+                        )}
+                        <button
+                            onClick={() => setStage('new-customer')}
+                            className="w-full text-white/40 hover:text-white/70 text-sm mt-4 py-2 transition-colors"
+                        >
+                            ← Back
+                        </button>
                     </div>
                 )}
 

@@ -80,8 +80,8 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         if (!navigator.onLine) return
         try {
             await syncPendingData()
-            const [customersRes, inventoryRes] = await Promise.all([
-                fetch('/api/customers'), fetch('/api/inventory'),
+            const [customersRes, inventoryRes, propertiesRes] = await Promise.all([
+                fetch('/api/customers'), fetch('/api/inventory'), fetch('/api/properties'),
             ])
             if (customersRes.ok) {
                 const { customers: freshCustomers } = await customersRes.json()
@@ -92,6 +92,10 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                 const { items } = await inventoryRes.json()
                 await cacheInventory(items)
                 setInventory(items)
+            }
+            if (propertiesRes.ok) {
+                const { properties: freshProperties } = await propertiesRes.json()
+                setProperties(freshProperties || [])
             }
         } catch (err) {
             console.error('Refresh/sync failed:', err)

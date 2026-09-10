@@ -55,14 +55,11 @@ export default function IntakeWizard() {
             .catch(() => { })
     }, [stage])
 
-    // If opened as .../intake?edit=<id>, load that customer + their linked
-    // property and jump straight to review.
-    useEffect(() => {
-        const editId = new URLSearchParams(window.location.search).get('edit')
-        if (!editId) return
+    const [existingCustomerMatches, setExistingCustomerMatches] = useState([])
 
+    function loadCustomerById(id) {
         setLoadingExisting(true)
-        fetch(`/api/customers?id=${encodeURIComponent(editId)}`)
+        return fetch(`/api/customers?id=${encodeURIComponent(id)}`)
             .then((res) => {
                 if (!res.ok) throw new Error('Load failed')
                 return res.json()
@@ -90,6 +87,25 @@ export default function IntakeWizard() {
                 setStatus('error')
             })
             .finally(() => setLoadingExisting(false))
+    }
+
+    async function checkForExistingCustomer() {
+        try {
+            const res = await fetch(`/api/customers?search=${encodeURIComponent(customer.lastName)}`)
+            const data = await res.json()
+            setExistingCustomerMatches(data.customers || [])
+        } catch (err) {
+            setExistingCustomerMatches([])
+        }
+        setStage('existing-customer-check')
+    }
+
+    // If opened as .../intake?edit=<id>, load that customer + their linked
+    // property and jump straight to review.
+    useEffect(() => {
+        const editId = new URLSearchParams(window.location.search).get('edit')
+        if (!editId) return
+        loadCustomerById(editId)
     }, [])
 
     useEffect(() => {
@@ -114,7 +130,7 @@ export default function IntakeWizard() {
     }
 
     // ---- name / bestPhone / altPhone / email / notes (simple one-field screens) ----
-    function submitSimpleField(e) {
+    async function submitSimpleField(e) {
         e.preventDefault()
         const value = draft.trim()
 
@@ -140,7 +156,7 @@ export default function IntakeWizard() {
         if (stage === 'firstName') setStage('lastName')
         else if (stage === 'lastName') setStage('bestPhone')
         else if (stage === 'bestPhone') setStage('altPhone')
-        else if (stage === 'altPhone') setStage('property-search')
+        else if (stage === 'altPhone') await checkForExistingCustomer()
         else if (stage === 'email') setStage('notes')
         else if (stage === 'notes') setStage('review')
     }
@@ -201,7 +217,7 @@ export default function IntakeWizard() {
     }
 
     function goBack() {
-        const order = ['firstName', 'lastName', 'bestPhone', 'altPhone', 'property-search', 'property-new', 'billingAddress', 'dog', 'email', 'notes']
+        const order = ['firstName', 'lastName', 'bestPhone', 'altPhone', 'existing-customer-check', 'property-search', 'property-new', 'billingAddress', 'dog', 'email', 'notes']
         const index = order.indexOf(stage)
         if (index <= 0) return
         setStage(order[index - 1])
@@ -326,6 +342,51 @@ export default function IntakeWizard() {
                                 ← Back
                             </button>
                         )}
+                    </div>
+                )}
+
+                {/* ---- check for existing customer match ---- */}
+                {stage === 'existing-customer-check' && (
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        {existingCustomerMatches.length > 0 ? (
+                            <>
+                                <p className="text-white text-xl font-serif mb-2">Is this one of these people?</p>
+                                <p className="text-white/40 text-xs mb-4">
+                                    We found existing customers with a similar last name — tap the right one, or confirm this is someone new.
+                                </p>
+                                <div className="flex flex-col gap-2 mb-4">
+                                    {existingCustomerMatches.map((c) => (
+                                        <button
+                                            key={c._id}
+                                            onClick={() => loadCustomerById(c._id)}
+                                            className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                        >
+                                            <p className="text-white text-sm">{c.firstName} {c.lastName}</p>
+                                            <p className="text-white/40 text-xs">{c.bestPhone}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => setStage('property-search')}
+                                    className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                                >
+                                    None of these — this is a new customer
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-white text-xl font-serif mb-4">No existing match found</p>
+                                <button
+                                    onClick={() => setStage('property-search')}
+                                    className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                                >
+                                    Continue as a new customer
+                                </button>
+                            </>
+                        )}
+                        <button onClick={() => setStage('altPhone')} className="w-full text-white/40 hover:text-white/70 text-sm mt-4 py-2 transition-colors">
+                            ← Back
+                        </button>
                     </div>
                 )}
 
@@ -502,7 +563,8 @@ export default function IntakeWizard() {
                             <ReviewRow label="Service Address" value={formatAddress(propertyDisplay?.address)} onEdit={() => setStage('property-search')} />
                             <ReviewRow label="Well / Municipal" value={propertyDisplay?.wellOrMunicipal} onEdit={() => setStage('property-search')} />
                             <ReviewRow label="Billing Address" value={formatAddress(customer.billingAddress)} onEdit={() => setStage('billingAddress')} />
-                            <ReviewRow label="Dog on site?" value={customer.dog} onEdit={() => setStage('dog')} />                            <ReviewRow label="Email" value={customer.email} onEdit={() => setStage('email')} />
+                            <ReviewRow label="Dog on site?" value={customer.dog} onEdit={() => setStage('dog')} />
+                            <ReviewRow label="Email" value={customer.email} onEdit={() => setStage('email')} />
                             <ReviewRow label="Notes" value={customer.notes} onEdit={() => setStage('notes')} />
                         </div>
                         {status === 'error' && <p className="text-red-400 text-sm mb-4 text-center">Something went wrong saving — check your connection and try again.</p>}
@@ -528,7 +590,6 @@ export default function IntakeWizard() {
                         >
                             View Customer Profile
                         </a>
-
                         <a
                             href={`/desktop?addJobFor=${savedCustomerId}`}
                             className="block w-full text-center bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-3"
@@ -548,10 +609,10 @@ export default function IntakeWizard() {
                             href="/desktop" className="block text-white/40 hover:text-white/70 text-sm py-2 transition-colors">
                             ← Back to Desktop
                         </a>
-                    </div>
+                    </div >
                 )
                 }
-            </div>
+            </div >
         </div >
     )
 }

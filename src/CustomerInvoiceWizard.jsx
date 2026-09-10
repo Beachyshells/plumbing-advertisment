@@ -685,6 +685,9 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                             >
                                 Next: Parts & Materials
                             </button>
+                            <button onClick={() => setStage('customer-search')} className="w-full text-white/40 hover:text-white/70 text-sm py-2 transition-colors">
+                                ← Back
+                            </button>
                         </div>
                     </div>
                 )}
@@ -795,6 +798,9 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         >
                             Next: Receipts
                         </button>
+                        <button onClick={() => setStage('job-details')} className="w-full text-white/40 hover:text-white/70 text-sm mt-2 py-2 transition-colors">
+                            ← Back
+                        </button>
                     </div>
                 )}
 
@@ -836,6 +842,9 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         >
                             Next: Review
                         </button>
+                        <button onClick={() => setStage('line-items')} className="w-full text-white/40 hover:text-white/70 text-sm mt-2 py-2 transition-colors">
+                            ← Back
+                        </button>
                     </div>
                 )}
 
@@ -858,6 +867,9 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                             className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
                         >
                             {status === 'saving' ? 'Saving...' : 'Save Invoice'}
+                        </button>
+                        <button onClick={() => setStage('receipts')} className="w-full text-white/40 hover:text-white/70 text-sm mt-2 py-2 transition-colors">
+                            ← Back
                         </button>
                     </div>
                 )}

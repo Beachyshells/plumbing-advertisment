@@ -184,7 +184,16 @@ function CustomersView({ onBack, onAddJob, initialSelectedId }) {
     }
 
     if (selectedProperty) {
-        return <PropertyDetail property={selectedProperty} onBack={() => setSelectedProperty(null)} />
+        return (
+            <PropertyDetail
+                property={selectedProperty}
+                onBack={() => setSelectedProperty(null)}
+                onViewCustomer={(id) => {
+                    setSelectedProperty(null)
+                    setSelectedId(id)
+                }}
+            />
+        )
     }
 
     return (
@@ -297,6 +306,9 @@ function CustomerCard({ customer, onBack, onAddJob }) {
     const [invoiceStatus, setInvoiceStatus] = useState('idle') // idle | loading | ready | error
     const [selectedInvoice, setSelectedInvoice] = useState(null)
 
+    const [equipmentGroups, setEquipmentGroups] = useState([]) // [{ propertyId, address, equipment }]
+    const [equipmentAggStatus, setEquipmentAggStatus] = useState('idle') // idle | loading | ready | error
+
     function fetchInvoices() {
         setInvoiceStatus('loading')
         fetch(`/api/invoices?customerId=${encodeURIComponent(customer._id)}`)
@@ -312,9 +324,43 @@ function CustomerCard({ customer, onBack, onAddJob }) {
     }
 
     useEffect(() => {
-        if (tab !== 'Service History' || invoiceStatus !== 'idle') return
+        if ((tab !== 'Service History' && tab !== 'Equipment') || invoiceStatus !== 'idle') return
         fetchInvoices()
     }, [tab])
+
+    // Equipment belongs to the property, not the person — so once we know
+    // every distinct property this customer has ever had a job at (from
+    // their invoice history), we look up each one's equipment separately,
+    // grouped by address, so a past house's equipment doesn't disappear
+    // just because they moved.
+    useEffect(() => {
+        if (tab !== 'Equipment' || invoiceStatus !== 'ready' || equipmentAggStatus !== 'idle') return
+        const distinctProperties = []
+        const seen = new Set()
+        invoices.forEach((inv) => {
+            if (inv.propertyId && !seen.has(inv.propertyId)) {
+                seen.add(inv.propertyId)
+                distinctProperties.push({ propertyId: inv.propertyId, address: inv.propertyAddress })
+            }
+        })
+        if (distinctProperties.length === 0) {
+            setEquipmentGroups([])
+            setEquipmentAggStatus('ready')
+            return
+        }
+        setEquipmentAggStatus('loading')
+        Promise.all(
+            distinctProperties.map((p) =>
+                fetch(`/api/properties?id=${encodeURIComponent(p.propertyId)}`)
+                    .then((res) => (res.ok ? res.json() : null))
+                    .then((data) => ({ ...p, equipment: data?.property?.equipment || [] }))
+                    .catch(() => ({ ...p, equipment: [] }))
+            )
+        ).then((groups) => {
+            setEquipmentGroups(groups.filter((g) => g.equipment.length > 0))
+            setEquipmentAggStatus('ready')
+        })
+    }, [tab, invoiceStatus])
 
     if (selectedInvoice) {
         return (
@@ -432,7 +478,34 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                         </div>
                     )}
 
-                    {(tab === 'Equipment' || tab === 'Contracts') && (
+                    {tab === 'Equipment' && (
+                        <div className="flex flex-col gap-5">
+                            {equipmentAggStatus === 'loading' && (
+                                <p className="text-white/40 text-sm text-center py-6">Loading...</p>
+                            )}
+                            {equipmentAggStatus === 'ready' && equipmentGroups.length === 0 && (
+                                <p className="text-white/40 text-sm text-center py-6">No equipment on file for this customer's properties yet.</p>
+                            )}
+                            {equipmentGroups.map((group) => (
+                                <div key={group.propertyId}>
+                                    <p className="text-white/40 text-xs uppercase tracking-widest mb-2">{formatAddress(group.address)}</p>
+                                    <div className="flex flex-col gap-2">
+                                        {group.equipment.map((item) => (
+                                            <div key={item._key} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                                                <p className="text-white text-sm">
+                                                    {[item.equipmentType, item.make, item.model].filter(Boolean).join(' — ') || 'Untitled unit'}
+                                                </p>
+                                                {item.serialNumber && <p className="text-white/40 text-xs mt-0.5">S/N {item.serialNumber}</p>}
+                                                {item.warrantyExpires && <p className="text-white/40 text-xs">Warranty until {item.warrantyExpires}</p>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {tab === 'Contracts' && (
                         <p className="text-white/40 text-sm text-center py-10">
                             Nothing here yet — coming in a future update.
                         </p>
@@ -443,7 +516,7 @@ function CustomerCard({ customer, onBack, onAddJob }) {
     )
 }
 
-function PropertyDetail({ property: initialProperty, onBack }) {
+function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
     const [property, setProperty] = useState(initialProperty)
     const [invoices, setInvoices] = useState([])
     const [status, setStatus] = useState('loading') // loading | ready | error
@@ -460,6 +533,93 @@ function PropertyDetail({ property: initialProperty, onBack }) {
     })
     const [saveStatus, setSaveStatus] = useState('idle') // idle | saving | error
 
+    const [linkedCustomers, setLinkedCustomers] = useState([])
+
+    const EMPTY_EQUIPMENT = {
+        equipmentType: '', make: '', model: '', serialNumber: '',
+        installDate: '', installedBy: '', warrantyExpires: '',
+        filterPartNumber: '', filterSize: '', replaceEvery: '', lastChanged: '', notes: '',
+    }
+    const [equipmentEditing, setEquipmentEditing] = useState(null) // null | 'new' | <key of item being edited>
+    const [equipmentDraft, setEquipmentDraft] = useState(EMPTY_EQUIPMENT)
+    const [equipmentStatus, setEquipmentStatus] = useState('idle') // idle | saving | error
+
+    function refreshProperty() {
+        fetch(`/api/properties?id=${encodeURIComponent(property._id)}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (data?.property) setProperty(data.property)
+            })
+            .catch(() => { })
+    }
+
+    function fetchLinkedCustomers() {
+        fetch(`/api/customers?propertyId=${encodeURIComponent(property._id)}`)
+            .then((res) => (res.ok ? res.json() : { customers: [] }))
+            .then((data) => setLinkedCustomers(data.customers || []))
+            .catch(() => { })
+    }
+
+    function openNewEquipmentForm() {
+        setEquipmentDraft(EMPTY_EQUIPMENT)
+        setEquipmentEditing('new')
+    }
+
+    function openEditEquipmentForm(item) {
+        setEquipmentDraft({
+            equipmentType: item.equipmentType || '',
+            make: item.make || '',
+            model: item.model || '',
+            serialNumber: item.serialNumber || '',
+            installDate: item.installDate || '',
+            installedBy: item.installedBy || '',
+            warrantyExpires: item.warrantyExpires || '',
+            filterPartNumber: item.filterPartNumber || '',
+            filterSize: item.filterSize || '',
+            replaceEvery: item.replaceEvery || '',
+            lastChanged: item.lastChanged || '',
+            notes: item.notes || '',
+        })
+        setEquipmentEditing(item._key)
+    }
+
+    async function handleSaveEquipment() {
+        setEquipmentStatus('saving')
+        try {
+            const isNew = equipmentEditing === 'new'
+            const res = await fetch('/api/properties', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    propertyId: property._id,
+                    action: isNew ? 'addEquipment' : 'updateEquipment',
+                    equipmentKey: isNew ? undefined : equipmentEditing,
+                    equipment: equipmentDraft,
+                }),
+            })
+            if (!res.ok) throw new Error('Failed')
+            refreshProperty()
+            setEquipmentEditing(null)
+            setEquipmentStatus('idle')
+        } catch (err) {
+            console.error(err)
+            setEquipmentStatus('error')
+        }
+    }
+
+    async function handleDeleteEquipment(key) {
+        try {
+            await fetch('/api/properties', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ propertyId: property._id, action: 'deleteEquipment', equipmentKey: key }),
+            })
+            refreshProperty()
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
     async function handleSaveEdit() {
         if (!draft.street.trim() || !draft.city.trim() || !draft.state.trim()) {
             setSaveStatus('error')
@@ -475,7 +635,6 @@ function PropertyDetail({ property: initialProperty, onBack }) {
                     address: { street: draft.street, city: draft.city, state: draft.state, zip: draft.zip },
                     wellOrMunicipal: draft.wellOrMunicipal,
                     gateCodeKeyEntry: draft.gateCodeKeyEntry,
-                    dog: draft.dog,
                     mainShutoffLocation: draft.mainShutoffLocation,
                 }),
             })
@@ -485,7 +644,6 @@ function PropertyDetail({ property: initialProperty, onBack }) {
                 address: { street: draft.street, city: draft.city, state: draft.state, zip: draft.zip },
                 wellOrMunicipal: draft.wellOrMunicipal,
                 gateCodeKeyEntry: draft.gateCodeKeyEntry,
-                dog: draft.dog,
                 mainShutoffLocation: draft.mainShutoffLocation,
             }))
             setEditing(false)
@@ -512,6 +670,8 @@ function PropertyDetail({ property: initialProperty, onBack }) {
 
     useEffect(() => {
         fetchInvoices()
+        refreshProperty()
+        fetchLinkedCustomers()
     }, [])
 
     if (selectedInvoice) {
@@ -547,6 +707,23 @@ function PropertyDetail({ property: initialProperty, onBack }) {
                             ✎
                         </button>
                     )}
+                </div>
+                <div className="mb-6">
+                    <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Customers at this address</p>
+                    <div className="flex flex-wrap gap-2">
+                        {linkedCustomers.length === 0 && (
+                            <p className="text-white/40 text-sm">None found — this property may be unlinked.</p>
+                        )}
+                        {linkedCustomers.map((c) => (
+                            <button
+                                key={c._id}
+                                onClick={() => onViewCustomer(c._id)}
+                                className="bg-white/5 hover:bg-blue border border-white/10 hover:border-blue text-white text-sm px-4 py-2 rounded-full transition-colors"
+                            >
+                                {c.firstName} {c.lastName}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {editing ? (
@@ -623,7 +800,7 @@ function PropertyDetail({ property: initialProperty, onBack }) {
                         <p className="text-white/30 text-xs italic">Dog on site is tracked per-customer, not per-property — check the customer's profile.</p>
                     </div>
                 )}
-
+                <p className="text-white text-lg font-serif mb-4">Service History</p>
                 <p className="text-white text-lg font-serif mb-4">Service History</p>
 
                 {status === 'loading' && <p className="text-white/40 text-sm text-center py-10">Loading...</p>}

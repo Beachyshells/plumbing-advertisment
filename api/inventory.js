@@ -16,11 +16,13 @@ export default async function handler(req, res) {
     try {
         const items = await client.fetch(
             `*[_type == "inventoryItem"] | order(name asc){
-                _id,
+                              _id,
                 name,
                 supplier,
                 buyPrice,
-                sellPrice
+                sellPrice,
+                category,
+                isEquipment
             }`
         )
         return res.status(200).json({ items })

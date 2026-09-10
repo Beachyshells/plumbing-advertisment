@@ -137,7 +137,8 @@ export default async function handler(req, res) {
                     "customerEmail": customer->email,
                     "customerId": customer->_id,
                     "customerCredit": customer->creditBalance,
-                    "propertyAddress": property->address
+                    "propertyAddress": property->address,
+                     "propertyId": property->_id
                 }`,
                 params
             )

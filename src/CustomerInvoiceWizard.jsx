@@ -50,6 +50,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
 
     const [lineItems, setLineItems] = useState([])
     const [catalogSearchTerm, setCatalogSearchTerm] = useState('')
+    const [categoryFilter, setCategoryFilter] = useState('all')
     const [miscDraft, setMiscDraft] = useState({ miscName: '', miscSellPrice: '', miscNote: '' })
 
     const [receipts, setReceipts] = useState([]) // array of base64 data URLs
@@ -58,7 +59,10 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     const [saveMessage, setSaveMessage] = useState('')
     const [status, setStatus] = useState('idle') // idle | saving | error
     const [savedInvoiceId, setSavedInvoiceId] = useState(null)
-
+    const [equipmentPrompts, setEquipmentPrompts] = useState([]) // [{ name, inventoryItemId }]
+    const [equipmentPromptIndex, setEquipmentPromptIndex] = useState(0)
+    const [equipmentLogDraft, setEquipmentLogDraft] = useState({ equipmentType: '', serialNumber: '', installDate: '', warrantyExpires: '', notes: '' })
+    const [equipmentLogStatus, setEquipmentLogStatus] = useState('idle') // idle | saving | error
     // Load cached data immediately (works offline), then refresh from the
     // server whenever we're online, and try to flush anything queued.
     useEffect(() => {
@@ -115,11 +119,20 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     })
 
 
-    const filteredInventory = inventory.filter((item) => {
-        const term = catalogSearchTerm.trim().toLowerCase()
-        if (!term) return false
-        return item.name?.toLowerCase().includes(term)
-    })
+    const CATEGORY_PILLS = ['All', 'Equipment', 'Plumbing', 'Electrical', 'Heating', 'Other']
+
+    const filteredInventory = inventory
+        .filter((item) => {
+            if (categoryFilter === 'all') return true
+            if (categoryFilter === 'Equipment') return item.isEquipment
+            return item.category === categoryFilter
+        })
+        .filter((item) => {
+            const term = catalogSearchTerm.trim().toLowerCase()
+            if (!term) return true
+            return item.name?.toLowerCase().includes(term)
+        })
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 
     function selectExistingCustomer(customer) {
         const fullName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim()
@@ -295,8 +308,28 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                 const savedData = await res.json()
                 setSavedInvoiceId(savedData.id)
                 setStatus('idle')
-                setStage('done')
                 setSaveMessage('Invoice saved.')
+
+                // If any catalog line item is flagged as trackable equipment,
+                // walk through a quick prompt to log its serial number and
+                // warranty before finishing — instead of requiring a separate
+                // trip to Property Detail afterward.
+                const flagged = lineItems
+                    .filter((li) => li.itemType === 'catalog')
+                    .map((li) => {
+                        const invItem = inventory.find((i) => i._id === li.inventoryItemId)
+                        return invItem?.isEquipment ? { name: invItem.name, inventoryItemId: invItem._id } : null
+                    })
+                    .filter(Boolean)
+
+                if (flagged.length > 0) {
+                    setEquipmentPrompts(flagged)
+                    setEquipmentPromptIndex(0)
+                    setEquipmentLogDraft({ equipmentType: flagged[0].name, serialNumber: '', installDate: serviceDate, warrantyExpires: '', notes: '' })
+                    setStage('equipment-prompt')
+                } else {
+                    setStage('done')
+                }
                 return
             } catch (err) {
                 console.error(err)
@@ -311,6 +344,38 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         setStatus('idle')
         setStage('done')
         setSaveMessage("Saved locally — will upload once you're back online.")
+    }
+
+    async function handleLogEquipment(skip) {
+        if (!skip) {
+            setEquipmentLogStatus('saving')
+            try {
+                const res = await fetch('/api/properties', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        propertyId: selectedCustomer.propertyId,
+                        action: 'addEquipment',
+                        equipment: equipmentLogDraft,
+                    }),
+                })
+                if (!res.ok) throw new Error('Failed')
+            } catch (err) {
+                console.error(err)
+                setEquipmentLogStatus('error')
+                return
+            }
+        }
+
+        const nextIndex = equipmentPromptIndex + 1
+        if (nextIndex < equipmentPrompts.length) {
+            setEquipmentPromptIndex(nextIndex)
+            setEquipmentLogDraft({ equipmentType: equipmentPrompts[nextIndex].name, serialNumber: '', installDate: serviceDate, warrantyExpires: '', notes: '' })
+            setEquipmentLogStatus('idle')
+        } else {
+            setEquipmentLogStatus('idle')
+            setStage('done')
+        }
     }
 
     function startOver() {
@@ -657,6 +722,20 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         </div>
 
                         <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Add from catalog</p>
+                        <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
+                            {CATEGORY_PILLS.map((pill) => (
+                                <button
+                                    key={pill}
+                                    onClick={() => setCategoryFilter(pill === 'All' ? 'all' : pill)}
+                                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${(pill === 'All' && categoryFilter === 'all') || categoryFilter === pill
+                                        ? 'bg-blue text-white'
+                                        : 'bg-white/5 text-white/50 border border-white/10'
+                                        }`}
+                                >
+                                    {pill}
+                                </button>
+                            ))}
+                        </div>
                         <input
                             type="text"
                             value={catalogSearchTerm}
@@ -780,6 +859,60 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         >
                             {status === 'saving' ? 'Saving...' : 'Save Invoice'}
                         </button>
+                    </div>
+                )}
+
+                {/* ---- equipment logging prompt ---- */}
+                {stage === 'equipment-prompt' && (
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <p className="text-white text-xl font-serif mb-1">
+                            This job included: {equipmentPrompts[equipmentPromptIndex]?.name}
+                        </p>
+                        <p className="text-white/40 text-xs mb-4">
+                            Log its serial number and warranty now? ({equipmentPromptIndex + 1} of {equipmentPrompts.length})
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <input
+                                type="text" placeholder="Serial number" value={equipmentLogDraft.serialNumber}
+                                onChange={(e) => setEquipmentLogDraft((d) => ({ ...d, serialNumber: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                            />
+                            <div>
+                                <p className="text-white/40 text-xs mb-1">Install date</p>
+                                <input
+                                    type="date" value={equipmentLogDraft.installDate}
+                                    onChange={(e) => setEquipmentLogDraft((d) => ({ ...d, installDate: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                />
+                            </div>
+                            <div>
+                                <p className="text-white/40 text-xs mb-1">Warranty expires</p>
+                                <input
+                                    type="date" value={equipmentLogDraft.warrantyExpires}
+                                    onChange={(e) => setEquipmentLogDraft((d) => ({ ...d, warrantyExpires: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                />
+                            </div>
+                            <textarea
+                                placeholder="Notes (optional)" value={equipmentLogDraft.notes}
+                                onChange={(e) => setEquipmentLogDraft((d) => ({ ...d, notes: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue h-20 resize-none"
+                            />
+                            {equipmentLogStatus === 'error' && <p className="text-red-400 text-sm">Something went wrong — try again.</p>}
+                            <button
+                                onClick={() => handleLogEquipment(false)}
+                                disabled={equipmentLogStatus === 'saving'}
+                                className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                            >
+                                {equipmentLogStatus === 'saving' ? 'Saving...' : 'Save & Continue'}
+                            </button>
+                            <button
+                                onClick={() => handleLogEquipment(true)}
+                                className="w-full text-white/40 hover:text-white/70 text-sm py-2 transition-colors"
+                            >
+                                Skip this one
+                            </button>
+                        </div>
                     </div>
                 )}
 

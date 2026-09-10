@@ -492,10 +492,14 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                                     <div className="flex flex-col gap-2">
                                         {group.equipment.map((item) => (
                                             <div key={item._key} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                                                <p className="text-white text-sm">
+                                                <p className="text-white text-base font-serif">
                                                     {[item.equipmentType, item.make, item.model].filter(Boolean).join(' — ') || 'Untitled unit'}
                                                 </p>
-                                                {item.serialNumber && <p className="text-white/40 text-xs mt-0.5">S/N {item.serialNumber}</p>}
+                                                <p className="text-white/40 text-xs mt-0.5">
+                                                    {[item.serialNumber ? `S/N ${item.serialNumber}` : null, item.installDate ? `Installed ${item.installDate}` : null]
+                                                        .filter(Boolean)
+                                                        .join(' · ')}
+                                                </p>
                                                 {item.warrantyExpires && <p className="text-white/40 text-xs">Warranty until {item.warrantyExpires}</p>}
                                             </div>
                                         ))}
@@ -800,7 +804,117 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
                         <p className="text-white/30 text-xs italic">Dog on site is tracked per-customer, not per-property — check the customer's profile.</p>
                     </div>
                 )}
-                <p className="text-white text-lg font-serif mb-4">Service History</p>
+                <p className="text-white text-lg font-serif mb-4">Equipment</p>
+                <div className="flex flex-col gap-3 mb-8">
+                    {(property.equipment || []).map((item) => (
+                        <div key={item._key} className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                                <div>
+                                    <p className="text-white text-base font-serif">
+                                        {[item.equipmentType, item.make, item.model].filter(Boolean).join(' — ') || 'Untitled unit'}
+                                    </p>
+                                    <p className="text-white/40 text-xs mt-0.5">
+                                        {[item.serialNumber ? `S/N ${item.serialNumber}` : null, item.installDate ? `Installed ${item.installDate}` : null]
+                                            .filter(Boolean)
+                                            .join(' · ')}
+                                    </p>
+                                </div>
+                                <div className="flex gap-2 shrink-0">
+                                    <button onClick={() => openEditEquipmentForm(item)} className="text-white/40 hover:text-white text-sm">✎</button>
+                                    <button onClick={() => handleDeleteEquipment(item._key)} className="text-red-400 hover:text-red-300 text-sm">✕</button>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-white/50">
+                                {item.installedBy && <p>By: {item.installedBy}</p>}
+                                {item.warrantyExpires && <p>Warranty until: {item.warrantyExpires}</p>}
+                                {item.filterPartNumber && <p>Filter part: {item.filterPartNumber}</p>}
+                                {item.filterSize && <p>Filter size: {item.filterSize}</p>}
+                                {item.replaceEvery && <p>Replace every: {item.replaceEvery}</p>}
+                                {item.lastChanged && <p>Last changed: {item.lastChanged}</p>}
+                            </div>
+                            {item.notes && <p className="text-white/40 text-xs mt-2 italic">{item.notes}</p>}
+                        </div>
+                    ))}
+                    {(!property.equipment || property.equipment.length === 0) && equipmentEditing !== 'new' && (
+                        <p className="text-white/40 text-sm">No equipment recorded yet.</p>
+                    )}
+                </div>
+
+                {equipmentEditing ? (
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-3 mb-8">
+                        <p className="text-white text-lg font-serif mb-1">{equipmentEditing === 'new' ? 'Add Equipment' : 'Edit Equipment'}</p>
+                        <input type="text" placeholder="Equipment type (e.g. Well pump)" value={equipmentDraft.equipmentType}
+                            onChange={(e) => setEquipmentDraft((d) => ({ ...d, equipmentType: e.target.value }))}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                        <div className="grid grid-cols-2 gap-3">
+                            <input type="text" placeholder="Make" value={equipmentDraft.make}
+                                onChange={(e) => setEquipmentDraft((d) => ({ ...d, make: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                            <input type="text" placeholder="Model" value={equipmentDraft.model}
+                                onChange={(e) => setEquipmentDraft((d) => ({ ...d, model: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                        </div>
+                        <input type="text" placeholder="Serial number" value={equipmentDraft.serialNumber}
+                            onChange={(e) => setEquipmentDraft((d) => ({ ...d, serialNumber: e.target.value }))}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <p className="text-white/40 text-xs mb-1">Install date</p>
+                                <input type="date" value={equipmentDraft.installDate}
+                                    onChange={(e) => setEquipmentDraft((d) => ({ ...d, installDate: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                            </div>
+                            <div>
+                                <p className="text-white/40 text-xs mb-1">Warranty expires</p>
+                                <input type="date" value={equipmentDraft.warrantyExpires}
+                                    onChange={(e) => setEquipmentDraft((d) => ({ ...d, warrantyExpires: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                            </div>
+                        </div>
+                        <input type="text" placeholder="Installed by" value={equipmentDraft.installedBy}
+                            onChange={(e) => setEquipmentDraft((d) => ({ ...d, installedBy: e.target.value }))}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                        <div className="grid grid-cols-2 gap-3">
+                            <input type="text" placeholder="Filter/cartridge part no." value={equipmentDraft.filterPartNumber}
+                                onChange={(e) => setEquipmentDraft((d) => ({ ...d, filterPartNumber: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                            <input type="text" placeholder="Filter size" value={equipmentDraft.filterSize}
+                                onChange={(e) => setEquipmentDraft((d) => ({ ...d, filterSize: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <input type="text" placeholder="Replace every (e.g. 6 months)" value={equipmentDraft.replaceEvery}
+                                onChange={(e) => setEquipmentDraft((d) => ({ ...d, replaceEvery: e.target.value }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                            <div>
+                                <p className="text-white/40 text-xs mb-1">Last changed</p>
+                                <input type="date" value={equipmentDraft.lastChanged}
+                                    onChange={(e) => setEquipmentDraft((d) => ({ ...d, lastChanged: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                            </div>
+                        </div>
+                        <textarea placeholder="Notes" value={equipmentDraft.notes}
+                            onChange={(e) => setEquipmentDraft((d) => ({ ...d, notes: e.target.value }))}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue h-20 resize-none" />
+                        {equipmentStatus === 'error' && <p className="text-red-400 text-sm">Something went wrong saving.</p>}
+                        <div className="flex gap-2">
+                            <button onClick={handleSaveEquipment} disabled={equipmentStatus === 'saving'}
+                                className="flex-1 bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]">
+                                {equipmentStatus === 'saving' ? 'Saving...' : 'Save Equipment'}
+                            </button>
+                            <button onClick={() => setEquipmentEditing(null)}
+                                className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <button onClick={openNewEquipmentForm}
+                        className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-8">
+                        + Add Equipment
+                    </button>
+                )}
+
                 <p className="text-white text-lg font-serif mb-4">Service History</p>
 
                 {status === 'loading' && <p className="text-white/40 text-sm text-center py-10">Loading...</p>}

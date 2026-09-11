@@ -7,6 +7,10 @@
         {
             "source": "/desktop",
             "destination": "/desktop.html"
+        },
+        {
+            "source": "/employee",
+            "destination": "/employee.html"
         }
     ],
     "headers": [

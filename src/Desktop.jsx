@@ -3,6 +3,7 @@ import emailjs from '@emailjs/browser'
 import CustomerInvoiceWizard from './CustomerInvoiceWizard.jsx'
 import { generateInvoicePdf } from './invoicePdf.js'
 import { queuePendingEmail, syncPendingEmails } from './offlineQueue.js'
+import EmployeesAdmin from './EmployeesAdmin.jsx'
 
 
 function formatAddress(address) {
@@ -69,6 +70,10 @@ export default function Desktop() {
         return <InvoicesView onBack={backToHub} />
     }
 
+    if (view === 'employees') {
+        return <EmployeesAdmin onBack={backToHub} />
+    }
+
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
             <div className="w-full max-w-2xl mx-auto">
@@ -92,6 +97,11 @@ export default function Desktop() {
                         title="Invoices"
                         subtitle="Browse all invoices"
                         onClick={() => setView('invoices')}
+                    />
+                    <Tile
+                        title="Employees"
+                        subtitle="Roster, timecards, pay"
+                        onClick={() => setView('employees')}
                     />
                     <Tile
                         title="Contracts"

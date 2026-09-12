@@ -141,7 +141,10 @@ export default async function handler(req, res) {
                     jobStatus,
                     paidDate,
                     payments,
-                    "customerName": customer->firstName + " " + customer->lastName,
+                    "customerFirstName": customer->firstName,
+                    "customerLastName": customer->lastName,
+                    "additionalContactFirstName": customer->additionalContactFirstName,
+                    "additionalContactLastName": customer->additionalContactLastName,
                     "customerEmail": customer->email,
                     "customerId": customer->_id,
                     "customerCredit": customer->creditBalance,
@@ -150,7 +153,12 @@ export default async function handler(req, res) {
                 }`,
                 params
             )
-            return res.status(200).json({ invoices })
+            const invoicesWithNames = invoices.map((inv) => {
+                const primary = [inv.customerFirstName, inv.customerLastName].filter(Boolean).join(' ')
+                const secondary = [inv.additionalContactFirstName, inv.additionalContactLastName].filter(Boolean).join(' ')
+                return { ...inv, customerName: secondary ? `${primary} / ${secondary}` : primary }
+            })
+            return res.status(200).json({ invoices: invoicesWithNames })
         } catch (err) {
             console.error('Failed to fetch invoice(s):', err)
             return res.status(500).json({ error: 'Could not load invoice data' })

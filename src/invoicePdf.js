@@ -50,6 +50,16 @@ export function generateInvoicePdf(invoice) {
     doc.setFontSize(11)
     doc.setTextColor(...BLACK)
     doc.text(invoice.customerName || '—', 36, y)
+
+    const billingAddr = invoice.customerBillingAddress?.street ? invoice.customerBillingAddress : invoice.propertyAddress
+    const billingLines = doc.splitTextToSize(
+        [billingAddr?.street, [billingAddr?.city, billingAddr?.state].filter(Boolean).join(', ')]
+            .filter(Boolean)
+            .join(', ') || '—',
+        260
+    )
+    doc.text(billingLines, 36, y + 13)
+
     const addressLines = doc.splitTextToSize(
         [invoice.propertyAddress?.street, [invoice.propertyAddress?.city, invoice.propertyAddress?.state].filter(Boolean).join(', ')]
             .filter(Boolean)
@@ -57,7 +67,7 @@ export function generateInvoicePdf(invoice) {
         220
     )
     doc.text(addressLines, 320, y)
-    y += 20 + addressLines.length * 12
+    y += 20 + Math.max(addressLines.length, billingLines.length + 1) * 12
 
     if (invoice.workPerformed) {
         doc.setFont('helvetica', 'bold')

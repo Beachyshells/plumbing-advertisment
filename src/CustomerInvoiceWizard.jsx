@@ -50,6 +50,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     const [lineItems, setLineItems] = useState([])
     const [toast, setToast] = useState(null)
     const [catalogSearchTerm, setCatalogSearchTerm] = useState('')
+    const [catalogOpen, setCatalogOpen] = useState(false)
     const [categoryFilter, setCategoryFilter] = useState('all')
     const [miscDraft, setMiscDraft] = useState({ miscName: '', miscSellPrice: '', miscNote: '' })
 
@@ -741,39 +742,50 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                             ))}
                         </div>
 
-                        <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Add from catalog</p>
-                        <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
-                            {CATEGORY_PILLS.map((pill) => (
-                                <button
-                                    key={pill}
-                                    onClick={() => setCategoryFilter(pill === 'All' ? 'all' : pill)}
-                                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${(pill === 'All' && categoryFilter === 'all') || categoryFilter === pill
-                                        ? 'bg-blue text-white'
-                                        : 'bg-white/5 text-white/50 border border-white/10'
-                                        }`}
-                                >
-                                    {pill}
-                                </button>
-                            ))}
-                        </div>
-                        <input
-                            type="text"
-                            value={catalogSearchTerm}
-                            onChange={(e) => setCatalogSearchTerm(e.target.value)}
-                            placeholder="Search parts..."
-                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue mb-2"
-                        />
-                        <div className="flex flex-col gap-2 mb-5 max-h-64 overflow-y-auto no-scrollbar border border-white/10 rounded-xl p-2">                            {filteredInventory.map((item) => (
-                            <button
-                                key={item._id}
-                                onClick={() => addCatalogLineItem(item)}
-                                className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
-                            >
-                                <p className="text-white text-sm">{item.name}</p>
-                                <p className="text-white/40 text-xs">{formatMoney(item.sellPrice)}</p>
-                            </button>
-                        ))}
-                        </div>
+                        <button
+                            onClick={() => setCatalogOpen((prev) => !prev)}
+                            className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 mb-2 transition-colors"
+                        >
+                            <p className="text-white/60 text-xs uppercase tracking-widest">Add from catalog</p>
+                            <span className="text-white/40 text-sm">{catalogOpen ? '▾' : '▸'}</span>
+                        </button>
+                        {catalogOpen && (
+                            <>
+                                <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
+                                    {CATEGORY_PILLS.map((pill) => (
+                                        <button
+                                            key={pill}
+                                            onClick={() => setCategoryFilter(pill === 'All' ? 'all' : pill)}
+                                            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${(pill === 'All' && categoryFilter === 'all') || categoryFilter === pill
+                                                ? 'bg-blue text-white'
+                                                : 'bg-white/5 text-white/50 border border-white/10'
+                                                }`}
+                                        >
+                                            {pill}
+                                        </button>
+                                    ))}
+                                </div>
+                                <input
+                                    type="text"
+                                    value={catalogSearchTerm}
+                                    onChange={(e) => setCatalogSearchTerm(e.target.value)}
+                                    placeholder="Search parts..."
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue mb-2"
+                                />
+                                <div className="flex flex-col gap-2 mb-5 max-h-64 overflow-y-auto no-scrollbar border border-white/10 rounded-xl p-2">
+                                    {filteredInventory.map((item) => (
+                                        <button
+                                            key={item._id}
+                                            onClick={() => addCatalogLineItem(item)}
+                                            className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                        >
+                                            <p className="text-white text-sm">{item.name}</p>
+                                            <p className="text-white/40 text-xs">{formatMoney(item.sellPrice)}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
 
                         <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Or add a one-off / reused part</p>
                         <div className="flex flex-col gap-2 mb-5">

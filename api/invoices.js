@@ -82,12 +82,8 @@ export default async function handler(req, res) {
             const { id, customerId, propertyId, calendarMonth } = req.query
 
             if (calendarMonth) {
-                // Ongoing jobs always show under today (they're happening right
-                // now, regardless of when they were originally scheduled).
-                // Not Started jobs show on whatever serviceDate was planned for
-                // them, so Michael can see upcoming work and avoid overbooking.
                 const monthInvoices = await readClient.fetch(
-                    `*[_type == "customerInvoice" && (jobStatus == "ongoing" || (serviceDate >= $monthStart && serviceDate <= $monthEnd))]{
+                    `*[_type == "customerInvoice" && jobStatus != "complete" && serviceDate >= $monthStart && serviceDate <= $monthEnd]{
                         _id,
                         invoiceNumber,
                         serviceDate,
@@ -109,33 +105,6 @@ export default async function handler(req, res) {
                 return res.status(200).json({ invoices: withNames })
             }
 
-            if (calendarMonth) {
-                // Ongoing jobs always show under today (they're happening right
-                // now, regardless of when they were originally scheduled).
-                // Not Started jobs show on whatever serviceDate was planned for
-                // them, so Michael can see upcoming work and avoid overbooking.
-                const monthInvoices = await readClient.fetch(
-                    `*[_type == "customerInvoice" && (jobStatus == "ongoing" || (serviceDate >= $monthStart && serviceDate <= $monthEnd))]{
-                        _id,
-                        invoiceNumber,
-                        serviceDate,
-                        jobStatus,
-                        workPerformed,
-                        "customerFirstName": customer->firstName,
-                        "customerLastName": customer->lastName,
-                        "additionalContactFirstName": customer->additionalContactFirstName,
-                        "additionalContactLastName": customer->additionalContactLastName,
-                        "propertyAddress": property->address
-                    }`,
-                    { monthStart: `${calendarMonth}-01`, monthEnd: `${calendarMonth}-31` }
-                )
-                const withNames = monthInvoices.map((inv) => {
-                    const primary = [inv.customerFirstName, inv.customerLastName].filter(Boolean).join(' ')
-                    const secondary = [inv.additionalContactFirstName, inv.additionalContactLastName].filter(Boolean).join(' ')
-                    return { ...inv, customerName: secondary ? `${primary} / ${secondary}` : primary }
-                })
-                return res.status(200).json({ invoices: withNames })
-            }
 
             if (id) {
                 const invoice = await readClient.fetch(

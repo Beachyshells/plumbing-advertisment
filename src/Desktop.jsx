@@ -1333,6 +1333,8 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             const templateParams = {
                 email: fullInvoice.customerEmail,
                 invoice_id: fullInvoice.invoiceNumber || '',
+                work_performed: fullInvoice.workPerformed || 'Not specified',
+                notes: fullInvoice.notes || '',
                 orders: items.map((item) => ({
                     name: item.itemType === 'misc' ? item.miscName : item.inventoryItemName,
                     units: item.itemType === 'misc' ? 1 : item.quantity || 1,

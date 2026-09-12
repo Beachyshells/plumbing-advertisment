@@ -446,6 +446,7 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                         <div className="flex flex-col gap-4">
                             <Field label="Best Phone" value={customer.bestPhone} />
                             <Field label="Alt Phone" value={customer.altPhone} />
+                            <Field label="Additional Contact" value={[customer.additionalContactFirstName, customer.additionalContactLastName].filter(Boolean).join(' ')} />
                             <Field label="Email" value={customer.email} />
                             <Field label="Service Address" value={formatAddress(customer.property?.address)} />
                             <Field label="Billing Address" value={formatAddress(customer.billingAddress)} />

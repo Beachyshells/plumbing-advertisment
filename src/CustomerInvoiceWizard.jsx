@@ -116,7 +116,9 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         const term = searchTerm.trim().toLowerCase()
         if (!term) return false
         const fullName = `${c.firstName || ''} ${c.lastName || ''}`.toLowerCase()
-        return fullName.includes(term) || c.bestPhone?.includes(term)
+        const additionalFirst = (c.additionalContactFirstName || '').toLowerCase()
+        const additionalLast = (c.additionalContactLastName || '').toLowerCase()
+        return fullName.includes(term) || additionalFirst.includes(term) || additionalLast.includes(term) || c.bestPhone?.includes(term)
     })
 
 

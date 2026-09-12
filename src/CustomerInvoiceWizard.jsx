@@ -963,8 +963,8 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         <p className="text-white/50 text-sm mb-6">{saveMessage}</p>
                         {(
                             <button
-                                onClick={() => {
-                                    generateInvoicePdf({
+                                onClick={async () => {
+                                    await generateInvoicePdf({
                                         invoiceNumber: savedInvoiceNumber,
                                         serviceDate,
                                         customerName: selectedCustomer?.name,

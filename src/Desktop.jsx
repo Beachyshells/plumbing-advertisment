@@ -1384,7 +1384,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         try {
             const res = await fetch(`/api/invoices?id=${invoice._id}`)
             const { invoice: fullInvoice } = await res.json()
-            generateInvoicePdf({ ...invoice, ...fullInvoice })
+            await generateInvoicePdf({ ...invoice, ...fullInvoice })
         } catch (err) {
             console.error(err)
         }

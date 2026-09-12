@@ -180,7 +180,8 @@ function CustomersView({ onBack, onAddJob, initialSelectedId }) {
         const q = search.trim().toLowerCase()
         if (!q) return true
         const fullName = `${c.firstName || ''} ${c.lastName || ''}`.toLowerCase()
-        return fullName.includes(q) || formatAddress(c.property?.address).toLowerCase().includes(q)
+        const additionalContact = (c.additionalContactName || '').toLowerCase()
+        return fullName.includes(q) || additionalContact.includes(q) || formatAddress(c.property?.address).toLowerCase().includes(q)
     })
 
     const propertyMatches = properties.filter((p) => {

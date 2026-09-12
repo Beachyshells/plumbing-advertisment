@@ -32,7 +32,7 @@ export default function IntakeWizard() {
     const [draft, setDraft] = useState('')
     const [fieldError, setFieldError] = useState('')
 
-    const [customer, setCustomer] = useState({ firstName: '', lastName: '', bestPhone: '', altPhone: '', billingAddress: undefined, dog: '', email: '', notes: '' })
+    const [customer, setCustomer] = useState({ firstName: '', lastName: '', bestPhone: '', altPhone: '', additionalContactName: '', billingAddress: undefined, dog: '', email: '', notes: '' })
     const [billingAddressDraft, setBillingAddressDraft] = useState(EMPTY_PROPERTY_ADDRESS)
 
     const [properties, setProperties] = useState([])
@@ -110,7 +110,7 @@ export default function IntakeWizard() {
 
     useEffect(() => {
         setFieldError('')
-        if (['firstName', 'lastName', 'bestPhone', 'altPhone', 'email'].includes(stage)) {
+        if (['firstName', 'lastName', 'bestPhone', 'altPhone', 'additionalContactName', 'email'].includes(stage)) {
             setDraft(customer[stage] || '')
             if (inputRef.current) inputRef.current.focus()
         }
@@ -166,7 +166,8 @@ export default function IntakeWizard() {
         if (stage === 'firstName') setStage('lastName')
         else if (stage === 'lastName') setStage('bestPhone')
         else if (stage === 'bestPhone') setStage('altPhone')
-        else if (stage === 'altPhone') await checkForExistingCustomer()
+        else if (stage === 'altPhone') setStage('additionalContactName')
+        else if (stage === 'additionalContactName') await checkForExistingCustomer()
         else if (stage === 'email') setStage('notes')
         else if (stage === 'notes') setStage('review')
     }
@@ -227,7 +228,7 @@ export default function IntakeWizard() {
     }
 
     function goBack() {
-        const order = ['firstName', 'lastName', 'bestPhone', 'altPhone', 'existing-customer-check', 'property-search', 'property-new', 'billingAddress', 'dog', 'email', 'notes']
+        const order = ['firstName', 'lastName', 'bestPhone', 'altPhone', 'additionalContactName', 'existing-customer-check', 'property-search', 'property-new', 'billingAddress', 'dog', 'email', 'notes']
         const index = order.indexOf(stage)
         if (index <= 0) return
         setStage(order[index - 1])
@@ -278,7 +279,7 @@ export default function IntakeWizard() {
         setStage('firstName')
         setDraft('')
         setFieldError('')
-        setCustomer({ firstName: '', lastName: '', bestPhone: '', altPhone: '', billingAddress: undefined, dog: '', email: '', notes: '' })
+        setCustomer({ firstName: '', lastName: '', bestPhone: '', altPhone: '', additionalContactName: '', billingAddress: undefined, dog: '', email: '', notes: '' })
         setBillingAddressDraft(EMPTY_PROPERTY_ADDRESS)
         setPropertySearchTerm('')
         setSelectedPropertyId(null)
@@ -294,6 +295,7 @@ export default function IntakeWizard() {
         lastName: "What's their last name?",
         bestPhone: 'Best phone number to reach them?',
         altPhone: 'Any other phone number? (skip if none)',
+        additionalContactName: "Anyone else tied to this job — a spouse, say? Searching their name will find this same profile. (skip if none)",
         email: 'Email address? (skip if none)',
         notes: "Anything else about them? Best time to call, etc. (skip if none)",
     }
@@ -317,7 +319,7 @@ export default function IntakeWizard() {
                 </div>
 
                 {/* ---- simple one-field screens ---- */}
-                {['firstName', 'lastName', 'bestPhone', 'altPhone', 'email', 'notes'].includes(stage) && (
+                {['firstName', 'lastName', 'bestPhone', 'altPhone', 'additionalContactName', 'email', 'notes'].includes(stage) && (
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                         <p className="text-white text-xl font-serif mb-6">{SIMPLE_LABELS[stage]}</p>
                         <form onSubmit={submitSimpleField} className="flex flex-col gap-3">
@@ -570,6 +572,7 @@ export default function IntakeWizard() {
                             <ReviewRow label="Last Name" value={customer.lastName} onEdit={() => setStage('lastName')} />
                             <ReviewRow label="Best Phone" value={customer.bestPhone} onEdit={() => setStage('bestPhone')} />
                             <ReviewRow label="Alt Phone" value={customer.altPhone} onEdit={() => setStage('altPhone')} />
+                            <ReviewRow label="Additional Contact" value={customer.additionalContactName} onEdit={() => setStage('additionalContactName')} />
                             <ReviewRow label="Service Address" value={formatAddress(propertyDisplay?.address)} onEdit={() => setStage('property-search')} />
                             <ReviewRow label="Well / Municipal" value={propertyDisplay?.wellOrMunicipal} onEdit={() => setStage('property-search')} />
                             <ReviewRow label="Billing Address" value={formatAddress(customer.billingAddress)} onEdit={() => setStage('billingAddress')} />

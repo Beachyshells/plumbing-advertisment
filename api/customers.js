@@ -64,7 +64,7 @@ export default async function handler(req, res) {
             if (search) {
                 const term = `*${search}*`
                 const matches = await readClient.fetch(
-                    `*[_type == "customerProfile" && (firstName match $term || lastName match $term)]{
+                    `*[_type == "customerProfile" && (firstName match $term || lastName match $term || additionalContactName match $term)]{
                         _id,
                         firstName,
                         lastName,
@@ -90,8 +90,9 @@ export default async function handler(req, res) {
                         _id,
                         firstName,
                         lastName,
-                        bestPhone,
+                                               bestPhone,
                         altPhone,
+                        additionalContactName,
                         billingAddress,
                         dog,
                         email,
@@ -120,6 +121,7 @@ export default async function handler(req, res) {
                     firstName,
                     lastName,
                     bestPhone,
+                    additionalContactName,
                     billingAddress,
                     email,
                     status,
@@ -154,6 +156,7 @@ export default async function handler(req, res) {
             lastName,
             bestPhone,
             altPhone: cleanText(body.altPhone),
+            additionalContactName: titleCase(cleanText(body.additionalContactName)),
             property: { _type: 'reference', _ref: propertyId },
             billingAddress: cleanAddress(body.billingAddress),
             dog: cleanText(body.dog),

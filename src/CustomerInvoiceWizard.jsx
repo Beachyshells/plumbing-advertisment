@@ -59,6 +59,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     const [saveMessage, setSaveMessage] = useState('')
     const [status, setStatus] = useState('idle') // idle | saving | error
     const [savedInvoiceId, setSavedInvoiceId] = useState(null)
+    const [savedInvoiceNumber, setSavedInvoiceNumber] = useState(null)
     const [equipmentPrompts, setEquipmentPrompts] = useState([]) // [{ name, inventoryItemId }]
     const [equipmentPromptIndex, setEquipmentPromptIndex] = useState(0)
     const [equipmentLogDraft, setEquipmentLogDraft] = useState({ equipmentType: '', serialNumber: '', installDate: '', warrantyExpires: '', notes: '' })
@@ -310,6 +311,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                 if (!res.ok) throw new Error('Save failed')
                 const savedData = await res.json()
                 setSavedInvoiceId(savedData.id)
+                setSavedInvoiceNumber(savedData.invoiceNumber)
                 setStatus('idle')
                 setSaveMessage('Invoice saved.')
 
@@ -961,7 +963,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                             <button
                                 onClick={() => {
                                     generateInvoicePdf({
-                                        invoiceNumber: null,
+                                        invoiceNumber: savedInvoiceNumber,
                                         serviceDate,
                                         customerName: selectedCustomer?.name,
                                         workPerformed,

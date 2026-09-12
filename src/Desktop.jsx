@@ -726,7 +726,7 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
                         <button
                             onClick={() => setEditing(true)}
                             title="Edit property"
-                            className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors text-lg shrink-0"
+                            className="w-10 h-10 flex items-center justify-center bg-brand-green hover:bg-white/40 border border-white/20 rounded-xl transition-colors text-lg shrink-0"
                         >
                             ✎
                         </button>
@@ -1444,7 +1444,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                         <button
                             onClick={handleEditClick}
                             title="Edit invoice"
-                            className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors text-lg shrink-0"
+                            className="w-10 h-10 flex items-center justify-center bg-brand-green hover:bg-white/40 border border-white/10 rounded-xl transition-colors text-lg shrink-0"
                         >
                             ✎
                         </button>

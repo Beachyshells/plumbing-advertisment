@@ -549,7 +549,7 @@ export default function IntakeWizard() {
                                         setCustomer((prev) => ({ ...prev, dog: opt }))
                                         setStage(existingCustomerId ? 'review' : 'email')
                                     }}
-                                    className="w-full bg-white/5 hover:bg-blue border border-white/10 hover:border-blue text-white text-lg py-4 rounded-xl transition-colors active:scale-[0.98]"
+                                    className="w-full bg-white/5 hover:bg-brand-green border border-white/10 hover:border-brand-green text-white text-lg py-4 rounded-xl transition-colors active:scale-[0.98]"
                                 >
                                     {opt}
                                 </button>

@@ -1669,6 +1669,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                     <Field label="Property Address" value={formatAddress(invoice.propertyAddress)} />
                     <Field label="Service Date" value={invoice.serviceDate} />
                     <Field label="Work Performed" value={invoice.workPerformed} />
+                    <Field label="Notes" value={invoice.notes} />
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Total</p>

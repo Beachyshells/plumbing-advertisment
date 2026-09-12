@@ -4,6 +4,7 @@ import CustomerInvoiceWizard from './CustomerInvoiceWizard.jsx'
 import { generateInvoicePdf } from './invoicePdf.js'
 import { queuePendingEmail, syncPendingEmails } from './offlineQueue.js'
 import EmployeesAdmin from './EmployeesAdmin.jsx'
+import CalendarView from './CalendarView.jsx'
 import Toast from './Toast.jsx'
 
 
@@ -22,6 +23,7 @@ export default function Desktop() {
     const [invoiceCustomer, setInvoiceCustomer] = useState(null) // pre-selected customer when "Add Job" is used
 
     const [viewCustomerId, setViewCustomerId] = useState(null)
+    const [calendarInvoice, setCalendarInvoice] = useState(null)
 
     useEffect(() => {
         if (navigator.onLine) syncPendingEmails()
@@ -60,6 +62,23 @@ export default function Desktop() {
         setView('service-call')
     }
 
+    // The calendar's own fetch only returns a lightweight shape (enough to
+    // show on a day tile) — InvoiceDetail needs the fuller record (payments,
+    // total, customer credit, etc.), so we fetch the real list and find the
+    // matching invoice before actually opening it.
+    function openInvoiceFromCalendar(calendarInv) {
+        fetch('/api/invoices')
+            .then((res) => (res.ok ? res.json() : { invoices: [] }))
+            .then((data) => {
+                const full = (data.invoices || []).find((inv) => inv._id === calendarInv._id)
+                if (full) {
+                    setCalendarInvoice(full)
+                    setView('calendar-invoice')
+                }
+            })
+            .catch(() => { })
+    }
+
     function backToHub() {
         setInvoiceCustomer(null)
         setView('hub')
@@ -79,6 +98,22 @@ export default function Desktop() {
 
     if (view === 'employees') {
         return <EmployeesAdmin onBack={backToHub} />
+    }
+
+    if (view === 'calendar') {
+        return <CalendarView onBack={backToHub} onOpenInvoice={openInvoiceFromCalendar} />
+    }
+
+    if (view === 'calendar-invoice' && calendarInvoice) {
+        return (
+            <InvoiceDetail
+                invoice={calendarInvoice}
+                onBack={() => {
+                    setCalendarInvoice(null)
+                    setView('calendar')
+                }}
+            />
+        )
     }
 
     return (
@@ -104,6 +139,11 @@ export default function Desktop() {
                         title="Invoices"
                         subtitle="Browse all invoices"
                         onClick={() => setView('invoices')}
+                    />
+                    <Tile
+                        title="Calendar"
+                        subtitle="See what's scheduled"
+                        onClick={() => setView('calendar')}
                     />
                     <Tile
                         title="Employees"

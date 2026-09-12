@@ -32,7 +32,7 @@ export default function IntakeWizard() {
     const [draft, setDraft] = useState('')
     const [fieldError, setFieldError] = useState('')
 
-    const [customer, setCustomer] = useState({ firstName: '', lastName: '', bestPhone: '', altPhone: '', additionalContactName: '', billingAddress: undefined, dog: '', email: '', notes: '' })
+    const [customer, setCustomer] = useState({ firstName: '', lastName: '', bestPhone: '', altPhone: '', additionalContactFirstName: '', additionalContactLastName: '', billingAddress: undefined, dog: '', email: '', notes: '' })
     const [billingAddressDraft, setBillingAddressDraft] = useState(EMPTY_PROPERTY_ADDRESS)
 
     const [properties, setProperties] = useState([])
@@ -110,7 +110,7 @@ export default function IntakeWizard() {
 
     useEffect(() => {
         setFieldError('')
-        if (['firstName', 'lastName', 'bestPhone', 'altPhone', 'additionalContactName', 'email'].includes(stage)) {
+        if (['firstName', 'lastName', 'bestPhone', 'altPhone', 'additionalContactFirstName', 'additionalContactLastName', 'email'].includes(stage)) {
             setDraft(customer[stage] || '')
             if (inputRef.current) inputRef.current.focus()
         }
@@ -166,8 +166,9 @@ export default function IntakeWizard() {
         if (stage === 'firstName') setStage('lastName')
         else if (stage === 'lastName') setStage('bestPhone')
         else if (stage === 'bestPhone') setStage('altPhone')
-        else if (stage === 'altPhone') setStage('additionalContactName')
-        else if (stage === 'additionalContactName') await checkForExistingCustomer()
+        else if (stage === 'altPhone') setStage('additionalContactFirstName')
+        else if (stage === 'additionalContactFirstName') setStage('additionalContactLastName')
+        else if (stage === 'additionalContactLastName') await checkForExistingCustomer()
         else if (stage === 'email') setStage('notes')
         else if (stage === 'notes') setStage('review')
     }
@@ -228,7 +229,7 @@ export default function IntakeWizard() {
     }
 
     function goBack() {
-        const order = ['firstName', 'lastName', 'bestPhone', 'altPhone', 'additionalContactName', 'existing-customer-check', 'property-search', 'property-new', 'billingAddress', 'dog', 'email', 'notes']
+        const order = ['firstName', 'lastName', 'bestPhone', 'altPhone', 'additionalContactFirstName', 'additionalContactLastName', 'existing-customer-check', 'property-search', 'property-new', 'billingAddress', 'dog', 'email', 'notes']
         const index = order.indexOf(stage)
         if (index <= 0) return
         setStage(order[index - 1])
@@ -279,7 +280,7 @@ export default function IntakeWizard() {
         setStage('firstName')
         setDraft('')
         setFieldError('')
-        setCustomer({ firstName: '', lastName: '', bestPhone: '', altPhone: '', additionalContactName: '', billingAddress: undefined, dog: '', email: '', notes: '' })
+        setCustomer({ firstName: '', lastName: '', bestPhone: '', altPhone: '', additionalContactFirstName: '', additionalContactLastName: '', billingAddress: undefined, dog: '', email: '', notes: '' })
         setBillingAddressDraft(EMPTY_PROPERTY_ADDRESS)
         setPropertySearchTerm('')
         setSelectedPropertyId(null)
@@ -295,7 +296,8 @@ export default function IntakeWizard() {
         lastName: "What's their last name?",
         bestPhone: 'Best phone number to reach them?',
         altPhone: 'Any other phone number? (skip if none)',
-        additionalContactName: "Anyone else tied to this job — a spouse, say? Searching their name will find this same profile. (skip if none)",
+        additionalContactFirstName: "First name of additional contact? (skip if none)",
+        additionalContactLastName: "Last name of additional contact? (skip if none)",
         email: 'Email address? (skip if none)',
         notes: "Anything else about them? Best time to call, etc. (skip if none)",
     }

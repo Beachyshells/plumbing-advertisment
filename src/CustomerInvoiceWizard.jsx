@@ -4,13 +4,12 @@ import {
     getCachedCustomers,
     cacheInventory,
     getCachedInventory,
-    queuePendingCustomer,
     queuePendingInvoice,
     syncPendingData,
     countPendingItems,
 } from './offlineQueue'
 import { generateInvoicePdf } from './invoicePdf.js'
-
+import Toast from './Toast.jsx'
 
 const EMPTY_NEW_CUSTOMER = { firstName: '', lastName: '', bestPhone: '' }
 
@@ -49,6 +48,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     const [notes, setNotes] = useState('')
 
     const [lineItems, setLineItems] = useState([])
+    const [toast, setToast] = useState(null)
     const [catalogSearchTerm, setCatalogSearchTerm] = useState('')
     const [categoryFilter, setCategoryFilter] = useState('all')
     const [miscDraft, setMiscDraft] = useState({ miscName: '', miscSellPrice: '', miscNote: '' })
@@ -231,6 +231,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
             { key: `${item._id}-${Date.now()}`, itemType: 'catalog', inventoryItemId: item._id, name: item.name, unitPrice: item.sellPrice, quantity: 1 },
         ])
         setCatalogSearchTerm('')
+        setToast(`${item.name} added`)
     }
 
     function addMiscLineItem() {
@@ -245,6 +246,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                 miscNote: miscDraft.miscNote.trim(),
             },
         ])
+        setToast(`${miscDraft.miscName.trim()} added`)
         setMiscDraft({ miscName: '', miscSellPrice: '', miscNote: '' })
     }
 
@@ -274,7 +276,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         setReceipts((prev) => prev.filter((_, i) => i !== index))
     }
 
-    async function handleSaveInvoice() {
+    async function handleSaveInvoice(startNow) {
         setStatus('saving')
         setSaveMessage('')
 
@@ -291,6 +293,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
             ),
             laborCost: Number(laborCost) || 0,
             paymentStatus,
+            startNow,
             notes,
             receipts,
         }
@@ -396,6 +399,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
 
     return (
         <div className="min-h-screen bg-navy flex flex-col items-center px-4 py-10">
+            <Toast message={toast} onDone={() => setToast(null)} />
             <div className="w-full max-w-lg">
                 {onBack && (
                     <button
@@ -862,11 +866,18 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         </div>
                         {saveMessage && status === 'error' && <p className="text-red-400 text-sm mb-4 text-center">{saveMessage}</p>}
                         <button
-                            onClick={handleSaveInvoice}
+                            onClick={() => handleSaveInvoice(true)}
                             disabled={status === 'saving'}
-                            className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                            className="w-full bg-brand-green hover:opacity-90 disabled:opacity-50 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-2"
                         >
-                            {status === 'saving' ? 'Saving...' : 'Save Invoice'}
+                            {status === 'saving' ? 'Saving...' : 'Save & Start Job'}
+                        </button>
+                        <button
+                            onClick={() => handleSaveInvoice(false)}
+                            disabled={status === 'saving'}
+                            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-50 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                        >
+                            {status === 'saving' ? 'Saving...' : "Save Only — I'll Start It Later"}
                         </button>
                         <button onClick={() => setStage('receipts')} className="w-full text-white/40 hover:text-white/70 text-sm mt-2 py-2 transition-colors">
                             ← Back

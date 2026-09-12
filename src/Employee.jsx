@@ -366,7 +366,7 @@ function TimeclockTab({ employeeId, pin }) {
 
     useEffect(() => {
         fetchStatus()
-        fetch('/api/properties')
+        fetch('/api/properties?activeOnly=true')
             .then((res) => (res.ok ? res.json() : { properties: [] }))
             .then((data) => setProperties(data.properties || []))
             .catch(() => { })
@@ -380,7 +380,7 @@ function TimeclockTab({ employeeId, pin }) {
 
     const filteredProperties = properties.filter((p) => {
         const term = propertySearch.trim().toLowerCase()
-        if (!term) return false
+        if (!term) return true
         return formatAddress(p.address).toLowerCase().includes(term)
     })
 
@@ -504,15 +504,21 @@ function TimeclockTab({ employeeId, pin }) {
                             placeholder="Search address..."
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue mb-2"
                         />
-                        <div className="flex flex-col gap-2 mb-4">
-                            {filteredProperties.map((p) => (
-                                <button key={p._id}
-                                    onClick={() => { setSelectedPropertyId(p._id); setSelectedPropertyLabel(formatAddress(p.address)) }}
-                                    className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors">
-                                    <p className="text-white text-sm">{formatAddress(p.address)}</p>
-                                </button>
-                            ))}
-                        </div>
+                        {properties.length === 0 ? (
+                            <p className="text-white/40 text-sm mb-4">
+                                No jobs currently marked as started. Ask Michael to hit "Start Job" on the invoice first.
+                            </p>
+                        ) : (
+                            <div className="flex flex-col gap-2 mb-4">
+                                {filteredProperties.map((p) => (
+                                    <button key={p._id}
+                                        onClick={() => { setSelectedPropertyId(p._id); setSelectedPropertyLabel(formatAddress(p.address)) }}
+                                        className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors">
+                                        <p className="text-white text-sm">{formatAddress(p.address)}</p>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </>
                 )}
 

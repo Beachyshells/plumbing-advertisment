@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Toast from './Toast.jsx'
 
 function formatAddress(address) {
     if (!address || (!address.street && !address.city && !address.state && !address.zip)) return ''
@@ -103,6 +104,7 @@ function EmployeeRow({ employee, onClick }) {
 }
 
 function EmployeeDetail({ employee: initialEmployee, onBack }) {
+    const [toast, setToast] = useState(null)
     const [employee, setEmployee] = useState(initialEmployee)
     const [entries, setEntries] = useState([])
     const [entriesStatus, setEntriesStatus] = useState('loading') // loading | ready | error
@@ -162,14 +164,19 @@ function EmployeeDetail({ employee: initialEmployee, onBack }) {
             setEmployee((prev) => ({ ...prev, ...profileDraft }))
             setEditingProfile(false)
             setProfileStatus('idle')
+            setToast('Profile updated')
         } catch (err) {
             console.error(err)
             setProfileStatus('error')
         }
     }
-
     async function recordPayment() {
         if (!paymentDraft.amount || Number(paymentDraft.amount) <= 0) return
+        const isOverpaying = Number(paymentDraft.amount) > balance
+        if (isOverpaying && !paymentDraft.note.trim()) {
+            setPaymentStatus('error')
+            return
+        }
         setPaymentStatus('saving')
         try {
             const res = await fetch('/api/timeclock', {
@@ -183,6 +190,7 @@ function EmployeeDetail({ employee: initialEmployee, onBack }) {
             setShowPaymentForm(false)
             setPaymentDraft({ amount: '', date: new Date().toISOString().slice(0, 10), note: '' })
             setPaymentStatus('idle')
+            setToast('Payment recorded')
         } catch (err) {
             console.error(err)
             setPaymentStatus('error')
@@ -223,6 +231,7 @@ function EmployeeDetail({ employee: initialEmployee, onBack }) {
             setEditingEntry(null)
             setEntryStatus('idle')
             fetchEntries()
+            setToast('Timecard updated')
         } catch (err) {
             console.error(err)
             setEntryStatus('error')
@@ -231,6 +240,7 @@ function EmployeeDetail({ employee: initialEmployee, onBack }) {
 
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
+            <Toast message={toast} onDone={() => setToast(null)} />
             <div className="w-full max-w-2xl mx-auto">
                 <button onClick={onBack} className="text-white/40 hover:text-white/70 text-sm mb-6 transition-colors">
                     ← Employees
@@ -325,16 +335,37 @@ function EmployeeDetail({ employee: initialEmployee, onBack }) {
                 {showPaymentForm ? (
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-3 mb-6">
                         <p className="text-white text-lg font-serif mb-1">Record Payment</p>
-                        <input type="number" placeholder={`Amount (balance: ${formatMoney(balance)})`} value={paymentDraft.amount}
+                        <input type="number" step="0.01" placeholder={`Amount (balance: ${formatMoney(balance)})`} value={paymentDraft.amount}
                             onChange={(e) => setPaymentDraft((d) => ({ ...d, amount: e.target.value }))}
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
+                        {paymentDraft.amount !== '' && (
+                            <p className={`text-center text-2xl font-serif ${Number(paymentDraft.amount) > balance ? 'text-red-400' : 'text-brand-green'}`}>
+                                {formatMoney(paymentDraft.amount)}
+                            </p>
+                        )}
+                        {paymentDraft.amount !== '' && Number(paymentDraft.amount) > balance && (
+                            <p className="text-red-400 text-xs text-center -mt-2">
+                                This is more than they're owed for hours worked. Add a note explaining why (tip, gas, advance, etc.) — required to save.
+                            </p>
+                        )}
                         <input type="date" value={paymentDraft.date}
                             onChange={(e) => setPaymentDraft((d) => ({ ...d, date: e.target.value }))}
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
-                        <input type="text" placeholder="Note (optional)" value={paymentDraft.note}
+                        <input
+                            type="text"
+                            placeholder={Number(paymentDraft.amount) > balance ? 'Note (required — why the extra amount?)' : 'Note (optional)'}
+                            value={paymentDraft.note}
                             onChange={(e) => setPaymentDraft((d) => ({ ...d, note: e.target.value }))}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
-                        {paymentStatus === 'error' && <p className="text-red-400 text-sm">Something went wrong.</p>}
+                            className={`w-full bg-white/5 border rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue ${Number(paymentDraft.amount) > balance && !paymentDraft.note.trim() ? 'border-red-400' : 'border-white/10'
+                                }`}
+                        />
+                        {paymentStatus === 'error' && (
+                            <p className="text-red-400 text-sm">
+                                {Number(paymentDraft.amount) > balance && !paymentDraft.note.trim()
+                                    ? 'A note is required when paying more than what they\'re owed.'
+                                    : 'Something went wrong.'}
+                            </p>
+                        )}
                         <div className="flex gap-2">
                             <button onClick={recordPayment} disabled={paymentStatus === 'saving'}
                                 className="flex-1 bg-brand-green hover:opacity-90 disabled:opacity-50 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]">

@@ -57,8 +57,12 @@ export default async function handler(req, res) {
                 return res.status(200).json({ property })
             }
 
+            const filter = req.query.activeOnly === 'true'
+                ? `_type == "property" && _id in *[_type == "customerInvoice" && jobStatus == "ongoing"].property._ref`
+                : `_type == "property"`
+
             const properties = await readClient.fetch(
-                `*[_type == "property"] | order(createdAt desc){${PROPERTY_PROJECTION}}`
+                `*[${filter}] | order(createdAt desc){${PROPERTY_PROJECTION}}`
             )
             return res.status(200).json({ properties })
         } catch (err) {

@@ -90,8 +90,9 @@ export default async function handler(req, res) {
                         workPerformed,
                         technician,
                         laborCost,
-                        totalAmount,
+                                                totalAmount,
                         paymentStatus,
+                        jobStatus,
                         notes,
                         "customerEmail": customer->email,
 
@@ -122,6 +123,12 @@ export default async function handler(req, res) {
                 filter += ` && property._ref == $propertyId`
                 params.propertyId = propertyId
             }
+            // The main Invoices tab (no customerId/propertyId filter) hides
+            // Complete jobs so it stays focused on active work — but a
+            // customer's or property's own history should still show everything.
+            if (!customerId && !propertyId) {
+                filter += ` && jobStatus != "complete"`
+            }
 
             const invoices = await readClient.fetch(
                 `*[${filter}] | order(serviceDate desc){
@@ -131,6 +138,7 @@ export default async function handler(req, res) {
                     workPerformed,
                     totalAmount,
                     paymentStatus,
+                    jobStatus,
                     paidDate,
                     payments,
                     "customerName": customer->firstName + " " + customer->lastName,
@@ -181,6 +189,7 @@ export default async function handler(req, res) {
                 laborCost,
                 totalAmount,
                 paymentStatus: 'unpaid',
+                jobStatus: body.startNow ? 'ongoing' : 'notStarted',
                 payments: [],
                 receipts,
                 notes: cleanText(body.notes),
@@ -306,6 +315,15 @@ export default async function handler(req, res) {
                     paymentStatus,
                     balanceRemaining: Math.max(totalAmount - newTotalPaid, 0),
                 })
+            }
+
+            if (action === 'setJobStatus') {
+                const jobStatus = body.jobStatus
+                if (!['notStarted', 'ongoing', 'complete'].includes(jobStatus)) {
+                    return res.status(400).json({ error: 'Invalid job status' })
+                }
+                await writeClient.patch(invoiceId).set({ jobStatus }).commit()
+                return res.status(200).json({ success: true, jobStatus })
             }
 
             // action === 'update' — editing an invoice's contents

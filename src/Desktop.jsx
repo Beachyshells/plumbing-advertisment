@@ -662,6 +662,7 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
             }))
             setEditing(false)
             setSaveStatus('idle')
+            setToast('Property updated')
         } catch (err) {
             console.error(err)
             setSaveStatus('error')
@@ -702,6 +703,7 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
 
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
+            <Toast message={toast} onDone={() => setToast(null)} />
             <div className="w-full max-w-2xl mx-auto">
                 <button onClick={onBack} className="text-white/40 hover:text-white/70 text-sm mb-6 transition-colors">
                     ← Customers
@@ -1116,6 +1118,8 @@ function InvoicesView({ onBack }) {
 // edit to confirm" safeguard) is a planned follow-up, not built yet.
 function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [invoice, setInvoice] = useState(initialInvoice)
+    const [toast, setToast] = useState(null)
+    const [jobStatusUpdating, setJobStatusUpdating] = useState(false)
     const [customerCredit, setCustomerCredit] = useState(Number(initialInvoice.customerCredit) || 0)
     const [amount, setAmount] = useState('')
     const [method, setMethod] = useState('cash')
@@ -1154,6 +1158,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             }))
             setCustomerCredit((prev) => prev - data.amountApplied)
             setStatus('idle')
+            setToast('Credit applied')
         } catch (err) {
             console.error(err)
             setStatus('error')
@@ -1289,6 +1294,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             setEditGate('none')
             setEditData(null)
             setEditStatus('idle')
+            setToast('Invoice updated')
         } catch (err) {
             console.error(err)
             setEditStatus('error')
@@ -1343,6 +1349,24 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         }
     }
 
+    async function handleSetJobStatus(newStatus) {
+        setJobStatusUpdating(true)
+        try {
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'setJobStatus', invoiceId: invoice._id, jobStatus: newStatus }),
+            })
+            if (!res.ok) throw new Error('Failed')
+            setInvoice((prev) => ({ ...prev, jobStatus: newStatus }))
+            setToast(newStatus === 'ongoing' ? 'Job started' : 'Job marked complete')
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setJobStatusUpdating(false)
+        }
+    }
+
     async function handlePrintInvoice() {
         try {
             const res = await fetch(`/api/invoices?id=${invoice._id}`)
@@ -1386,6 +1410,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             setCheckNumber('')
             setSignee('')
             setStatus('idle')
+            setToast(`${method === 'cash' ? 'Cash' : 'Check'} payment recorded`)
         } catch (err) {
             console.error(err)
             setStatus('error')
@@ -1394,6 +1419,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
 
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
+            <Toast message={toast} onDone={() => setToast(null)} />
             <div className="w-full max-w-2xl mx-auto">
                 <button onClick={onBack} className="text-white/40 hover:text-white/70 text-sm mb-6 transition-colors">
                     ← Back
@@ -1584,6 +1610,26 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                         </div>
                     </div>
                 )}
+
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-3 flex items-center justify-between gap-3">
+                    <div>
+                        <p className="text-white/40 text-xs uppercase tracking-widest">Job Status</p>
+                        <p className={`text-sm font-semibold ${invoice.jobStatus === 'ongoing' ? 'text-brand-green' : invoice.jobStatus === 'complete' ? 'text-white/50' : 'text-accent'
+                            }`}>
+                            {invoice.jobStatus === 'ongoing' ? 'Ongoing' : invoice.jobStatus === 'complete' ? 'Complete' : 'Not Started'}
+                        </p>
+                    </div>
+                    {invoice.jobStatus !== 'complete' && (
+                        <button
+                            onClick={() => handleSetJobStatus(invoice.jobStatus === 'ongoing' ? 'complete' : 'ongoing')}
+                            disabled={jobStatusUpdating}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 ${invoice.jobStatus === 'ongoing' ? 'bg-blue hover:bg-blue-light text-white' : 'bg-brand-green hover:opacity-90 text-white'
+                                }`}
+                        >
+                            {jobStatusUpdating ? 'Updating...' : invoice.jobStatus === 'ongoing' ? 'Complete Job' : 'Start Job'}
+                        </button>
+                    )}
+                </div>
 
                 <div className="grid grid-cols-2 gap-3 mb-3">
                     <button

@@ -191,15 +191,19 @@ export default function Employee() {
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-3">
                         <input type="text" placeholder="First name" value={intake.firstName}
                             onChange={(e) => updateIntake('firstName', e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && submitIntake()}
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
                         <input type="text" placeholder="Last name" value={intake.lastName}
                             onChange={(e) => updateIntake('lastName', e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && submitIntake()}
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
                         <input type="tel" placeholder="Phone" value={intake.phone}
                             onChange={(e) => updateIntake('phone', e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && submitIntake()}
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
                         <input type="email" placeholder="Email" value={intake.email}
                             onChange={(e) => updateIntake('email', e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && submitIntake()}
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
                         <div>
                             <p className="text-white/40 text-xs mb-1">Start date</p>
@@ -211,9 +215,11 @@ export default function Employee() {
                         <p className="text-white/30 text-xs">You'll use this every time you clock in — pick something you'll remember, don't share it.</p>
                         <input type="password" inputMode="numeric" maxLength={4} placeholder="PIN" value={intake.pin}
                             onChange={(e) => updateIntake('pin', e.target.value.replace(/\D/g, ''))}
+                            onKeyDown={(e) => e.key === 'Enter' && submitIntake()}
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue text-center tracking-[0.5em]" />
                         <input type="password" inputMode="numeric" maxLength={4} placeholder="Confirm PIN" value={intake.confirmPin}
                             onChange={(e) => updateIntake('confirmPin', e.target.value.replace(/\D/g, ''))}
+                            onKeyDown={(e) => e.key === 'Enter' && submitIntake()}
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue text-center tracking-[0.5em]" />
                         {intakeError && <p className="text-red-400 text-sm">{intakeError}</p>}
                         <button onClick={submitIntake}
@@ -273,6 +279,7 @@ export default function Employee() {
                             <input
                                 type="password" inputMode="numeric" maxLength={4} value={pinInput}
                                 onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+                                onKeyDown={(e) => e.key === 'Enter' && pinInput.length === 4 && submitPin()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-2xl py-4 px-4 outline-none focus:border-blue text-center tracking-[0.5em] mb-3"
                                 autoFocus
                             />
@@ -527,6 +534,7 @@ function TimeclockTab({ employeeId, pin }) {
                 </p>
                 <input
                     type="number" value={rateOverride} onChange={(e) => setRateOverride(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleClockIn()}
                     placeholder="e.g. 22.50"
                     className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue mb-4"
                 />

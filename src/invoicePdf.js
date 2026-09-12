@@ -73,6 +73,20 @@ export function generateInvoicePdf(invoice) {
         y += workLines.length * 13 + 16
     }
 
+    if (invoice.notes) {
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(9)
+        doc.setTextColor(...GRAY_LABEL)
+        doc.text('NOTES', 36, y)
+        y += 14
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(10)
+        doc.setTextColor(...BLACK)
+        const noteLines = doc.splitTextToSize(invoice.notes, 540)
+        doc.text(noteLines, 36, y)
+        y += noteLines.length * 13 + 16
+    }
+
     doc.setFillColor(...NAVY)
     doc.rect(36, y - 12, 540, 20, 'F')
     doc.setFont('helvetica', 'bold')

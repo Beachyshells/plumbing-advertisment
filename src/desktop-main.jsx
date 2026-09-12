@@ -3,14 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import Desktop from './Desktop.jsx'
 import PinGate from './PinGate.jsx'
-import ErrorBoundary from './ErrorBoundary.jsx'
+import InternalErrorBoundary from './ErrorBoundary.jsx'
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
-        <ErrorBoundary>
+        <InternalErrorBoundary>
             <PinGate>
                 <Desktop />
             </PinGate>
-        </ErrorBoundary>
+        </InternalErrorBoundary>
     </StrictMode>,
 )

@@ -153,6 +153,16 @@ export default function IntakeWizard() {
 
         setCustomer((prev) => ({ ...prev, [stage]: value }))
 
+        // Editing one field of an existing customer should save that field
+        // and go straight back to review — not continue through the rest
+        // of the new-customer wizard, and definitely not re-run the
+        // duplicate-check search (which would find and reload this same
+        // customer from the server, wiping out the edit that was just made).
+        if (existingCustomerId) {
+            setStage('review')
+            return
+        }
+
         if (stage === 'firstName') setStage('lastName')
         else if (stage === 'lastName') setStage('bestPhone')
         else if (stage === 'bestPhone') setStage('altPhone')
@@ -176,7 +186,7 @@ export default function IntakeWizard() {
             return
         }
         setCustomer((prev) => ({ ...prev, billingAddress: hasAny ? trimmed : undefined }))
-        setStage('email')
+        setStage(existingCustomerId ? 'review' : 'email')
     }
 
     // ---- property search ----
@@ -537,7 +547,7 @@ export default function IntakeWizard() {
                                     key={opt}
                                     onClick={() => {
                                         setCustomer((prev) => ({ ...prev, dog: opt }))
-                                        setStage('email')
+                                        setStage(existingCustomerId ? 'review' : 'email')
                                     }}
                                     className="w-full bg-white/5 hover:bg-blue border border-white/10 hover:border-blue text-white text-lg py-4 rounded-xl transition-colors active:scale-[0.98]"
                                 >

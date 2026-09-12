@@ -4,6 +4,7 @@ import CustomerInvoiceWizard from './CustomerInvoiceWizard.jsx'
 import { generateInvoicePdf } from './invoicePdf.js'
 import { queuePendingEmail, syncPendingEmails } from './offlineQueue.js'
 import EmployeesAdmin from './EmployeesAdmin.jsx'
+import Toast from './Toast.jsx'
 
 
 function formatAddress(address) {
@@ -27,6 +28,12 @@ export default function Desktop() {
         const params = new URLSearchParams(window.location.search)
         const addJobFor = params.get('addJobFor')
         const viewCustomer = params.get('viewCustomer')
+
+        // Clean the URL immediately so a later reload (like pull-to-refresh)
+        // doesn't re-trigger this same one-time navigation.
+        if (addJobFor || viewCustomer) {
+            window.history.replaceState({}, '', window.location.pathname)
+        }
 
         if (addJobFor) {
             fetch(`/api/customers?id=${encodeURIComponent(addJobFor)}`)
@@ -401,9 +408,10 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                         <a
+
                             href={`/invoice?edit=${customer._id}`}
                             title="Edit profile"
-                            className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors text-lg"
+                            className="w-10 h-10 flex items-center justify-center bg-brand-green hover:bg-white/40 border border-white/20 rounded-xl transition-colors text-lg"
                         >
                             ✎
                         </a>

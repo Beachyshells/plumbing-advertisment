@@ -470,6 +470,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="First name"
                                 value={newCustomer.firstName}
                                 onChange={(e) => setNewCustomer((prev) => ({ ...prev, firstName: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && checkForExistingCustomer()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <input
@@ -477,6 +478,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="Last name"
                                 value={newCustomer.lastName}
                                 onChange={(e) => setNewCustomer((prev) => ({ ...prev, lastName: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && checkForExistingCustomer()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <input
@@ -484,6 +486,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="Best phone"
                                 value={newCustomer.bestPhone}
                                 onChange={(e) => setNewCustomer((prev) => ({ ...prev, bestPhone: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && checkForExistingCustomer()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             {saveMessage && <p className="text-red-400 text-sm">{saveMessage}</p>}
@@ -602,6 +605,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="Street"
                                 value={newPropertyDraft.street}
                                 onChange={(e) => setNewPropertyDraft((prev) => ({ ...prev, street: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && submitNewPropertyAndCreateCustomer()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <div className="grid grid-cols-2 gap-3">
@@ -610,6 +614,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                     placeholder="City"
                                     value={newPropertyDraft.city}
                                     onChange={(e) => setNewPropertyDraft((prev) => ({ ...prev, city: e.target.value }))}
+                                    onKeyDown={(e) => e.key === 'Enter' && submitNewPropertyAndCreateCustomer()}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                                 />
                                 <input
@@ -617,6 +622,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                     placeholder="State"
                                     value={newPropertyDraft.state}
                                     onChange={(e) => setNewPropertyDraft((prev) => ({ ...prev, state: e.target.value }))}
+                                    onKeyDown={(e) => e.key === 'Enter' && submitNewPropertyAndCreateCustomer()}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                                 />
                             </div>
@@ -625,6 +631,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="ZIP (optional)"
                                 value={newPropertyDraft.zip}
                                 onChange={(e) => setNewPropertyDraft((prev) => ({ ...prev, zip: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && submitNewPropertyAndCreateCustomer()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             {saveMessage && <p className="text-red-400 text-sm">{saveMessage}</p>}
@@ -667,6 +674,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="Technician"
                                 value={technician}
                                 onChange={(e) => setTechnician(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && setStage('line-items')}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <input
@@ -674,6 +682,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="Labor cost"
                                 value={laborCost}
                                 onChange={(e) => setLaborCost(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && setStage('line-items')}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
 
@@ -769,6 +778,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="Item name"
                                 value={miscDraft.miscName}
                                 onChange={(e) => setMiscDraft((prev) => ({ ...prev, miscName: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && addMiscLineItem()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <input
@@ -776,6 +786,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="Sell price (final, no markup)"
                                 value={miscDraft.miscSellPrice}
                                 onChange={(e) => setMiscDraft((prev) => ({ ...prev, miscSellPrice: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && addMiscLineItem()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <input
@@ -783,6 +794,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 placeholder="Note (e.g. customer's old part, reused)"
                                 value={miscDraft.miscNote}
                                 onChange={(e) => setMiscDraft((prev) => ({ ...prev, miscNote: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && addMiscLineItem()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <button
@@ -897,6 +909,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                             <input
                                 type="text" placeholder="Serial number" value={equipmentLogDraft.serialNumber}
                                 onChange={(e) => setEquipmentLogDraft((d) => ({ ...d, serialNumber: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && handleLogEquipment(false)}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <div>

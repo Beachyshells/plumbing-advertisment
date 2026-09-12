@@ -750,17 +750,16 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                             placeholder="Search parts..."
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue mb-2"
                         />
-                        <div className="flex flex-col gap-2 mb-5">
-                            {filteredInventory.map((item) => (
-                                <button
-                                    key={item._id}
-                                    onClick={() => addCatalogLineItem(item)}
-                                    className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
-                                >
-                                    <p className="text-white text-sm">{item.name}</p>
-                                    <p className="text-white/40 text-xs">{formatMoney(item.sellPrice)}</p>
-                                </button>
-                            ))}
+                        <div className="flex flex-col gap-2 mb-5 max-h-64 overflow-y-auto no-scrollbar border border-white/10 rounded-xl p-2">                            {filteredInventory.map((item) => (
+                            <button
+                                key={item._id}
+                                onClick={() => addCatalogLineItem(item)}
+                                className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                            >
+                                <p className="text-white text-sm">{item.name}</p>
+                                <p className="text-white/40 text-xs">{formatMoney(item.sellPrice)}</p>
+                            </button>
+                        ))}
                         </div>
 
                         <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Or add a one-off / reused part</p>

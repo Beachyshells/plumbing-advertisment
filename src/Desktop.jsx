@@ -1706,8 +1706,9 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                 {!['sent', 'queued', 'no-email', 'error'].includes(emailStatus) && <div className="mb-6" />}
 
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 mb-6">
-                    <Field label="Property Address" value={formatAddress(invoice.propertyAddress)} />
-                    <Field label="Service Date" value={invoice.serviceDate} />
+                    <Field label="Invoice Date" value={invoice.createdAt ? invoice.createdAt.slice(0, 10) : ''} />
+                    <Field label="Start Date" value={invoice.serviceDate} />
+                    <Field label="Property Address" value={formatAddress(invoice.propertyAddress)} />                    <Field label="Service Date" value={invoice.serviceDate} />
                     <Field label="Work Performed" value={invoice.workPerformed} />
                     <Field label="Notes" value={invoice.notes} />
                     <div className="grid grid-cols-2 gap-4">

@@ -48,9 +48,11 @@ export async function generateInvoicePdf(invoice) {
     doc.setFontSize(10)
     doc.setTextColor(...GRAY_LABEL)
     doc.text(`#${invoice.invoiceNumber || ''}`, 576, 62, { align: 'right' })
-    doc.text(invoice.serviceDate || '', 576, 74, { align: 'right' })
+    const invoiceDate = invoice.createdAt ? invoice.createdAt.slice(0, 10) : ''
+    doc.text(`Invoice Date: ${invoiceDate}`, 576, 74, { align: 'right' })
+    doc.text(`Start Date: ${invoice.serviceDate || ''}`, 576, 86, { align: 'right' })
 
-    let y = 100
+    let y = 112
     doc.setDrawColor(...NAVY)
     doc.setLineWidth(1.5)
     doc.line(36, y, 576, y)

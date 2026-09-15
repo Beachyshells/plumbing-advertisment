@@ -321,42 +321,41 @@ export default function IntakeWizard() {
                 </div>
 
                 {/* ---- simple one-field screens ---- */}
-                {['firstName', 'lastName', 'bestPhone', 'altPhone', 'additionalContactName', 'email', 'notes'].includes(stage) && (
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                        <p className="text-white text-xl font-serif mb-6">{SIMPLE_LABELS[stage]}</p>
-                        <form onSubmit={submitSimpleField} className="flex flex-col gap-3">
-                            {stage === 'notes' ? (
-                                <textarea
-                                    ref={inputRef}
-                                    value={draft}
-                                    onChange={(e) => setDraft(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue h-28 resize-none"
-                                    placeholder="Type here..."
-                                />
-                            ) : (
-                                <input
-                                    ref={inputRef}
-                                    type={stage.toLowerCase().includes('phone') ? 'tel' : 'text'}
-                                    value={draft}
-                                    onChange={(e) => setDraft(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
-                                    placeholder="Type here..."
-                                />
-                            )}
-                            {fieldError && <p className="text-red-400 text-sm">{fieldError}</p>}
-                            <button
-                                type="submit"
-                                className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
-                            >
-                                {draft.trim() ? 'Next' : stage === 'name' || stage === 'bestPhone' ? 'Next' : 'Skip'}
-                            </button>
-                        </form>
-                        {stage !== 'firstName' && (
-                            <button onClick={goBack} className="w-full text-white/40 hover:text-white/70 text-sm mt-4 py-2 transition-colors">
-                                ← Back
-                            </button>
+                {['firstName', 'lastName', 'bestPhone', 'altPhone', 'additionalContactFirstName', 'additionalContactLastName', 'email', 'notes'].includes(stage) && (<div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    <p className="text-white text-xl font-serif mb-6">{SIMPLE_LABELS[stage]}</p>
+                    <form onSubmit={submitSimpleField} className="flex flex-col gap-3">
+                        {stage === 'notes' ? (
+                            <textarea
+                                ref={inputRef}
+                                value={draft}
+                                onChange={(e) => setDraft(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue h-28 resize-none"
+                                placeholder="Type here..."
+                            />
+                        ) : (
+                            <input
+                                ref={inputRef}
+                                type={stage.toLowerCase().includes('phone') ? 'tel' : 'text'}
+                                value={draft}
+                                onChange={(e) => setDraft(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                placeholder="Type here..."
+                            />
                         )}
-                    </div>
+                        {fieldError && <p className="text-red-400 text-sm">{fieldError}</p>}
+                        <button
+                            type="submit"
+                            className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
+                        >
+                            {draft.trim() ? 'Next' : stage === 'name' || stage === 'bestPhone' ? 'Next' : 'Skip'}
+                        </button>
+                    </form>
+                    {stage !== 'firstName' && (
+                        <button onClick={goBack} className="w-full text-white/40 hover:text-white/70 text-sm mt-4 py-2 transition-colors">
+                            ← Back
+                        </button>
+                    )}
+                </div>
                 )}
 
                 {/* ---- check for existing customer match ---- */}
@@ -574,8 +573,7 @@ export default function IntakeWizard() {
                             <ReviewRow label="Last Name" value={customer.lastName} onEdit={() => setStage('lastName')} />
                             <ReviewRow label="Best Phone" value={customer.bestPhone} onEdit={() => setStage('bestPhone')} />
                             <ReviewRow label="Alt Phone" value={customer.altPhone} onEdit={() => setStage('altPhone')} />
-                            <ReviewRow label="Additional Contact" value={customer.additionalContactName} onEdit={() => setStage('additionalContactName')} />
-                            <ReviewRow label="Service Address" value={formatAddress(propertyDisplay?.address)} onEdit={() => setStage('property-search')} />
+                            <ReviewRow label="Additional Contact" value={[customer.additionalContactFirstName, customer.additionalContactLastName].filter(Boolean).join(' ')} onEdit={() => setStage('additionalContactFirstName')} />                            <ReviewRow label="Service Address" value={formatAddress(propertyDisplay?.address)} onEdit={() => setStage('property-search')} />
                             <ReviewRow label="Well / Municipal" value={propertyDisplay?.wellOrMunicipal} onEdit={() => setStage('property-search')} />
                             <ReviewRow label="Billing Address" value={formatAddress(customer.billingAddress)} onEdit={() => setStage('billingAddress')} />
                             <ReviewRow label="Dog on site?" value={customer.dog} onEdit={() => setStage('dog')} />

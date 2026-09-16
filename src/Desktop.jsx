@@ -271,87 +271,87 @@ function CustomersView({ onBack, onAddJob, initialSelectedId }) {
                             {status === 'ready' ? `${customers.length} profile${customers.length === 1 ? '' : 's'}` : ''}
                         </p>
                     </div>
-
-                    href="/invoice"
-                    className="bg-blue hover:bg-blue-light text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors active:scale-[0.98]"
+                    <a
+                        href="/invoice"
+                        className="bg-blue hover:bg-blue-light text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors active:scale-[0.98]"
                     >
-                    + New Customer
-                </a>
-            </div>
-
-            <div className="flex gap-2 mb-4">
-                <button
-                    onClick={() => setSearchMode('name')}
-                    className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${searchMode === 'name' ? 'bg-blue text-white' : 'bg-white/5 text-white/50 border border-white/10'
-                        }`}
-                >
-                    By Name
-                </button>
-                <button
-                    onClick={() => setSearchMode('address')}
-                    className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${searchMode === 'address' ? 'bg-blue text-white' : 'bg-white/5 text-white/50 border border-white/10'
-                        }`}
-                >
-                    By Address
-                </button>
-            </div>
-
-            <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={searchMode === 'name' ? 'Search by name or phone...' : 'Search by address...'}
-                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-base py-3 px-4 outline-none focus:border-blue mb-6"
-            />
-
-            {status === 'loading' && (
-                <p className="text-white/40 text-sm text-center py-10">Loading...</p>
-            )}
-
-            {status === 'error' && (
-                <p className="text-red-400 text-sm text-center py-10">Couldn't load customers — check your connection.</p>
-            )}
-
-            {status === 'ready' && filtered.length === 0 && (
-                <p className="text-white/40 text-sm text-center py-10">
-                    {customers.length === 0 ? 'No customers yet.' : 'No matches for that search.'}
-                </p>
-            )}
-
-            {searchMode === 'name' && (
-                <div className="flex flex-col gap-3">
-                    {filtered.map((c) => (
-                        <button
-                            key={c._id}
-                            onClick={() => setSelectedId(c._id)}
-                            className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-5 transition-colors active:scale-[0.98]"
-                        >
-                            <p className="text-white text-lg font-serif">{c.firstName || c.lastName ? `${c.firstName} ${c.lastName}` : 'No name'}</p>
-                            <p className="text-white/50 text-sm mt-1">{formatAddress(c.property?.address) || '—'}</p>
-                            <p className="text-white/30 text-xs mt-1">{c.bestPhone || ''}</p>
-                        </button>
-                    ))}
+                        + New Customer
+                    </a>
                 </div>
-            )}
 
-            {searchMode === 'address' && (
-                <div className="flex flex-col gap-3">
-                    {propertyMatches.map((p) => (
-                        <button
-                            key={p._id}
-                            onClick={() => setSelectedProperty(p)}
-                            className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-5 transition-colors active:scale-[0.98]"
-                        >
-                            <p className="text-white text-lg font-serif">{formatAddress(p.address)}</p>
-                            <p className="text-white/30 text-xs mt-1">Tap to see full history at this address</p>
-                        </button>
-                    ))}
-                    {propertyMatches.length === 0 && search.trim() && (
-                        <p className="text-white/40 text-sm text-center py-10">No matching address.</p>
-                    )}
+                <div className="flex gap-2 mb-4">
+                    <button
+                        onClick={() => setSearchMode('name')}
+                        className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${searchMode === 'name' ? 'bg-blue text-white' : 'bg-white/5 text-white/50 border border-white/10'
+                            }`}
+                    >
+                        By Name
+                    </button>
+                    <button
+                        onClick={() => setSearchMode('address')}
+                        className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${searchMode === 'address' ? 'bg-blue text-white' : 'bg-white/5 text-white/50 border border-white/10'
+                            }`}
+                    >
+                        By Address
+                    </button>
                 </div>
-            )}
-        </div>
+
+                <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={searchMode === 'name' ? 'Search by name or phone...' : 'Search by address...'}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-base py-3 px-4 outline-none focus:border-blue mb-6"
+                />
+
+                {status === 'loading' && (
+                    <p className="text-white/40 text-sm text-center py-10">Loading...</p>
+                )}
+
+                {status === 'error' && (
+                    <p className="text-red-400 text-sm text-center py-10">Couldn't load customers — check your connection.</p>
+                )}
+
+                {status === 'ready' && filtered.length === 0 && (
+                    <p className="text-white/40 text-sm text-center py-10">
+                        {customers.length === 0 ? 'No customers yet.' : 'No matches for that search.'}
+                    </p>
+                )}
+
+                {searchMode === 'name' && (
+                    <div className="flex flex-col gap-3">
+                        {filtered.map((c) => (
+                            <button
+                                key={c._id}
+                                onClick={() => setSelectedId(c._id)}
+                                className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-5 transition-colors active:scale-[0.98]"
+                            >
+                                <p className="text-white text-lg font-serif">{c.firstName || c.lastName ? `${c.firstName} ${c.lastName}` : 'No name'}</p>
+                                <p className="text-white/50 text-sm mt-1">{formatAddress(c.property?.address) || '—'}</p>
+                                <p className="text-white/30 text-xs mt-1">{c.bestPhone || ''}</p>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {searchMode === 'address' && (
+                    <div className="flex flex-col gap-3">
+                        {propertyMatches.map((p) => (
+                            <button
+                                key={p._id}
+                                onClick={() => setSelectedProperty(p)}
+                                className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-5 transition-colors active:scale-[0.98]"
+                            >
+                                <p className="text-white text-lg font-serif">{formatAddress(p.address)}</p>
+                                <p className="text-white/30 text-xs mt-1">Tap to see full history at this address</p>
+                            </button>
+                        ))}
+                        {propertyMatches.length === 0 && search.trim() && (
+                            <p className="text-white/40 text-sm text-center py-10">No matching address.</p>
+                        )}
+                    </div>
+                )}
+            </div>
         </div >
     )
 }
@@ -449,138 +449,139 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
 
-
-                        href={`/invoice?edit=${customer._id}`}
-                        title="Edit profile"
-                        className="w-10 h-10 flex items-center justify-center bg-brand-green hover:bg-white/40 border border-white/20 rounded-xl transition-colors text-lg"
+                        <a
+                            href={`/invoice?edit=${customer._id}`}
+                            title="Edit profile"
+                            className="w-10 h-10 flex items-center justify-center bg-brand-green hover:bg-white/40 border border-white/20 rounded-xl transition-colors text-lg"
                         >
-                        ✎
-                    </a>
-                    <button
-                        onClick={() => onAddJob(customer)}
-                        className="bg-blue hover:bg-blue-light text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors active:scale-[0.98] whitespace-nowrap"
-                    >
-                        + Add Job
-                    </button>
+                            ✎
+                        </a>
+                        <button
+                            onClick={() => onAddJob(customer)}
+                            className="bg-blue hover:bg-blue-light text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors active:scale-[0.98] whitespace-nowrap"
+                        >
+                            + Add Job
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+                    {TABS.map((t) => (
+                        <button
+                            key={t}
+                            onClick={() => setTab(t)}
+                            className={`shrink-0 px-4 py-2 rounded-full text-sm transition-colors ${tab === t
+                                ? 'bg-blue text-white'
+                                : 'bg-white/5 text-white/50 hover:bg-white/10 border border-white/10'
+                                }`}
+                        >
+                            {t}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    {tab === 'Overview' && (
+                        <div className="flex flex-col gap-4">
+                            <Field label="Best Phone" value={customer.bestPhone} />
+                            <Field label="Alt Phone" value={customer.altPhone} />
+                            <Field label="Additional Contact" value={[customer.additionalContactFirstName, customer.additionalContactLastName].filter(Boolean).join(' ')} />
+                            <Field label="Email" value={customer.email} />
+                            <Field label="Service Address" value={formatAddress(customer.property?.address)} />
+                            <Field label="Billing Address" value={formatAddress(customer.billingAddress)} />
+                            <Field label="Well / Municipal" value={customer.property?.wellOrMunicipal} />
+                            {Number(customer.creditBalance) > 0 && (
+                                <div>
+                                    <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Account Credit</p>
+                                    <p className="text-brand-green text-lg">{formatMoney(customer.creditBalance)}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {tab === 'Site Access' && (
+                        <div className="flex flex-col gap-4">
+                            <Field label="Gate Code / Key / Entry" value={customer.property?.gateCodeKeyEntry} />
+                            <Field label="Dog?" value={customer.dog} />
+                            <Field label="Main Shutoff Location" value={customer.property?.mainShutoffLocation} />
+                            <Field label="Notes" value={customer.notes} />
+                        </div>
+                    )}
+
+                    {tab === 'Service History' && (
+                        <div className="flex flex-col gap-3">
+                            {invoiceStatus === 'loading' && (
+                                <p className="text-white/40 text-sm text-center py-6">Loading...</p>
+                            )}
+                            {invoiceStatus === 'error' && (
+                                <p className="text-red-400 text-sm text-center py-6">Couldn't load service history.</p>
+                            )}
+                            {invoiceStatus === 'ready' && invoices.length === 0 && (
+                                <p className="text-white/40 text-sm text-center py-6">No jobs yet — tap "+ Add Job" to start one.</p>
+                            )}
+                            {invoices.map((inv) => (
+                                <button
+                                    key={inv._id}
+                                    onClick={() => setSelectedInvoice(inv)}
+                                    className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-white text-sm">
+                                            {inv.invoiceNumber ? `#${inv.invoiceNumber}` : 'Invoice'} — {inv.serviceDate || 'No date'}
+                                        </p>
+                                        <p className="text-white/50 text-sm">{inv.totalAmount != null ? formatMoney(inv.totalAmount) : ''}</p>
+                                    </div>
+                                    <p className="text-white/40 text-xs mt-1">{inv.workPerformed || 'No description'}</p>
+                                    <p className="text-white/30 text-xs mt-1 capitalize">{inv.paymentStatus}</p>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {tab === 'Equipment' && (
+                        <div className="flex flex-col gap-5">
+                            {equipmentAggStatus === 'loading' && (
+                                <p className="text-white/40 text-sm text-center py-6">Loading...</p>
+                            )}
+                            {equipmentAggStatus === 'ready' && equipmentGroups.length === 0 && (
+                                <p className="text-white/40 text-sm text-center py-6">No equipment on file for this customer's properties yet.</p>
+                            )}
+                            {equipmentGroups.map((group) => (
+                                <div key={group.propertyId}>
+                                    <p className="text-white/40 text-xs uppercase tracking-widest mb-2">{formatAddress(group.address)}</p>
+                                    <div className="flex flex-col gap-2">
+                                        {group.equipment.map((item) => (
+                                            <div key={item._key} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                                                <p className="text-white text-base font-serif">
+                                                    {[item.equipmentType, item.make, item.model].filter(Boolean).join(' — ') || 'Untitled unit'}
+                                                </p>
+                                                <p className="text-white/40 text-xs mt-0.5">
+                                                    {[item.serialNumber ? `S/N ${item.serialNumber}` : null, item.installDate ? `Installed ${item.installDate}` : null]
+                                                        .filter(Boolean)
+                                                        .join(' · ')}
+                                                </p>
+                                                {item.warrantyExpires && <p className="text-white/40 text-xs">Warranty until {item.warrantyExpires}</p>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {tab === 'Contracts' && (
+                        <p className="text-white/40 text-sm text-center py-10">
+                            Nothing here yet — coming in a future update.
+                        </p>
+                    )}
                 </div>
             </div>
-
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-                {TABS.map((t) => (
-                    <button
-                        key={t}
-                        onClick={() => setTab(t)}
-                        className={`shrink-0 px-4 py-2 rounded-full text-sm transition-colors ${tab === t
-                            ? 'bg-blue text-white'
-                            : 'bg-white/5 text-white/50 hover:bg-white/10 border border-white/10'
-                            }`}
-                    >
-                        {t}
-                    </button>
-                ))}
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                {tab === 'Overview' && (
-                    <div className="flex flex-col gap-4">
-                        <Field label="Best Phone" value={customer.bestPhone} />
-                        <Field label="Alt Phone" value={customer.altPhone} />
-                        <Field label="Additional Contact" value={[customer.additionalContactFirstName, customer.additionalContactLastName].filter(Boolean).join(' ')} />
-                        <Field label="Email" value={customer.email} />
-                        <Field label="Service Address" value={formatAddress(customer.property?.address)} />
-                        <Field label="Billing Address" value={formatAddress(customer.billingAddress)} />
-                        <Field label="Well / Municipal" value={customer.property?.wellOrMunicipal} />
-                        {Number(customer.creditBalance) > 0 && (
-                            <div>
-                                <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Account Credit</p>
-                                <p className="text-brand-green text-lg">{formatMoney(customer.creditBalance)}</p>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {tab === 'Site Access' && (
-                    <div className="flex flex-col gap-4">
-                        <Field label="Gate Code / Key / Entry" value={customer.property?.gateCodeKeyEntry} />
-                        <Field label="Dog?" value={customer.dog} />
-                        <Field label="Main Shutoff Location" value={customer.property?.mainShutoffLocation} />
-                        <Field label="Notes" value={customer.notes} />
-                    </div>
-                )}
-
-                {tab === 'Service History' && (
-                    <div className="flex flex-col gap-3">
-                        {invoiceStatus === 'loading' && (
-                            <p className="text-white/40 text-sm text-center py-6">Loading...</p>
-                        )}
-                        {invoiceStatus === 'error' && (
-                            <p className="text-red-400 text-sm text-center py-6">Couldn't load service history.</p>
-                        )}
-                        {invoiceStatus === 'ready' && invoices.length === 0 && (
-                            <p className="text-white/40 text-sm text-center py-6">No jobs yet — tap "+ Add Job" to start one.</p>
-                        )}
-                        {invoices.map((inv) => (
-                            <button
-                                key={inv._id}
-                                onClick={() => setSelectedInvoice(inv)}
-                                className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <p className="text-white text-sm">
-                                        {inv.invoiceNumber ? `#${inv.invoiceNumber}` : 'Invoice'} — {inv.serviceDate || 'No date'}
-                                    </p>
-                                    <p className="text-white/50 text-sm">{inv.totalAmount != null ? formatMoney(inv.totalAmount) : ''}</p>
-                                </div>
-                                <p className="text-white/40 text-xs mt-1">{inv.workPerformed || 'No description'}</p>
-                                <p className="text-white/30 text-xs mt-1 capitalize">{inv.paymentStatus}</p>
-                            </button>
-                        ))}
-                    </div>
-                )}
-                {tab === 'Equipment' && (
-                    <div className="flex flex-col gap-5">
-                        {equipmentAggStatus === 'loading' && (
-                            <p className="text-white/40 text-sm text-center py-6">Loading...</p>
-                        )}
-                        {equipmentAggStatus === 'ready' && equipmentGroups.length === 0 && (
-                            <p className="text-white/40 text-sm text-center py-6">No equipment on file for this customer's properties yet.</p>
-                        )}
-                        {equipmentGroups.map((group) => (
-                            <div key={group.propertyId}>
-                                <p className="text-white/40 text-xs uppercase tracking-widest mb-2">{formatAddress(group.address)}</p>
-                                <div className="flex flex-col gap-2">
-                                    {group.equipment.map((item) => (
-                                        <div key={item._key} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                                            <p className="text-white text-base font-serif">
-                                                {[item.equipmentType, item.make, item.model].filter(Boolean).join(' — ') || 'Untitled unit'}
-                                            </p>
-                                            <p className="text-white/40 text-xs mt-0.5">
-                                                {[item.serialNumber ? `S/N ${item.serialNumber}` : null, item.installDate ? `Installed ${item.installDate}` : null]
-                                                    .filter(Boolean)
-                                                    .join(' · ')}
-                                            </p>
-                                            {item.warrantyExpires && <p className="text-white/40 text-xs">Warranty until {item.warrantyExpires}</p>}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {tab === 'Contracts' && (
-                    <p className="text-white/40 text-sm text-center py-10">
-                        Nothing here yet — coming in a future update.
-                    </p>
-                )}
-            </div>
-        </div>
         </div >
     )
 }
 
 function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
     const [property, setProperty] = useState(initialProperty)
+    const [toast, setToast] = useState(null)
     const [invoices, setInvoices] = useState([])
     const [status, setStatus] = useState('loading') // loading | ready | error
     const [selectedInvoice, setSelectedInvoice] = useState(null)
@@ -805,7 +806,6 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <input
-                                type="text" placeholder="State" value={draft.state}
                                 type="text" placeholder="State" value={draft.state}
                                 onChange={(e) => setDraft((d) => ({ ...d, state: e.target.value }))}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"

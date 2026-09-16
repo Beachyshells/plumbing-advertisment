@@ -1370,9 +1370,18 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             }, 0)
             const totalPaid = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
 
+            const formatAddr = (addr) =>
+                addr ? [addr.street, [addr.city, addr.state].filter(Boolean).join(', ')].filter(Boolean).join(', ') : ''
+            const billingAddr = fullInvoice.customerBillingAddress?.street ? fullInvoice.customerBillingAddress : invoice.propertyAddress
+
             const templateParams = {
                 email: fullInvoice.customerEmail,
+                to_name: invoice.customerName || '',
                 invoice_id: fullInvoice.invoiceNumber || '',
+                invoice_date: fullInvoice.createdAt ? fullInvoice.createdAt.slice(0, 10) : '',
+                start_date: fullInvoice.serviceDate || '',
+                service_address: formatAddr(invoice.propertyAddress),
+                billing_address: formatAddr(billingAddr),
                 work_performed: fullInvoice.workPerformed || 'Not specified',
                 notes: fullInvoice.notes || '',
                 orders: items.map((item) => ({

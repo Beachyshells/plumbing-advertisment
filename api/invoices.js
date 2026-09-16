@@ -169,12 +169,7 @@ export default async function handler(req, res) {
                 filter += ` && property._ref == $propertyId`
                 params.propertyId = propertyId
             }
-            // The main Invoices tab (no customerId/propertyId filter) hides
-            // Complete jobs so it stays focused on active work — but a
-            // customer's or property's own history should still show everything.
-            if (!customerId && !propertyId) {
-                filter += ` && jobStatus != "complete"`
-            }
+
 
             const invoices = await readClient.fetch(
                 `*[${filter}] | order(serviceDate desc){

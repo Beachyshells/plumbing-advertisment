@@ -121,6 +121,7 @@ export default async function handler(req, res) {
                         notes,
                         createdAt,
                         "customerEmail": customer->email,
+                        "customerBillingAddress": customer->billingAddress,
 
                         lineItems[]{
                             itemType,

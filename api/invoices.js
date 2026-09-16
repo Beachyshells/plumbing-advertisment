@@ -34,8 +34,27 @@ async function uploadReceipt(base64Image) {
 }
 
 async function nextInvoiceNumber() {
-    const existingCount = await readClient.fetch(`count(*[_type == "customerInvoice"])`)
-    return String(1001 + existingCount)
+    const highest = await readClient.fetch(
+        `*[_type == "customerInvoice" && defined(invoiceNumber)] | order(invoiceNumber desc)[0].invoiceNumber`
+    )
+
+    if (!highest) return '1001'
+
+    const match = highest.match(/^([A-Z]?)(\d+)$/)
+    if (!match) return '1001'
+
+    const [, prefix, digits] = match
+    const num = Number(digits)
+
+    if (num < 9999) {
+        return `${prefix}${num + 1}`
+    }
+
+    // Rolled past 9999 — bump to the next letter and restart at 1000
+    // (e.g. 9999 -> A1000, A9999 -> B1000). A letter always sorts after
+    // a plain digit in text order, so this stays correctly sortable forever.
+    const nextPrefix = prefix ? String.fromCharCode(prefix.charCodeAt(0) + 1) : 'A'
+    return `${nextPrefix}1000`
 }
 
 async function resolveLineItems(submittedLineItems) {

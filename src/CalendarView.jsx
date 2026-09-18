@@ -153,14 +153,13 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                 {status === 'ready' && (
                     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
                         {/* ---- left: calendar grid ---- */}
-                        <div>
-                            <div className="flex items-center justify-between mb-6">
-                                <button
-                                    onClick={() => setCursor(new Date(year, month - 1, 1))}
-                                    className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors"
-                                >
-                                    ←
-                                </button>
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <div className="flex items-center justify-between mb-6">                                <button
+                                onClick={() => setCursor(new Date(year, month - 1, 1))}
+                                className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors"
+                            >
+                                ←
+                            </button>
                                 <h1 className="font-serif text-2xl text-white">{monthLabel}</h1>
                                 <button
                                     onClick={() => setCursor(new Date(year, month + 1, 1))}

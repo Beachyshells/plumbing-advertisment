@@ -1673,33 +1673,40 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                                     className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                                 />
                             </div>
-                            <textarea
-                                placeholder="Work performed"
-                                value={editData.workPerformed}
-                                onChange={(e) => setEditData((d) => ({ ...d, workPerformed: e.target.value }))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue h-24 resize-none"
-                            />
-                            <input
-                                type="text"
-                                placeholder="Technician"
-                                value={editData.technician}
-                                onChange={(e) => setEditData((d) => ({ ...d, technician: e.target.value }))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
-                            />
-                            <input
-                                type="number"
-                                placeholder="Labor cost"
-                                value={editData.laborCost}
-                                onChange={(e) => setEditData((d) => ({ ...d, laborCost: e.target.value }))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
-                            />
-                            <textarea
-                                placeholder="Notes"
-                                value={editData.notes}
-                                onChange={(e) => setEditData((d) => ({ ...d, notes: e.target.value }))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue h-20 resize-none"
-                            />
-                        </div>
+                            <div>
+                                <label className="text-white/40 text-xs uppercase tracking-widest mb-1 block">Work Performed</label>
+                                <textarea
+                                    value={editData.workPerformed}
+                                    onChange={(e) => setEditData((d) => ({ ...d, workPerformed: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue h-24 resize-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-white/40 text-xs uppercase tracking-widest mb-1 block">Technician</label>
+                                <input
+                                    type="text"
+                                    value={editData.technician}
+                                    onChange={(e) => setEditData((d) => ({ ...d, technician: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-white/40 text-xs uppercase tracking-widest mb-1 block">Labor Cost</label>
+                                <input
+                                    type="number"
+                                    value={editData.laborCost}
+                                    onChange={(e) => setEditData((d) => ({ ...d, laborCost: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-white/40 text-xs uppercase tracking-widest mb-1 block">Notes</label>
+                                <textarea
+                                    value={editData.notes}
+                                    onChange={(e) => setEditData((d) => ({ ...d, notes: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue h-20 resize-none"
+                                />
+                            </div>                        </div>
 
                         <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Line items</p>
                         <div className="flex flex-col gap-2 mb-4">

@@ -184,7 +184,7 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                                     <p key={i} className="text-white/40 text-xs text-center uppercase tracking-widest py-1">{d}</p>
                                 ))}
                             </div>
-                            <div className="grid grid-cols-7 gap-1">
+                            <div className="grid grid-cols-7 gap-2">
                                 {cells.map((day, i) => {
                                     if (day === null) return <div key={i} />
                                     const ds = dateString(day)
@@ -196,14 +196,14 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                                         <button
                                             key={i}
                                             onClick={() => setSelectedDay(ds)}
-                                            className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 p-1 transition-all border ${isSelected
+                                            className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 p-1 transition-all border active:scale-95 ${isSelected
                                                 ? 'bg-blue border-blue text-white shadow-lg shadow-blue/30'
                                                 : hasJobs
-                                                    ? 'bg-white border-white/0 text-navy hover:bg-white/90'
-                                                    : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'
+                                                    ? 'bg-white border-white text-navy hover:bg-white/90'
+                                                    : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20 hover:border-white/30'
                                                 } ${isToday ? 'ring-2 ring-blue ring-offset-2 ring-offset-navy' : ''}`}
                                         >
-                                            <p className={`text-sm font-semibold ${isSelected ? 'text-white' : hasJobs ? 'text-navy' : 'text-white/40'}`}>
+                                            <p className={`text-sm font-semibold ${isSelected ? 'text-white' : hasJobs ? 'text-navy' : 'text-white/60'}`}>
                                                 {day}
                                             </p>
                                             {hasJobs && (

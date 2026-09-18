@@ -98,11 +98,34 @@ export default async function handler(req, res) {
     // ---- GET: one invoice (?id=), a filtered list (?customerId= / ?propertyId=), or everything ----
     if (req.method === 'GET') {
         try {
-            const { id, customerId, propertyId, calendarMonth } = req.query
+            const { id, customerId, propertyId, calendarMonth, unconfirmedCancelations } = req.query
+
+            if (unconfirmedCancelations) {
+                const canceled = await readClient.fetch(
+                    `*[_type == "customerInvoice" && status == "canceled" && cancelAcknowledged != true] | order(canceledAt desc){
+                        _id,
+                        invoiceNumber,
+                        serviceDate,
+                        cancelReason,
+                        canceledAt,
+                        "customerFirstName": customer->firstName,
+                        "customerLastName": customer->lastName,
+                        "additionalContactFirstName": customer->additionalContactFirstName,
+                        "additionalContactLastName": customer->additionalContactLastName,
+                        "propertyAddress": property->address
+                    }`
+                )
+                const withNames = canceled.map((inv) => {
+                    const primary = [inv.customerFirstName, inv.customerLastName].filter(Boolean).join(' ')
+                    const secondary = [inv.additionalContactFirstName, inv.additionalContactLastName].filter(Boolean).join(' ')
+                    return { ...inv, customerName: secondary ? `${primary} / ${secondary}` : primary }
+                })
+                return res.status(200).json({ invoices: withNames })
+            }
 
             if (calendarMonth) {
                 const monthInvoices = await readClient.fetch(
-                    `*[_type == "customerInvoice" && jobStatus != "complete" && serviceDate >= $monthStart && serviceDate <= $monthEnd]{
+                    `*[_type == "customerInvoice" && status != "canceled" && jobStatus != "complete" && serviceDate >= $monthStart && serviceDate <= $monthEnd]{
                         _id,
                         invoiceNumber,
                         serviceDate,
@@ -140,6 +163,7 @@ export default async function handler(req, res) {
                         status,
                         cancelReason,
                         canceledAt,
+                        cancelAcknowledged,
                         notes,
                         createdAt,
                         "customerEmail": customer->email,
@@ -263,7 +287,8 @@ export default async function handler(req, res) {
 
     // ---- PATCH: edit contents (action: "update", default), record a payment
     // (action: "payment"), apply account credit (action: "credit"), change job
-    // status (action: "setJobStatus"), or cancel/reactivate (action: "cancel") ----
+    // status (action: "setJobStatus"), cancel/reactivate (action: "cancel" /
+    // "reactivate"), or dismiss the calendar alert (action: "acknowledgeCancelation") ----
     if (req.method === 'PATCH') {
         const body = req.body || {}
         const action = body.action || 'update'
@@ -391,19 +416,20 @@ export default async function handler(req, res) {
 
                 await writeClient
                     .patch(invoiceId)
-                    .set({ status: 'canceled', cancelReason, canceledAt })
+                    .set({ status: 'canceled', cancelReason, canceledAt, cancelAcknowledged: false })
                     .commit()
 
                 return res.status(200).json({ success: true, status: 'canceled', cancelReason, canceledAt })
             }
 
             if (action === 'reactivate') {
-                await writeClient
-                    .patch(invoiceId)
-                    .set({ status: 'active' })
-                    .commit()
-
+                await writeClient.patch(invoiceId).set({ status: 'active' }).commit()
                 return res.status(200).json({ success: true, status: 'active' })
+            }
+
+            if (action === 'acknowledgeCancelation') {
+                await writeClient.patch(invoiceId).set({ cancelAcknowledged: true }).commit()
+                return res.status(200).json({ success: true, cancelAcknowledged: true })
             }
 
             // action === 'update' — editing an invoice's contents (also handles

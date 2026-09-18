@@ -13,6 +13,37 @@ function daysInMonth(year, month) {
     return new Date(year, month + 1, 0).getDate()
 }
 
+function CancelationAlert({ cancelations, confirmingId, onConfirm, className = '' }) {
+    if (cancelations.length === 0) return null
+    return (
+        <div className={`bg-white border-2 border-red-500 rounded-2xl p-5 shadow-lg shadow-red-500/20 ${className}`}>
+            <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">⚠️</span>
+                <p className="text-navy font-serif text-lg font-semibold">
+                    {cancelations.length} Cancelation{cancelations.length === 1 ? '' : 's'} Need{cancelations.length === 1 ? 's' : ''} Review
+                </p>
+            </div>
+            <div className="flex flex-col gap-3">
+                {cancelations.map((c) => (
+                    <div key={c._id} className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <p className="text-navy text-sm font-semibold">{c.customerName || 'No customer'}</p>
+                        <p className="text-navy/60 text-xs mt-0.5">{formatAddress(c.propertyAddress)}</p>
+                        {c.cancelReason && <p className="text-navy/70 text-xs mt-2 italic">“{c.cancelReason}”</p>}
+                        <p className="text-navy/40 text-xs mt-1">Canceled {c.canceledAt || '—'}</p>
+                        <button
+                            onClick={() => onConfirm(c._id)}
+                            disabled={confirmingId === c._id}
+                            className="mt-3 w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-2 rounded-lg transition-colors active:scale-[0.98]"
+                        >
+                            {confirmingId === c._id ? 'Confirming...' : 'Confirm'}
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 export default function CalendarView({ onBack, onOpenInvoice }) {
     const [cursor, setCursor] = useState(() => {
         const d = new Date()
@@ -21,6 +52,8 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
     const [invoices, setInvoices] = useState([])
     const [status, setStatus] = useState('loading') // loading | ready | error
     const [selectedDay, setSelectedDay] = useState(null) // 'YYYY-MM-DD' or null
+    const [cancelations, setCancelations] = useState([])
+    const [confirmingId, setConfirmingId] = useState(null)
 
     const monthString = toMonthString(cursor)
     const todayFull = new Date().toISOString().slice(0, 10)
@@ -39,10 +72,43 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
             .catch(() => setStatus('error'))
     }
 
+    function fetchCancelations() {
+        fetch('/api/invoices?unconfirmedCancelations=true')
+            .then((res) => {
+                if (!res.ok) throw new Error('Failed')
+                return res.json()
+            })
+            .then((data) => setCancelations(data.invoices || []))
+            .catch(() => { }) // non-critical — the alert card just stays empty if this fails
+    }
+
+    async function handleConfirmCancelation(id) {
+        setConfirmingId(id)
+        try {
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'acknowledgeCancelation', invoiceId: id }),
+            })
+            if (!res.ok) throw new Error('Failed')
+            setCancelations((prev) => prev.filter((c) => c._id !== id))
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setConfirmingId(null)
+        }
+    }
+
     useEffect(() => {
         fetchMonth()
         setSelectedDay(null)
     }, [monthString])
+
+    // Independent of month navigation on purpose — Michael shouldn't be able
+    // to "page away" from an unconfirmed cancelation by changing months.
+    useEffect(() => {
+        fetchCancelations()
+    }, [])
 
     const byDate = {}
     invoices.forEach((inv) => {
@@ -73,6 +139,13 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                 <button onClick={onBack} className="text-white/40 hover:text-white/70 text-sm mb-6 transition-colors">
                     ← Desktop
                 </button>
+
+                <CancelationAlert
+                    cancelations={cancelations}
+                    confirmingId={confirmingId}
+                    onConfirm={handleConfirmCancelation}
+                    className="mb-6 lg:hidden"
+                />
 
                 {status === 'loading' && <p className="text-white/40 text-sm text-center py-10">Loading...</p>}
                 {status === 'error' && <p className="text-red-400 text-sm text-center py-10">Couldn't load the calendar.</p>}
@@ -138,39 +211,47 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                             </div>
                         </div>
 
-                        {/* ---- right: selected day's jobs ---- */}
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 lg:sticky lg:top-10">
-                            {!selectedDay && (
-                                <p className="text-white/40 text-sm text-center py-6">Tap a day to see what's scheduled.</p>
-                            )}
-                            {selectedDay && (
-                                <>
-                                    <p className="text-white text-lg font-serif mb-4">
-                                        {new Date(selectedDay + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                                    </p>
-                                    {selectedInvoices.length === 0 && (
-                                        <p className="text-white/40 text-sm">Nothing scheduled for this day.</p>
-                                    )}
-                                    <div className="flex flex-col gap-2">
-                                        {selectedInvoices.map((inv) => (
-                                            <button
-                                                key={inv._id}
-                                                onClick={() => onOpenInvoice(inv)}
-                                                className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <p className="text-white text-sm">{inv.customerName || 'No customer'}</p>
-                                                    <span className={`text-xs font-semibold ${inv.jobStatus === 'ongoing' ? 'text-brand-green' : 'text-accent'}`}>
-                                                        {inv.jobStatus === 'ongoing' ? 'Ongoing' : 'Not Started'}
-                                                    </span>
-                                                </div>
-                                                <p className="text-white/40 text-xs mt-0.5">{formatAddress(inv.propertyAddress)}</p>
-                                                {inv.workPerformed && <p className="text-white/40 text-xs mt-1 italic">{inv.workPerformed}</p>}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
+                        {/* ---- right: cancelation alerts + selected day's jobs ---- */}
+                        <div className="flex flex-col gap-6 lg:sticky lg:top-10">
+                            <CancelationAlert
+                                cancelations={cancelations}
+                                confirmingId={confirmingId}
+                                onConfirm={handleConfirmCancelation}
+                                className="hidden lg:block"
+                            />
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                                {!selectedDay && (
+                                    <p className="text-white/40 text-sm text-center py-6">Tap a day to see what's scheduled.</p>
+                                )}
+                                {selectedDay && (
+                                    <>
+                                        <p className="text-white text-lg font-serif mb-4">
+                                            {new Date(selectedDay + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                        </p>
+                                        {selectedInvoices.length === 0 && (
+                                            <p className="text-white/40 text-sm">Nothing scheduled for this day.</p>
+                                        )}
+                                        <div className="flex flex-col gap-2">
+                                            {selectedInvoices.map((inv) => (
+                                                <button
+                                                    key={inv._id}
+                                                    onClick={() => onOpenInvoice(inv)}
+                                                    className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-white text-sm">{inv.customerName || 'No customer'}</p>
+                                                        <span className={`text-xs font-semibold ${inv.jobStatus === 'ongoing' ? 'text-brand-green' : 'text-accent'}`}>
+                                                            {inv.jobStatus === 'ongoing' ? 'Ongoing' : 'Not Started'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-white/40 text-xs mt-0.5">{formatAddress(inv.propertyAddress)}</p>
+                                                    {inv.workPerformed && <p className="text-white/40 text-xs mt-1 italic">{inv.workPerformed}</p>}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

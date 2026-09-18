@@ -170,6 +170,15 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                                 </button>
                             </div>
 
+                            <div className="flex items-center justify-center gap-4 mb-4">
+                                <span className="flex items-center gap-1.5 text-white/40 text-xs">
+                                    <span className="w-2 h-2 rounded-full bg-brand-green" /> Ongoing
+                                </span>
+                                <span className="flex items-center gap-1.5 text-white/40 text-xs">
+                                    <span className="w-2 h-2 rounded-full bg-accent" /> Not Started
+                                </span>
+                            </div>
+
                             <div className="grid grid-cols-7 gap-1 mb-2">
                                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
                                     <p key={i} className="text-white/40 text-xs text-center uppercase tracking-widest py-1">{d}</p>
@@ -180,29 +189,37 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                                     if (day === null) return <div key={i} />
                                     const ds = dateString(day)
                                     const dayJobs = byDate[ds] || []
+                                    const hasJobs = dayJobs.length > 0
                                     const isToday = ds === todayFull
                                     const isSelected = ds === selectedDay
                                     return (
                                         <button
                                             key={i}
                                             onClick={() => setSelectedDay(ds)}
-                                            className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 transition-colors border ${isSelected
-                                                ? 'bg-blue border-blue text-white'
-                                                : isToday
-                                                    ? 'bg-white/10 border-blue/50 text-white'
-                                                    : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
-                                                }`}
+                                            className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 p-1 transition-all border ${isSelected
+                                                ? 'bg-blue border-blue text-white shadow-lg shadow-blue/30'
+                                                : hasJobs
+                                                    ? 'bg-white border-white/0 text-navy hover:bg-white/90'
+                                                    : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'
+                                                } ${isToday ? 'ring-2 ring-blue ring-offset-2 ring-offset-navy' : ''}`}
                                         >
-                                            <p className="text-sm">{day}</p>
-                                            {dayJobs.length > 0 && (
-                                                <div className="flex gap-0.5">
+                                            <p className={`text-sm font-semibold ${isSelected ? 'text-white' : hasJobs ? 'text-navy' : 'text-white/40'}`}>
+                                                {day}
+                                            </p>
+                                            {hasJobs && (
+                                                <div className="flex items-center gap-0.5">
                                                     {dayJobs.slice(0, 3).map((job, j) => (
                                                         <span
                                                             key={j}
-                                                            className={`w-1.5 h-1.5 rounded-full ${job.jobStatus === 'ongoing' ? 'bg-brand-green' : 'bg-accent'
+                                                            className={`w-2 h-2 rounded-full ${job.jobStatus === 'ongoing' ? 'bg-brand-green' : 'bg-accent'
                                                                 }`}
                                                         />
                                                     ))}
+                                                    {dayJobs.length > 3 && (
+                                                        <span className={`text-[9px] font-semibold ${isSelected ? 'text-white/80' : 'text-navy/50'}`}>
+                                                            +{dayJobs.length - 3}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             )}
                                         </button>

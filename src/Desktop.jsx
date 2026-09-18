@@ -1664,12 +1664,15 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
                         <p className="text-white text-lg font-serif mb-4">Edit Invoice</p>
                         <div className="flex flex-col gap-3 mb-5">
-                            <input
-                                type="date"
-                                value={editData.serviceDate}
-                                onChange={(e) => setEditData((d) => ({ ...d, serviceDate: e.target.value }))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
-                            />
+                            <div>
+                                <label className="text-white/40 text-xs uppercase tracking-widest mb-1 block">Job Scheduled For</label>
+                                <input
+                                    type="date"
+                                    value={editData.serviceDate}
+                                    onChange={(e) => setEditData((d) => ({ ...d, serviceDate: e.target.value }))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                />
+                            </div>
                             <textarea
                                 placeholder="Work performed"
                                 value={editData.workPerformed}
@@ -1947,9 +1950,8 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
 
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 mb-6">
                     <Field label="Invoice Date" value={invoice.createdAt ? invoice.createdAt.slice(0, 10) : ''} />
-                    <Field label="Start Date" value={invoice.serviceDate} />
-                    <Field label="Property Address" value={formatAddress(invoice.propertyAddress)} />                    <Field label="Service Date" value={invoice.serviceDate} />
-                    <Field label="Work Performed" value={invoice.workPerformed} />
+                    <Field label="Job Scheduled For" value={invoice.serviceDate} />
+                    <Field label="Property Address" value={formatAddress(invoice.propertyAddress)} />                    <Field label="Work Performed" value={invoice.workPerformed} />
                     <Field label="Notes" value={invoice.notes} />
                     <div className="grid grid-cols-2 gap-4">
                         <div>

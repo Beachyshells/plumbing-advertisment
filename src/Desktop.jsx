@@ -1218,6 +1218,12 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [invoice, setInvoice] = useState(initialInvoice)
     const [toast, setToast] = useState(null)
     const [jobStatusUpdating, setJobStatusUpdating] = useState(false)
+    const [showCancelForm, setShowCancelForm] = useState(false)
+    const [cancelReasonDraft, setCancelReasonDraft] = useState('')
+    const [cancelStatus, setCancelStatus] = useState('idle') // idle | saving | error
+    const [cancelDetailsEditing, setCancelDetailsEditing] = useState(false)
+    const [cancelReasonEdit, setCancelReasonEdit] = useState(initialInvoice.cancelReason || '')
+    const [canceledAtEdit, setCanceledAtEdit] = useState(initialInvoice.canceledAt || '')
     const [customerCredit, setCustomerCredit] = useState(Number(initialInvoice.customerCredit) || 0)
     const [amount, setAmount] = useState('')
     const [method, setMethod] = useState('cash')
@@ -1473,6 +1479,71 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             console.error(err)
         } finally {
             setJobStatusUpdating(false)
+        }
+    }
+
+    async function handleCancelInvoice() {
+        setCancelStatus('saving')
+        try {
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'cancel', invoiceId: invoice._id, cancelReason: cancelReasonDraft }),
+            })
+            if (!res.ok) throw new Error('Failed')
+            const data = await res.json()
+            setInvoice((prev) => ({ ...prev, status: 'canceled', cancelReason: data.cancelReason, canceledAt: data.canceledAt }))
+            setCancelReasonEdit(data.cancelReason)
+            setCanceledAtEdit(data.canceledAt)
+            setShowCancelForm(false)
+            setCancelReasonDraft('')
+            setCancelStatus('idle')
+            setToast('Invoice canceled')
+        } catch (err) {
+            console.error(err)
+            setCancelStatus('error')
+        }
+    }
+
+    async function handleReactivateInvoice() {
+        setCancelStatus('saving')
+        try {
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reactivate', invoiceId: invoice._id }),
+            })
+            if (!res.ok) throw new Error('Failed')
+            setInvoice((prev) => ({ ...prev, status: 'active' }))
+            setCancelStatus('idle')
+            setToast('Invoice reactivated')
+        } catch (err) {
+            console.error(err)
+            setCancelStatus('error')
+        }
+    }
+
+    async function handleSaveCancelDetails() {
+        setCancelStatus('saving')
+        try {
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'update',
+                    invoiceId: invoice._id,
+                    cancelReason: cancelReasonEdit,
+                    canceledAt: canceledAtEdit,
+                }),
+            })
+            if (!res.ok) throw new Error('Failed')
+            setInvoice((prev) => ({ ...prev, cancelReason: cancelReasonEdit, canceledAt: canceledAtEdit }))
+            setCancelDetailsEditing(false)
+            setCancelStatus('idle')
+            setToast('Cancelation details updated')
+        } catch (err) {
+            console.error(err)
+            setCancelStatus('error')
         }
     }
 
@@ -1737,6 +1808,119 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                         >
                             {jobStatusUpdating ? 'Updating...' : invoice.jobStatus === 'ongoing' ? 'Complete Job' : 'Start Job'}
                         </button>
+                    )}
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-white/40 text-xs uppercase tracking-widest">Cancelation</p>
+                            <p className={`text-sm font-semibold ${invoice.status === 'canceled' ? 'text-red-400' : 'text-white/50'}`}>
+                                {invoice.status === 'canceled' ? 'Canceled' : 'Active'}
+                            </p>
+                        </div>
+                        {invoice.status === 'canceled' ? (
+                            <button
+                                onClick={handleReactivateInvoice}
+                                disabled={cancelStatus === 'saving'}
+                                className="px-4 py-2 rounded-xl text-sm font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-colors disabled:opacity-50"
+                            >
+                                {cancelStatus === 'saving' ? 'Updating...' : 'Reactivate'}
+                            </button>
+                        ) : (
+                            !showCancelForm && (
+                                <button
+                                    onClick={() => setShowCancelForm(true)}
+                                    className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
+                                >
+                                    Cancel Job
+                                </button>
+                            )
+                        )}
+                    </div>
+
+                    {invoice.status !== 'canceled' && showCancelForm && (
+                        <div className="mt-4 flex flex-col gap-3">
+                            <textarea
+                                value={cancelReasonDraft}
+                                onChange={(e) => setCancelReasonDraft(e.target.value)}
+                                placeholder="Reason for canceling (e.g. customer went elsewhere, price too high, fixed it themselves)"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-sm py-3 px-4 outline-none focus:border-blue h-20 resize-none"
+                            />
+                            {cancelStatus === 'error' && <p className="text-red-400 text-xs">Something went wrong — try again.</p>}
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleCancelInvoice}
+                                    disabled={cancelStatus === 'saving'}
+                                    className="flex-1 bg-red-500/20 hover:bg-red-500/30 disabled:opacity-50 text-red-400 text-sm font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]"
+                                >
+                                    {cancelStatus === 'saving' ? 'Canceling...' : 'Confirm Cancelation'}
+                                </button>
+                                <button
+                                    onClick={() => { setShowCancelForm(false); setCancelReasonDraft('') }}
+                                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]"
+                                >
+                                    Back
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {invoice.status === 'canceled' && (
+                        <div className="mt-4 flex flex-col gap-3">
+                            {cancelDetailsEditing ? (
+                                <>
+                                    <textarea
+                                        value={cancelReasonEdit}
+                                        onChange={(e) => setCancelReasonEdit(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-sm py-3 px-4 outline-none focus:border-blue h-20 resize-none"
+                                    />
+                                    <input
+                                        type="date"
+                                        value={canceledAtEdit}
+                                        onChange={(e) => setCanceledAtEdit(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-sm py-3 px-4 outline-none focus:border-blue"
+                                    />
+                                    {cancelStatus === 'error' && <p className="text-red-400 text-xs">Something went wrong — try again.</p>}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={handleSaveCancelDetails}
+                                            disabled={cancelStatus === 'saving'}
+                                            className="flex-1 bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]"
+                                        >
+                                            {cancelStatus === 'saving' ? 'Saving...' : 'Save'}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setCancelDetailsEditing(false)
+                                                setCancelReasonEdit(invoice.cancelReason || '')
+                                                setCanceledAtEdit(invoice.canceledAt || '')
+                                            }}
+                                            className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div>
+                                        <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Reason</p>
+                                        <p className="text-white text-sm">{invoice.cancelReason || '—'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Canceled On</p>
+                                        <p className="text-white text-sm">{invoice.canceledAt || '—'}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setCancelDetailsEditing(true)}
+                                        className="text-left text-white/40 hover:text-white/70 text-xs transition-colors"
+                                    >
+                                        Edit reason / date
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     )}
                 </div>
 

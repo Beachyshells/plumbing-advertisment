@@ -137,6 +137,9 @@ export default async function handler(req, res) {
                         totalAmount,
                         paymentStatus,
                         jobStatus,
+                        status,
+                        cancelReason,
+                        canceledAt,
                         notes,
                         createdAt,
                         "customerEmail": customer->email,
@@ -159,7 +162,7 @@ export default async function handler(req, res) {
                 return res.status(200).json({ invoice })
             }
 
-            let filter = `_type == "customerInvoice"`
+            let filter = `_type == "customerInvoice" && status != "canceled"`
             const params = {}
             if (customerId) {
                 filter += ` && customer._ref == $customerId`
@@ -181,6 +184,9 @@ export default async function handler(req, res) {
                     totalAmount,
                     paymentStatus,
                     jobStatus,
+                    status,
+                    cancelReason,
+                    canceledAt,
                     createdAt,
                     paidDate,
                     payments,
@@ -241,6 +247,7 @@ export default async function handler(req, res) {
                 totalAmount,
                 paymentStatus: 'unpaid',
                 jobStatus: body.startNow ? 'ongoing' : 'notStarted',
+                status: 'active',
                 payments: [],
                 receipts,
                 notes: cleanText(body.notes),
@@ -255,7 +262,8 @@ export default async function handler(req, res) {
     }
 
     // ---- PATCH: edit contents (action: "update", default), record a payment
-    // (action: "payment"), or apply account credit (action: "credit") ----
+    // (action: "payment"), apply account credit (action: "credit"), change job
+    // status (action: "setJobStatus"), or cancel/reactivate (action: "cancel") ----
     if (req.method === 'PATCH') {
         const body = req.body || {}
         const action = body.action || 'update'
@@ -377,22 +385,48 @@ export default async function handler(req, res) {
                 return res.status(200).json({ success: true, jobStatus })
             }
 
-            // action === 'update' — editing an invoice's contents
+            if (action === 'cancel') {
+                const cancelReason = cleanText(body.cancelReason, 500)
+                const canceledAt = body.canceledAt || new Date().toISOString().slice(0, 10)
+
+                await writeClient
+                    .patch(invoiceId)
+                    .set({ status: 'canceled', cancelReason, canceledAt })
+                    .commit()
+
+                return res.status(200).json({ success: true, status: 'canceled', cancelReason, canceledAt })
+            }
+
+            if (action === 'reactivate') {
+                await writeClient
+                    .patch(invoiceId)
+                    .set({ status: 'active' })
+                    .commit()
+
+                return res.status(200).json({ success: true, status: 'active' })
+            }
+
+            // action === 'update' — editing an invoice's contents (also handles
+            // editing the cancelation reason/date on an already-canceled invoice)
             const existing = await readClient.fetch(
-                `*[_type == "customerInvoice" && _id == $id][0]{ payments }`,
+                `*[_type == "customerInvoice" && _id == $id][0]{ payments, status }`,
                 { id: invoiceId }
             )
             if (!existing) return res.status(404).json({ error: 'Invoice not found' })
 
-            const { resolvedLineItems, lineItemsTotal } = await resolveLineItems(body.lineItems)
-            const laborCost = Number(body.laborCost) || 0
-            const totalAmount = lineItemsTotal + laborCost
-            const totalPaid = (existing.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
-            const paymentStatus = totalPaid >= totalAmount && totalAmount > 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'unpaid'
+            const updatePayload = {}
 
-            await writeClient
-                .patch(invoiceId)
-                .set({
+            // Only touch invoice contents (line items, totals, etc.) if this
+            // update actually includes them — a cancelReason/canceledAt-only
+            // edit shouldn't recompute totals or require lineItems to be sent.
+            if (body.lineItems !== undefined || body.laborCost !== undefined) {
+                const { resolvedLineItems, lineItemsTotal } = await resolveLineItems(body.lineItems)
+                const laborCost = Number(body.laborCost) || 0
+                const totalAmount = lineItemsTotal + laborCost
+                const totalPaid = (existing.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+                const paymentStatus = totalPaid >= totalAmount && totalAmount > 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'unpaid'
+
+                Object.assign(updatePayload, {
                     serviceDate: body.serviceDate,
                     workPerformed: cleanText(body.workPerformed),
                     technician: cleanText(body.technician),
@@ -402,9 +436,16 @@ export default async function handler(req, res) {
                     notes: cleanText(body.notes),
                     paymentStatus,
                 })
-                .commit()
+            }
 
-            return res.status(200).json({ success: true, totalAmount, paymentStatus })
+            if (existing.status === 'canceled') {
+                if (body.cancelReason !== undefined) updatePayload.cancelReason = cleanText(body.cancelReason, 500)
+                if (body.canceledAt !== undefined) updatePayload.canceledAt = body.canceledAt
+            }
+
+            await writeClient.patch(invoiceId).set(updatePayload).commit()
+
+            return res.status(200).json({ success: true, ...updatePayload })
         } catch (err) {
             console.error('Failed to update invoice:', err)
             return res.status(500).json({ error: 'Could not update invoice' })

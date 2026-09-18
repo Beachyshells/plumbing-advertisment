@@ -1795,7 +1795,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                                 onClick={() => { setEditGate('none'); setEditData(null) }}
                                 className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
                             >
-                                Cancel
+                                Cancel Edit
                             </button>
                         </div>
                     </div>

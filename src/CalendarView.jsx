@@ -153,7 +153,7 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                 {status === 'ready' && (
                     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
                         {/* ---- left: calendar grid ---- */}
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <div className="bg-white/10 border border-white/10 rounded-2xl p-6">
                             <div className="flex items-center justify-between mb-6">                                <button
                                 onClick={() => setCursor(new Date(year, month - 1, 1))}
                                 className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors"
@@ -180,7 +180,7 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
 
                             <div className="grid grid-cols-7 gap-1 mb-2">
                                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-                                    <p key={i} className="text-white/40 text-xs text-center uppercase tracking-widest py-1">{d}</p>
+                                    <p key={i} className="text-white/70 text-xs text-center uppercase tracking-widest py-1">{d}</p>
                                 ))}
                             </div>
                             <div className="grid grid-cols-7 gap-2">

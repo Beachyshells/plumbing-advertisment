@@ -127,6 +127,7 @@ export default async function handler(req, res) {
                     replaceEvery: cleanText(item.replaceEvery, 200),
                     lastChanged: item.lastChanged || undefined,
                     notes: cleanText(item.notes, 1000),
+                    invoiceId: cleanText(item.invoiceId, 200) || undefined,
                 }
                 await writeClient
                     .patch(propertyId)
@@ -156,6 +157,9 @@ export default async function handler(req, res) {
                         [`equipment[_key=="${key}"].replaceEvery`]: cleanText(item.replaceEvery, 200),
                         [`equipment[_key=="${key}"].lastChanged`]: item.lastChanged || undefined,
                         [`equipment[_key=="${key}"].notes`]: cleanText(item.notes, 1000),
+                        ...(item.invoiceId !== undefined
+                            ? { [`equipment[_key=="${key}"].invoiceId`]: cleanText(item.invoiceId, 200) || undefined }
+                            : {}),
                     })
                     .commit()
                 return res.status(200).json({ success: true })

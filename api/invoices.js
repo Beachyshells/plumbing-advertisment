@@ -166,6 +166,7 @@ export default async function handler(req, res) {
                         cancelAcknowledged,
                         notes,
                         createdAt,
+                        "propertyId": property->_id,
                         "customerEmail": customer->email,
                         "customerBillingAddress": customer->billingAddress,
 
@@ -177,7 +178,8 @@ export default async function handler(req, res) {
                             miscNote,
                             "inventoryItemId": inventoryItem->_id,
                             "inventoryItemName": inventoryItem->name,
-                            "inventoryItemPrice": inventoryItem->sellPrice
+                            "inventoryItemPrice": inventoryItem->sellPrice,
+                            "isEquipment": inventoryItem->isEquipment
                         }
                     }`,
                     { id }

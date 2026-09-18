@@ -5,6 +5,7 @@ import { generateInvoicePdf } from './invoicePdf.js'
 import { queuePendingEmail, syncPendingEmails } from './offlineQueue.js'
 import EmployeesAdmin from './EmployeesAdmin.jsx'
 import CalendarView from './CalendarView.jsx'
+import EquipmentLogView from './EquipmentLogView.jsx'
 import Toast from './Toast.jsx'
 
 
@@ -1217,6 +1218,7 @@ function InvoicesView({ onBack }) {
 function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [invoice, setInvoice] = useState(initialInvoice)
     const [toast, setToast] = useState(null)
+    const [showEquipmentLog, setShowEquipmentLog] = useState(false)
     const [jobStatusUpdating, setJobStatusUpdating] = useState(false)
     const [showCancelForm, setShowCancelForm] = useState(false)
     const [cancelReasonDraft, setCancelReasonDraft] = useState('')
@@ -1597,10 +1599,13 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         }
     }
 
+    if (showEquipmentLog) {
+        return <EquipmentLogView invoice={invoice} onBack={() => setShowEquipmentLog(false)} />
+    }
+
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
-            <Toast message={toast} onDone={() => setToast(null)} />
-            <div className="w-full max-w-2xl mx-auto">
+            <Toast message={toast} onDone={() => setToast(null)} />            <div className="w-full max-w-2xl mx-auto">
                 <button onClick={onBack} className="text-white/40 hover:text-white/70 text-sm mb-6 transition-colors">
                     ← Back
                 </button>
@@ -1934,10 +1939,17 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                     )}
                 </div>
 
+                <button
+                    onClick={() => setShowEquipmentLog(true)}
+                    className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 mb-3 flex items-center justify-between transition-colors text-left"
+                >
+                    <p className="text-white text-sm font-semibold">Equipment</p>
+                    <span className="text-white/40 text-lg">→</span>
+                </button>
+
                 <div className="grid grid-cols-2 gap-3 mb-3">
                     <button
-                        onClick={handlePrintInvoice}
-                        className="bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+                        onClick={handlePrintInvoice} className="bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
                     >
                         Print Invoice (PDF)
                     </button>

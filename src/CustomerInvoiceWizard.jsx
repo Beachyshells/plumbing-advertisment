@@ -364,7 +364,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                     body: JSON.stringify({
                         propertyId: selectedCustomer.propertyId,
                         action: 'addEquipment',
-                        equipment: equipmentLogDraft,
+                        equipment: { ...equipmentLogDraft, invoiceId: savedInvoiceId },
                     }),
                 })
                 if (!res.ok) throw new Error('Failed')

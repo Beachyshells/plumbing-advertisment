@@ -662,12 +662,15 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         <p className="text-white text-xl font-serif mb-1">Job details</p>
                         <p className="text-white/40 text-xs mb-4">For {selectedCustomer?.name}</p>
                         <div className="flex flex-col gap-3">
-                            <input
-                                type="date"
-                                value={serviceDate}
-                                onChange={(e) => setServiceDate(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
-                            />
+                            <div>
+                                <label className="text-white/40 text-xs uppercase tracking-widest mb-1 block">Job Scheduled For</label>
+                                <input
+                                    type="date"
+                                    value={serviceDate}
+                                    onChange={(e) => setServiceDate(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                />
+                            </div>
                             <textarea
                                 placeholder="Work performed"
                                 value={workPerformed}
@@ -885,7 +888,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         <p className="text-white text-xl font-serif mb-4">Review before saving</p>
                         <div className="text-white/80 text-sm flex flex-col gap-2 mb-6">
                             <p><span className="text-white/40">Customer:</span> {selectedCustomer?.name}</p>
-                            <p><span className="text-white/40">Date:</span> {serviceDate}</p>
+                            <p><span className="text-white/40">Job Scheduled For:</span> {serviceDate}</p>
                             <p><span className="text-white/40">Items:</span> {lineItems.length}</p>
                             <p><span className="text-white/40">Labor:</span> {formatMoney(laborCost)}</p>
                             <p><span className="text-white/40">Receipts:</span> {receipts.length}</p>

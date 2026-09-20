@@ -25,6 +25,107 @@ function randomKey() {
     return Math.random().toString(36).slice(2, 10)
 }
 
+// Same PIN check used by the employee timeclock — kept here too rather
+// than shared, matching how this file already duplicates its own small
+// helpers. Also returns the employee's name, so discount attribution can
+// come from the server's own lookup rather than anything the client sends.
+async function verifyEmployeePin(employeeId, pin) {
+    const employee = await readClient.fetch(
+        `*[_type == "employee" && _id == $employeeId && active == true][0]{ _id, firstName, lastName, pin }`,
+        { employeeId }
+    )
+    if (!employee) return { ok: false, error: 'Employee not found', status: 404 }
+    if (String(employee.pin) !== String(pin)) return { ok: false, error: 'Incorrect PIN', status: 401 }
+    return { ok: true, name: `${employee.firstName} ${employee.lastName}`.trim() }
+}
+
+function applyDiscount(amount, discountType, discountValue) {
+    if (!discountType || discountType === 'none') return amount
+    const value = Number(discountValue) || 0
+    if (discountType === 'percent') return Math.max(amount * (1 - value / 100), 0)
+    if (discountType === 'flat') return Math.max(amount - value, 0)
+    return amount
+}
+
+// Strips a submitted discount down to just its meaningful fields (never
+// trusts a client-supplied discountAppliedBy).
+function normalizeDiscountInput(input) {
+    const discountType = input?.discountType && input.discountType !== 'none' ? input.discountType : 'none'
+    if (discountType === 'none') return { discountType: 'none' }
+    return {
+        discountType,
+        discountValue: Number(input.discountValue) || 0,
+        discountReason: input.discountReason || undefined,
+        discountReasonNote: input.discountReason === 'other' ? cleanText(input.discountReasonNote, 300) : undefined,
+    }
+}
+
+function discountsMatch(a, b) {
+    if ((a?.discountType || 'none') !== (b?.discountType || 'none')) return false
+    if ((a?.discountType || 'none') === 'none') return true
+    return (
+        Number(a?.discountValue) === Number(b?.discountValue) &&
+        (a?.discountReason || '') === (b?.discountReason || '') &&
+        (a?.discountReasonNote || '') === (b?.discountReasonNote || '')
+    )
+}
+
+// If a discount is unchanged from what's already stored, keep whoever
+// applied it originally — a resave for something unrelated shouldn't
+// relabel history. If it's new or actually different, attribute it to
+// whoever is saving right now.
+function resolveDiscountAppliedBy(newDiscount, existing, actorName) {
+    if (newDiscount.discountType === 'none') return undefined
+    if (existing && discountsMatch(newDiscount, existing)) {
+        return existing.discountAppliedBy || actorName
+    }
+    return actorName
+}
+
+// Turns an already-stored line item back into the shape resolveLineItems()
+// expects as "submitted" input — used when an edit doesn't touch lineItems
+// at all, so the existing items just pass through unchanged (and, via their
+// _key, keep their existing discount attribution intact).
+function toResolveInput(li) {
+    const shared = {
+        _key: li._key,
+        discountType: li.discountType,
+        discountValue: li.discountValue,
+        discountReason: li.discountReason,
+        discountReasonNote: li.discountReasonNote,
+    }
+    return li.itemType === 'misc'
+        ? { ...shared, itemType: 'misc', miscName: li.miscName, miscSellPrice: li.miscSellPrice, miscNote: li.miscNote }
+        : { ...shared, itemType: 'catalog', inventoryItemId: li.inventoryItemId, quantity: li.quantity }
+}
+
+// Resolves the invoice-level (whole-invoice) discount the same way a line
+// item's discount resolves — falls back to whatever's already stored when
+// the caller didn't submit a change, and only attributes to actorName when
+// the discount is genuinely new or different from what's on file.
+function resolveInvoiceDiscount(submittedDiscount, existing, actorName) {
+    const input = submittedDiscount !== undefined
+        ? submittedDiscount
+        : {
+            discountType: existing.discountType,
+            discountValue: existing.discountValue,
+            discountReason: existing.discountReason,
+            discountReasonNote: existing.discountReasonNote,
+        }
+    const newDiscount = normalizeDiscountInput(input)
+    if (newDiscount.discountType === 'none') {
+        return { discountType: 'none', discountValue: undefined, discountReason: undefined, discountReasonNote: undefined, discountAppliedBy: undefined }
+    }
+    const existingDiscount = {
+        discountType: existing.discountType,
+        discountValue: existing.discountValue,
+        discountReason: existing.discountReason,
+        discountReasonNote: existing.discountReasonNote,
+        discountAppliedBy: existing.discountAppliedBy,
+    }
+    return { ...newDiscount, discountAppliedBy: resolveDiscountAppliedBy(newDiscount, existingDiscount, actorName) }
+}
+
 async function uploadReceipt(base64Image) {
     const [header, data] = base64Image.split(',')
     const contentType = header.match(/data:(.*);base64/)?.[1] || 'image/jpeg'
@@ -57,21 +158,32 @@ async function nextInvoiceNumber() {
     return `${nextPrefix}1000`
 }
 
-async function resolveLineItems(submittedLineItems) {
+// `existingLineItemsByKey` is a Map of _key -> the invoice's currently
+// stored discount fields for that item, used only to decide whether a
+// discount is unchanged (preserve attribution) or new/different (attribute
+// to actorName). Pass an empty Map when there's no prior invoice (creation).
+async function resolveLineItems(submittedLineItems, existingLineItemsByKey = new Map(), actorName) {
     let lineItemsTotal = 0
     const resolvedLineItems = []
 
     for (const item of submittedLineItems || []) {
+        const newDiscount = normalizeDiscountInput(item)
+        const existingDiscount = item._key ? existingLineItemsByKey.get(item._key) : null
+        const discountOut = newDiscount.discountType === 'none'
+            ? { discountType: 'none' }
+            : { ...newDiscount, discountAppliedBy: resolveDiscountAppliedBy(newDiscount, existingDiscount, actorName) }
+
         if (item.itemType === 'misc') {
             const price = Number(item.miscSellPrice) || 0
-            lineItemsTotal += price
+            lineItemsTotal += applyDiscount(price, newDiscount.discountType, newDiscount.discountValue)
             resolvedLineItems.push({
                 _type: 'lineItem',
-                _key: randomKey(),
+                _key: item._key || randomKey(),
                 itemType: 'misc',
                 miscName: cleanText(item.miscName),
                 miscSellPrice: price,
                 miscNote: cleanText(item.miscNote),
+                ...discountOut,
             })
         } else {
             const catalogItem = await readClient.fetch(
@@ -80,13 +192,14 @@ async function resolveLineItems(submittedLineItems) {
             )
             const quantity = Number(item.quantity) || 1
             const unitPrice = catalogItem?.sellPrice || 0
-            lineItemsTotal += unitPrice * quantity
+            lineItemsTotal += applyDiscount(unitPrice * quantity, newDiscount.discountType, newDiscount.discountValue)
             resolvedLineItems.push({
                 _type: 'lineItem',
-                _key: randomKey(),
+                _key: item._key || randomKey(),
                 itemType: 'catalog',
                 inventoryItem: { _type: 'reference', _ref: item.inventoryItemId },
                 quantity,
+                ...discountOut,
             })
         }
     }
@@ -166,16 +279,27 @@ export default async function handler(req, res) {
                         cancelAcknowledged,
                         notes,
                         createdAt,
+                        discountType,
+                        discountValue,
+                        discountReason,
+                        discountReasonNote,
+                        discountAppliedBy,
                         "propertyId": property->_id,
                         "customerEmail": customer->email,
                         "customerBillingAddress": customer->billingAddress,
 
                         lineItems[]{
+                            _key,
                             itemType,
                             quantity,
                             miscName,
                             miscSellPrice,
                             miscNote,
+                            discountType,
+                            discountValue,
+                            discountReason,
+                            discountReasonNote,
+                            discountAppliedBy,
                             "inventoryItemId": inventoryItem->_id,
                             "inventoryItemName": inventoryItem->name,
                             "inventoryItemPrice": inventoryItem->sellPrice,
@@ -290,7 +414,9 @@ export default async function handler(req, res) {
     // ---- PATCH: edit contents (action: "update", default), record a payment
     // (action: "payment"), apply account credit (action: "credit"), change job
     // status (action: "setJobStatus"), cancel/reactivate (action: "cancel" /
-    // "reactivate"), or dismiss the calendar alert (action: "acknowledgeCancelation") ----
+    // "reactivate"), dismiss the calendar alert (action: "acknowledgeCancelation"),
+    // or an employee updating parts/equipment & discounts from the field
+    // (action: "employeeUpdateLineItems") ----
     if (req.method === 'PATCH') {
         const body = req.body || {}
         const action = body.action || 'update'
@@ -434,10 +560,58 @@ export default async function handler(req, res) {
                 return res.status(200).json({ success: true, cancelAcknowledged: true })
             }
 
+            // Employee-facing, from the field — adding/removing parts & equipment,
+            // and/or adjusting discounts (including giving something away free).
+            // PIN-gated since this is reachable from the employee portal, not
+            // just /desktop, and deliberately narrower than action:'update' —
+            // it can only ever touch lineItems and the invoice-level discount,
+            // never serviceDate/workPerformed/technician/notes.
+            if (action === 'employeeUpdateLineItems') {
+                const pinCheck = await verifyEmployeePin(body.employeeId, body.pin)
+                if (!pinCheck.ok) return res.status(pinCheck.status).json({ error: pinCheck.error })
+                const actorName = pinCheck.name
+
+                const existing = await readClient.fetch(
+                    `*[_type == "customerInvoice" && _id == $id][0]{
+                        payments, laborCost, discountType, discountValue, discountReason, discountReasonNote, discountAppliedBy,
+                        lineItems[]{ _key, itemType, quantity, miscName, miscSellPrice, miscNote, discountType, discountValue, discountReason, discountReasonNote, discountAppliedBy, "inventoryItemId": inventoryItem->_id }
+                    }`,
+                    { id: invoiceId }
+                )
+                if (!existing) return res.status(404).json({ error: 'Invoice not found' })
+
+                const existingLineItemsByKey = new Map((existing.lineItems || []).map((li) => [li._key, li]))
+                const submittedItems = body.lineItems !== undefined ? body.lineItems : (existing.lineItems || []).map(toResolveInput)
+                const { resolvedLineItems, lineItemsTotal } = await resolveLineItems(submittedItems, existingLineItemsByKey, actorName)
+
+                const laborCost = Number(existing.laborCost) || 0
+                const subtotal = lineItemsTotal + laborCost
+
+                const submittedInvoiceDiscount = body.discountType !== undefined
+                    ? { discountType: body.discountType, discountValue: body.discountValue, discountReason: body.discountReason, discountReasonNote: body.discountReasonNote }
+                    : undefined
+                const invoiceDiscountOut = resolveInvoiceDiscount(submittedInvoiceDiscount, existing, actorName)
+
+                const totalAmount = applyDiscount(subtotal, invoiceDiscountOut.discountType, invoiceDiscountOut.discountValue)
+                const totalPaid = (existing.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+                const paymentStatus = totalPaid >= totalAmount && totalAmount > 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'unpaid'
+
+                await writeClient
+                    .patch(invoiceId)
+                    .set({ lineItems: resolvedLineItems, totalAmount, paymentStatus, ...invoiceDiscountOut })
+                    .commit()
+
+                return res.status(200).json({ success: true, totalAmount, paymentStatus })
+            }
+
             // action === 'update' — editing an invoice's contents (also handles
             // editing the cancelation reason/date on an already-canceled invoice)
             const existing = await readClient.fetch(
-                `*[_type == "customerInvoice" && _id == $id][0]{ payments, status }`,
+                `*[_type == "customerInvoice" && _id == $id][0]{
+                    payments, status, serviceDate, workPerformed, technician, notes, laborCost,
+                    discountType, discountValue, discountReason, discountReasonNote, discountAppliedBy,
+                    lineItems[]{ _key, itemType, quantity, miscName, miscSellPrice, miscNote, discountType, discountValue, discountReason, discountReasonNote, discountAppliedBy, "inventoryItemId": inventoryItem->_id }
+                }`,
                 { id: invoiceId }
             )
             if (!existing) return res.status(404).json({ error: 'Invoice not found' })
@@ -446,23 +620,35 @@ export default async function handler(req, res) {
 
             // Only touch invoice contents (line items, totals, etc.) if this
             // update actually includes them — a cancelReason/canceledAt-only
-            // edit shouldn't recompute totals or require lineItems to be sent.
-            if (body.lineItems !== undefined || body.laborCost !== undefined) {
-                const { resolvedLineItems, lineItemsTotal } = await resolveLineItems(body.lineItems)
-                const laborCost = Number(body.laborCost) || 0
-                const totalAmount = lineItemsTotal + laborCost
+            // edit shouldn't recompute totals or require anything else to be sent.
+            const touchesPricing = body.lineItems !== undefined || body.laborCost !== undefined || body.discountType !== undefined
+            if (touchesPricing) {
+                const existingLineItemsByKey = new Map((existing.lineItems || []).map((li) => [li._key, li]))
+                const submittedItems = body.lineItems !== undefined ? body.lineItems : (existing.lineItems || []).map(toResolveInput)
+                const { resolvedLineItems, lineItemsTotal } = await resolveLineItems(submittedItems, existingLineItemsByKey, 'Michael')
+
+                const laborCost = body.laborCost !== undefined ? (Number(body.laborCost) || 0) : (Number(existing.laborCost) || 0)
+                const subtotal = lineItemsTotal + laborCost
+
+                const submittedInvoiceDiscount = body.discountType !== undefined
+                    ? { discountType: body.discountType, discountValue: body.discountValue, discountReason: body.discountReason, discountReasonNote: body.discountReasonNote }
+                    : undefined
+                const invoiceDiscountOut = resolveInvoiceDiscount(submittedInvoiceDiscount, existing, 'Michael')
+
+                const totalAmount = applyDiscount(subtotal, invoiceDiscountOut.discountType, invoiceDiscountOut.discountValue)
                 const totalPaid = (existing.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
                 const paymentStatus = totalPaid >= totalAmount && totalAmount > 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'unpaid'
 
                 Object.assign(updatePayload, {
-                    serviceDate: body.serviceDate,
-                    workPerformed: cleanText(body.workPerformed),
-                    technician: cleanText(body.technician),
+                    serviceDate: body.serviceDate !== undefined ? body.serviceDate : existing.serviceDate,
+                    workPerformed: body.workPerformed !== undefined ? cleanText(body.workPerformed) : existing.workPerformed,
+                    technician: body.technician !== undefined ? cleanText(body.technician) : existing.technician,
                     lineItems: resolvedLineItems,
                     laborCost,
                     totalAmount,
-                    notes: cleanText(body.notes),
+                    notes: body.notes !== undefined ? cleanText(body.notes) : existing.notes,
                     paymentStatus,
+                    ...invoiceDiscountOut,
                 })
             }
 

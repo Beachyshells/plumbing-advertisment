@@ -19,6 +19,80 @@ function formatMoney(amount) {
     return `$${Number(amount || 0).toFixed(2)}`
 }
 
+const DISCOUNT_REASONS = [
+    { value: 'veteran', label: 'Veteran' },
+    { value: 'senior', label: 'Senior' },
+    { value: 'loyalCustomer', label: 'Loyal Customer' },
+    { value: 'employeeFamily', label: 'Employee / Family' },
+    { value: 'referral', label: 'Referral' },
+    { value: 'damageCredit', label: 'Damage / Complaint Credit' },
+    { value: 'other', label: 'Other' },
+]
+
+const EMPTY_DISCOUNT = { discountType: 'none', discountValue: '', discountReason: '', discountReasonNote: '' }
+
+function applyDiscountClient(amount, discountType, discountValue) {
+    if (!discountType || discountType === 'none') return amount
+    const value = Number(discountValue) || 0
+    if (discountType === 'percent') return Math.max(amount * (1 - value / 100), 0)
+    if (discountType === 'flat') return Math.max(amount - value, 0)
+    return amount
+}
+
+function DiscountControls({ discount, onChange, appliedBy }) {
+    return (
+        <div className="mt-2 pt-2 border-t border-white/10">
+            <div className="flex items-center gap-2 mb-2">
+                {[
+                    { value: 'none', label: 'No Discount' },
+                    { value: 'percent', label: '% Off' },
+                    { value: 'flat', label: '$ Off' },
+                ].map((t) => (
+                    <button
+                        key={t.value}
+                        onClick={() => onChange({ ...discount, discountType: t.value })}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${discount.discountType === t.value ? 'bg-blue text-white' : 'bg-white/5 text-white/50 border border-white/10'
+                            }`}
+                    >
+                        {t.label}
+                    </button>
+                ))}
+            </div>
+            {discount.discountType !== 'none' && (
+                <div className="flex flex-col gap-2">
+                    <input
+                        type="number"
+                        placeholder={discount.discountType === 'percent' ? 'Percent (e.g. 20)' : 'Dollar amount (e.g. 15)'}
+                        value={discount.discountValue}
+                        onChange={(e) => onChange({ ...discount, discountValue: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue"
+                    />
+                    <select
+                        value={discount.discountReason}
+                        onChange={(e) => onChange({ ...discount, discountReason: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue"
+                    >
+                        <option value="" disabled>Reason...</option>
+                        {DISCOUNT_REASONS.map((r) => (
+                            <option key={r.value} value={r.value}>{r.label}</option>
+                        ))}
+                    </select>
+                    {discount.discountReason === 'other' && (
+                        <input
+                            type="text"
+                            placeholder="Reason details"
+                            value={discount.discountReasonNote}
+                            onChange={(e) => onChange({ ...discount, discountReasonNote: e.target.value })}
+                            className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue"
+                        />
+                    )}
+                    {appliedBy && <p className="text-white/30 text-xs">Applied by {appliedBy}</p>}
+                </div>
+            )}
+        </div>
+    )
+}
+
 export default function Desktop() {
     const [view, setView] = useState('hub') // hub | customers | service-call | invoices
     const [invoiceCustomer, setInvoiceCustomer] = useState(null) // pre-selected customer when "Add Job" is used
@@ -1239,6 +1313,8 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [editGate, setEditGate] = useState('none') // none | confirming | editing
     const [confirmText, setConfirmText] = useState('')
     const [editData, setEditData] = useState(null)
+    const [invoiceDiscount, setInvoiceDiscount] = useState(EMPTY_DISCOUNT)
+    const [invoiceDiscountAppliedBy, setInvoiceDiscountAppliedBy] = useState('')
     const [inventory, setInventory] = useState([])
     const [catalogSearchTerm, setCatalogSearchTerm] = useState('')
     const [miscDraft, setMiscDraft] = useState({ miscName: '', miscSellPrice: '', miscNote: '' })
@@ -1282,25 +1358,30 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             const { invoice: fullInvoice } = await invoiceRes.json()
             const { items } = await inventoryRes.json()
             setInventory(items || [])
+            const toDraftDiscount = (obj) => ({
+                discountType: obj.discountType || 'none',
+                discountValue: obj.discountValue ?? '',
+                discountReason: obj.discountReason || '',
+                discountReasonNote: obj.discountReasonNote || '',
+            })
             setEditData({
                 serviceDate: fullInvoice.serviceDate || '',
                 workPerformed: fullInvoice.workPerformed || '',
                 technician: fullInvoice.technician || '',
                 laborCost: fullInvoice.laborCost || 0,
                 notes: fullInvoice.notes || '',
-                lineItems: (fullInvoice.lineItems || []).map((li, i) =>
-                    li.itemType === 'misc'
-                        ? { key: `existing-${i}`, itemType: 'misc', miscName: li.miscName, miscSellPrice: li.miscSellPrice, miscNote: li.miscNote }
-                        : {
-                            key: `existing-${i}`,
-                            itemType: 'catalog',
-                            inventoryItemId: li.inventoryItemId,
-                            name: li.inventoryItemName,
-                            unitPrice: li.inventoryItemPrice,
-                            quantity: li.quantity,
-                        }
-                ),
+                lineItems: (fullInvoice.lineItems || []).map((li, i) => ({
+                    key: li._key || `existing-${i}`,
+                    _key: li._key,
+                    ...toDraftDiscount(li),
+                    discountAppliedBy: li.discountAppliedBy || '',
+                    ...(li.itemType === 'misc'
+                        ? { itemType: 'misc', miscName: li.miscName, miscSellPrice: li.miscSellPrice, miscNote: li.miscNote }
+                        : { itemType: 'catalog', inventoryItemId: li.inventoryItemId, name: li.inventoryItemName, unitPrice: li.inventoryItemPrice, quantity: li.quantity }),
+                })),
             })
+            setInvoiceDiscount(toDraftDiscount(fullInvoice))
+            setInvoiceDiscountAppliedBy(fullInvoice.discountAppliedBy || '')
             setEditGate('editing')
             setEditStatus('idle')
         } catch (err) {
@@ -1328,7 +1409,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             ...prev,
             lineItems: [
                 ...prev.lineItems,
-                { key: `${item._id}-${Date.now()}`, itemType: 'catalog', inventoryItemId: item._id, name: item.name, unitPrice: item.sellPrice, quantity: 1 },
+                { key: `${item._id}-${Date.now()}`, _key: null, itemType: 'catalog', inventoryItemId: item._id, name: item.name, unitPrice: item.sellPrice, quantity: 1, ...EMPTY_DISCOUNT, discountAppliedBy: '' },
             ],
         }))
         setCatalogSearchTerm('')
@@ -1340,7 +1421,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             ...prev,
             lineItems: [
                 ...prev.lineItems,
-                { key: `misc-${Date.now()}`, itemType: 'misc', miscName: miscDraft.miscName.trim(), miscSellPrice: Number(miscDraft.miscSellPrice) || 0, miscNote: miscDraft.miscNote.trim() },
+                { key: `misc-${Date.now()}`, _key: null, itemType: 'misc', miscName: miscDraft.miscName.trim(), miscSellPrice: Number(miscDraft.miscSellPrice) || 0, miscNote: miscDraft.miscNote.trim(), ...EMPTY_DISCOUNT, discountAppliedBy: '' },
             ],
         }))
         setMiscDraft({ miscName: '', miscSellPrice: '', miscNote: '' })
@@ -1357,10 +1438,21 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         }))
     }
 
+    function updateEditItemDiscount(key, discount) {
+        setEditData((prev) => ({
+            ...prev,
+            lineItems: prev.lineItems.map((li) => (li.key === key ? { ...li, ...discount } : li)),
+        }))
+    }
+
     const editLineItemsTotal = editData
-        ? editData.lineItems.reduce((sum, li) => (li.itemType === 'misc' ? sum + li.miscSellPrice : sum + li.unitPrice * (li.quantity || 1)), 0)
+        ? editData.lineItems.reduce((sum, li) => {
+            const base = li.itemType === 'misc' ? li.miscSellPrice : li.unitPrice * (li.quantity || 1)
+            return sum + applyDiscountClient(base, li.discountType, li.discountValue)
+        }, 0)
         : 0
-    const editTotalAmount = editLineItemsTotal + (Number(editData?.laborCost) || 0)
+    const editSubtotal = editLineItemsTotal + (Number(editData?.laborCost) || 0)
+    const editTotalAmount = applyDiscountClient(editSubtotal, invoiceDiscount.discountType, invoiceDiscount.discountValue)
 
     const filteredEditInventory = inventory.filter((item) => {
         const term = catalogSearchTerm.trim().toLowerCase()
@@ -1382,11 +1474,20 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                     technician: editData.technician,
                     laborCost: Number(editData.laborCost) || 0,
                     notes: editData.notes,
-                    lineItems: editData.lineItems.map((li) =>
-                        li.itemType === 'misc'
+                    lineItems: editData.lineItems.map((li) => ({
+                        _key: li._key || undefined,
+                        discountType: li.discountType,
+                        discountValue: li.discountValue,
+                        discountReason: li.discountReason,
+                        discountReasonNote: li.discountReasonNote,
+                        ...(li.itemType === 'misc'
                             ? { itemType: 'misc', miscName: li.miscName, miscSellPrice: li.miscSellPrice, miscNote: li.miscNote }
-                            : { itemType: 'catalog', inventoryItemId: li.inventoryItemId, quantity: li.quantity }
-                    ),
+                            : { itemType: 'catalog', inventoryItemId: li.inventoryItemId, quantity: li.quantity }),
+                    })),
+                    discountType: invoiceDiscount.discountType,
+                    discountValue: invoiceDiscount.discountValue,
+                    discountReason: invoiceDiscount.discountReason,
+                    discountReasonNote: invoiceDiscount.discountReasonNote,
                 }),
             })
             if (!res.ok) throw new Error('Failed')
@@ -1774,12 +1875,26 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                                             </div>
                                         )}
                                     </div>
-                                    <button onClick={() => removeEditLineItem(li.key)} className="text-red-400 text-sm">
+                                    <button onClick={() => removeEditLineItem(li.key)} className="text-red-400 text-sm shrink-0">
                                         Remove
                                     </button>
                                 </div>
                             ))}
                         </div>
+                        {editData.lineItems.length > 0 && (
+                            <div className="flex flex-col gap-2 mb-4">
+                                {editData.lineItems.map((li) => (
+                                    <div key={`discount-${li.key}`} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                                        <p className="text-white/40 text-xs mb-1">{li.itemType === 'misc' ? li.miscName : li.name}</p>
+                                        <DiscountControls
+                                            discount={{ discountType: li.discountType, discountValue: li.discountValue, discountReason: li.discountReason, discountReasonNote: li.discountReasonNote }}
+                                            onChange={(d) => updateEditItemDiscount(li.key, d)}
+                                            appliedBy={li.discountAppliedBy}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         <input
                             type="text"
@@ -1824,6 +1939,18 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                             </button>
                         </div>
 
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4">
+                            <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Whole Invoice Discount</p>
+                            <DiscountControls
+                                discount={invoiceDiscount}
+                                onChange={setInvoiceDiscount}
+                                appliedBy={invoiceDiscountAppliedBy}
+                            />
+                        </div>
+
+                        {editTotalAmount !== editSubtotal && (
+                            <p className="text-white/40 text-right text-sm mb-1">Subtotal: {formatMoney(editSubtotal)}</p>
+                        )}
                         <p className="text-white text-right mb-4">New total: {formatMoney(editTotalAmount)}</p>
 
                         {editStatus === 'error' && <p className="text-red-400 text-sm text-center mb-3">Something went wrong — try again.</p>}

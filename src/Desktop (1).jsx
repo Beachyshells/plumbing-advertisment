@@ -6,6 +6,7 @@ import { queuePendingEmail, syncPendingEmails } from './offlineQueue.js'
 import EmployeesAdmin from './EmployeesAdmin.jsx'
 import CalendarView from './CalendarView.jsx'
 import EquipmentLogView from './EquipmentLogView.jsx'
+import MoneyInput from './MoneyInput.jsx'
 import Toast from './Toast.jsx'
 
 
@@ -60,13 +61,21 @@ function DiscountControls({ discount, onChange, appliedBy }) {
             </div>
             {discount.discountType !== 'none' && (
                 <div className="flex flex-col gap-2">
-                    <input
-                        type="number"
-                        placeholder={discount.discountType === 'percent' ? 'Percent (e.g. 20)' : 'Dollar amount (e.g. 15)'}
-                        value={discount.discountValue}
-                        onChange={(e) => onChange({ ...discount, discountValue: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue"
-                    />
+                    {discount.discountType === 'flat' ? (
+                        <MoneyInput
+                            placeholder="Dollar amount (e.g. 15.00)"
+                            value={discount.discountValue}
+                            onChange={(val) => onChange({ ...discount, discountValue: val })}
+                        />
+                    ) : (
+                        <input
+                            type="number"
+                            placeholder="Percent (e.g. 20)"
+                            value={discount.discountValue}
+                            onChange={(e) => onChange({ ...discount, discountValue: e.target.value })}
+                            className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue"
+                        />
+                    )}
                     <select
                         value={discount.discountReason}
                         onChange={(e) => onChange({ ...discount, discountReason: e.target.value })}
@@ -1864,11 +1873,9 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                             </div>
                             <div>
                                 <label className="text-white/40 text-xs uppercase tracking-widest mb-1 block">Labor Cost</label>
-                                <input
-                                    type="number"
+                                <MoneyInput
                                     value={editData.laborCost}
-                                    onChange={(e) => setEditData((d) => ({ ...d, laborCost: e.target.value }))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                    onChange={(val) => setEditData((d) => ({ ...d, laborCost: val }))}
                                 />
                             </div>
                             <div>
@@ -1950,12 +1957,10 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                                 onChange={(e) => setMiscDraft((p) => ({ ...p, miscName: e.target.value }))}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
-                            <input
-                                type="number"
+                            <MoneyInput
                                 placeholder="Sell price"
                                 value={miscDraft.miscSellPrice}
-                                onChange={(e) => setMiscDraft((p) => ({ ...p, miscSellPrice: e.target.value }))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                onChange={(val) => setMiscDraft((p) => ({ ...p, miscSellPrice: val }))}
                             />
                             <button
                                 onClick={addEditMiscItem}
@@ -2248,12 +2253,10 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                         <p className="text-white text-lg font-serif mb-4">Record a Payment</p>
                         <div className="flex flex-col gap-3">
-                            <input
-                                type="number"
+                            <MoneyInput
                                 placeholder={`Amount (up to ${formatMoney(balanceRemaining)})`}
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
+                                onChange={setAmount}
                             />
                             <div className="flex gap-2">
                                 {['cash', 'check'].map((opt) => (

@@ -25,15 +25,15 @@ export default async function handler(req, res) {
     }
 
     const jobLine = workPerformed
-        ? `We have your ${workPerformed} scheduled for ${startDate || 'your upcoming date'}.`
-        : `We have your job scheduled for ${startDate || 'your upcoming date'}.`
+        ? `We have scheduled an appointment with you for ${startDate || 'your upcoming date'}: ${workPerformed}.`
+        : `We have scheduled an appointment with you for ${startDate || 'your upcoming date'}.`
 
     try {
         const { error } = await resend.emails.send({
             from: FROM_ADDRESS,
             to,
             subject: `You're scheduled with us${startDate ? ` — ${startDate}` : ''}`,
-            text: `Hi ${customerName || 'there'},\n\nThanks for scheduling with us! ${jobLine}${serviceAddress ? `\n\nService address: ${serviceAddress}` : ''}\n\nWe're looking forward to it.\n\nAdirondack Advanced Water Solutions`,
+            text: `Hi ${customerName || 'there'},\n\nThank you for choosing Adirondack Advanced Water Solutions for your home and water needs. ${jobLine}${serviceAddress ? `\n\nService address: ${serviceAddress}` : ''}\n\nWe look forward to seeing you then.\n\nAdirondack Advanced Water Solutions`,
         })
 
         if (error) {

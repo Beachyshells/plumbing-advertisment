@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import EmployeePartsView from './EmployeePartsView.jsx'
+import EmployeePartsView from './EmployeePartsView.jsx'
 
 const EMPTY_INTAKE = { firstName: '', lastName: '', phone: '', email: '', startDate: new Date().toISOString().slice(0, 10), pin: '', confirmPin: '' }
 
@@ -358,8 +360,8 @@ function TimeclockTab({ employeeId, pin }) {
 
     const [jobsAccomplished, setJobsAccomplished] = useState('')
     const [dayNotes, setDayNotes] = useState('')
-    const [daySummary, setDaySummary] = useState(null) // { totalHours, totalPay }
-
+    const [daySummary, setDaySummary] = useState(null)
+    const [showParts, setShowParts] = useState(false)
     function fetchStatus() {
         fetch(`/api/timeclock?action=status&employeeId=${employeeId}&pin=${pin}`)
             .then((res) => res.json())
@@ -465,6 +467,10 @@ function TimeclockTab({ employeeId, pin }) {
         return <p className="text-white/40 text-sm text-center py-10">Loading...</p>
     }
 
+    if (showParts) {
+        return <EmployeePartsView propertyId={entry.propertyId} employeeId={employeeId} pin={pin} onBack={() => setShowParts(false)} />
+    }
+
     if (daySummary) {
         return (
             <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
@@ -548,6 +554,14 @@ function TimeclockTab({ employeeId, pin }) {
         )
     }
 
+    if (showParts) {
+        return <EmployeePartsView propertyId={entry.propertyId} employeeId={employeeId} pin={pin} onBack={() => setShowParts(false)} />
+    }
+
+    if (showParts) {
+        return <EmployeePartsView propertyId={entry.propertyId} employeeId={employeeId} pin={pin} onBack={() => setShowParts(false)} />
+    }
+
     // clocked-in
     const clockInMs = new Date(entry.clockIn).getTime()
     const completedBreakMs = (entry.breaks || []).reduce((sum, b) => {
@@ -583,6 +597,27 @@ function TimeclockTab({ employeeId, pin }) {
                     {onBreak ? 'End Break' : 'Start Break'}
                 </button>
             </div>
+
+            <button
+                onClick={() => setShowParts(true)}
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-3"
+            >
+                Parts & Equipment
+            </button>
+
+            <button
+                onClick={() => setShowParts(true)}
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-3"
+            >
+                Parts & Equipment
+            </button>
+
+            <button
+                onClick={() => setShowParts(true)}
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-3"
+            >
+                Parts & Equipment
+            </button>
 
             {!onBreak && (
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left mb-3">

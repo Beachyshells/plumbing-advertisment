@@ -1235,7 +1235,8 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [signee, setSignee] = useState('')
     const [status, setStatus] = useState('idle') // idle | saving | error
     const [emailStatus, setEmailStatus] = useState('idle') // idle | sending | sent | queued | no-email | error
-    const [confirmationStatus, setConfirmationStatus] = useState('idle') // idle | sending | sent | queued | no-email | error    const [editGate, setEditGate] = useState('none') // none | confirming | editing
+    const [confirmationStatus, setConfirmationStatus] = useState('idle') // idle | sending | sent | queued | no-email | error
+    const [editGate, setEditGate] = useState('none') // none | confirming | editing
     const [confirmText, setConfirmText] = useState('')
     const [editData, setEditData] = useState(null)
     const [inventory, setInventory] = useState([])

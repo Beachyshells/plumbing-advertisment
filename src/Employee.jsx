@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import EmployeePartsView from './EmployeePartsView.jsx'
-import EmployeePartsView from './EmployeePartsView.jsx'
 
 const EMPTY_INTAKE = { firstName: '', lastName: '', phone: '', email: '', startDate: new Date().toISOString().slice(0, 10), pin: '', confirmPin: '' }
 
@@ -462,13 +461,8 @@ function TimeclockTab({ employeeId, pin }) {
         setRateOverride('')
         fetchStatus()
     }
-
     if (status === 'loading') {
         return <p className="text-white/40 text-sm text-center py-10">Loading...</p>
-    }
-
-    if (showParts) {
-        return <EmployeePartsView propertyId={entry.propertyId} employeeId={employeeId} pin={pin} onBack={() => setShowParts(false)} />
     }
 
     if (daySummary) {
@@ -552,10 +546,6 @@ function TimeclockTab({ employeeId, pin }) {
                 </button>
             </div>
         )
-    }
-
-    if (showParts) {
-        return <EmployeePartsView propertyId={entry.propertyId} employeeId={employeeId} pin={pin} onBack={() => setShowParts(false)} />
     }
 
     if (showParts) {

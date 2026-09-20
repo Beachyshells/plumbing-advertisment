@@ -1235,7 +1235,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [signee, setSignee] = useState('')
     const [status, setStatus] = useState('idle') // idle | saving | error
     const [emailStatus, setEmailStatus] = useState('idle') // idle | sending | sent | queued | no-email | error
-    const [editGate, setEditGate] = useState('none') // none | confirming | editing
+    const [confirmationStatus, setConfirmationStatus] = useState('idle') // idle | sending | sent | queued | no-email | error    const [editGate, setEditGate] = useState('none') // none | confirming | editing
     const [confirmText, setConfirmText] = useState('')
     const [editData, setEditData] = useState(null)
     const [inventory, setInventory] = useState([])
@@ -2000,14 +2000,26 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                         {emailStatus === 'sending' ? 'Sending...' : 'Email Invoice'}
                     </button>
                 </div>
-                {emailStatus === 'sent' && <p className="text-brand-green text-xs text-center mb-6">Emailed to customer.</p>}
-                {emailStatus === 'queued' && <p className="text-accent text-xs text-center mb-6">Offline — will send once you're back online.</p>}
-                {emailStatus === 'no-email' && <p className="text-red-400 text-xs text-center mb-6">This customer has no email on file.</p>}
-                {emailStatus === 'error' && <p className="text-red-400 text-xs text-center mb-6">Something went wrong sending.</p>}
-                {!['sent', 'queued', 'no-email', 'error'].includes(emailStatus) && <div className="mb-6" />}
+                {emailStatus === 'sent' && <p className="text-brand-green text-xs text-center mb-3">Emailed to customer.</p>}
+                {emailStatus === 'queued' && <p className="text-accent text-xs text-center mb-3">Offline — will send once you're back online.</p>}
+                {emailStatus === 'no-email' && <p className="text-red-400 text-xs text-center mb-3">This customer has no email on file.</p>}
+                {emailStatus === 'error' && <p className="text-red-400 text-xs text-center mb-3">Something went wrong sending.</p>}
+                {!['sent', 'queued', 'no-email', 'error'].includes(emailStatus) && <div className="mb-3" />}
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 mb-6">
-                    <Field label="Invoice Date" value={invoice.createdAt ? invoice.createdAt.slice(0, 10) : ''} />
+                <button
+                    onClick={handleSendConfirmation}
+                    disabled={confirmationStatus === 'sending'}
+                    className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-3"
+                >
+                    {confirmationStatus === 'sending' ? 'Sending...' : 'Send Customer Confirmation'}
+                </button>
+                {confirmationStatus === 'sent' && <p className="text-brand-green text-xs text-center mb-6">Confirmation sent to customer.</p>}
+                {confirmationStatus === 'queued' && <p className="text-accent text-xs text-center mb-6">Offline — will send once you're back online.</p>}
+                {confirmationStatus === 'no-email' && <p className="text-red-400 text-xs text-center mb-6">This customer has no email on file.</p>}
+                {confirmationStatus === 'error' && <p className="text-red-400 text-xs text-center mb-6">Something went wrong sending.</p>}
+                {!['sent', 'queued', 'no-email', 'error'].includes(confirmationStatus) && <div className="mb-6" />}
+
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 mb-6">                    <Field label="Invoice Date" value={invoice.createdAt ? invoice.createdAt.slice(0, 10) : ''} />
                     <Field label="Job Scheduled For" value={invoice.serviceDate} />
                     <Field label="Property Address" value={formatAddress(invoice.propertyAddress)} />                    <Field label="Work Performed" value={invoice.workPerformed} />
                     <Field label="Notes" value={invoice.notes} />

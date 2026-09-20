@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import EmployeePartsView from './EmployeePartsView.jsx'
+import MoneyInput from './MoneyInput.jsx'
 
 const EMPTY_INTAKE = { firstName: '', lastName: '', phone: '', email: '', startDate: new Date().toISOString().slice(0, 10), pin: '', confirmPin: '' }
 
@@ -532,12 +533,14 @@ function TimeclockTab({ employeeId, pin }) {
                 <p className="text-white/40 text-xs uppercase tracking-widest mb-2">
                     Pay rate — leave blank for standard {jobType} rate
                 </p>
-                <input
-                    type="number" value={rateOverride} onChange={(e) => setRateOverride(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleClockIn()}
-                    placeholder="e.g. 22.50"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue mb-4"
-                />
+                <div className="mb-4">
+                    <MoneyInput
+                        value={rateOverride}
+                        onChange={setRateOverride}
+                        onKeyDown={(e) => e.key === 'Enter' && handleClockIn()}
+                        placeholder="e.g. 22.50"
+                    />
+                </div>
 
                 {actionError && <p className="text-red-400 text-sm mb-3">{actionError}</p>}
                 <button onClick={handleClockIn} disabled={actionStatus === 'working'}

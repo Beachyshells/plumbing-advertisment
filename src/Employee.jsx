@@ -327,7 +327,7 @@ export default function Employee() {
                 </div>
 
                 {tab === 'Timeclock' && <TimeclockTab employeeId={selectedEmployee._id} pin={verifiedPin} />}
-                {tab === 'Profile' && <ProfileTab employeeId={selectedEmployee._id} pin={verifiedPin} />}
+                {tab === 'Profile' && <ProfileTab employeeId={selectedEmployee._id} pin={verifiedPin} onPinChanged={setVerifiedPin} />}
             </div>
         </div>
     )
@@ -612,9 +612,18 @@ function TimeclockTab({ employeeId, pin }) {
     )
 }
 
-function ProfileTab({ employeeId, pin }) {
+function ProfileTab({ employeeId, pin, onPinChanged }) {
     const [data, setData] = useState(null)
     const [status, setStatus] = useState('loading') // loading | ready | error
+
+    const [editingProfile, setEditingProfile] = useState(false)
+    const [profileDraft, setProfileDraft] = useState({ firstName: '', lastName: '', street: '', city: '', state: '', zip: '' })
+    const [profileSaveStatus, setProfileSaveStatus] = useState('idle') // idle | saving | error
+
+    const [editingPin, setEditingPin] = useState(false)
+    const [pinDraft, setPinDraft] = useState({ currentPin: '', newPin: '', confirmPin: '' })
+    const [pinSaveStatus, setPinSaveStatus] = useState('idle') // idle | saving | error
+    const [pinSaveError, setPinSaveError] = useState('')
 
     function fetchHistory() {
         setStatus('loading')
@@ -625,6 +634,14 @@ function ProfileTab({ employeeId, pin }) {
             })
             .then((d) => {
                 setData(d)
+                setProfileDraft({
+                    firstName: d.firstName || '',
+                    lastName: d.lastName || '',
+                    street: d.address?.street || '',
+                    city: d.address?.city || '',
+                    state: d.address?.state || '',
+                    zip: d.address?.zip || '',
+                })
                 setStatus('ready')
             })
             .catch(() => setStatus('error'))
@@ -633,6 +650,66 @@ function ProfileTab({ employeeId, pin }) {
     useEffect(() => {
         fetchHistory()
     }, [])
+
+    async function handleSaveProfile() {
+        setProfileSaveStatus('saving')
+        try {
+            const res = await fetch('/api/timeclock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'selfUpdateProfile',
+                    employeeId,
+                    pin,
+                    firstName: profileDraft.firstName,
+                    lastName: profileDraft.lastName,
+                    address: { street: profileDraft.street, city: profileDraft.city, state: profileDraft.state, zip: profileDraft.zip },
+                }),
+            })
+            if (!res.ok) throw new Error('Failed')
+            setProfileSaveStatus('idle')
+            setEditingProfile(false)
+            fetchHistory()
+        } catch (err) {
+            console.error(err)
+            setProfileSaveStatus('error')
+        }
+    }
+
+    async function handleChangePin() {
+        setPinSaveError('')
+        if (!/^\d{4}$/.test(pinDraft.newPin)) {
+            setPinSaveError('New PIN must be exactly 4 digits.')
+            return
+        }
+        if (pinDraft.newPin !== pinDraft.confirmPin) {
+            setPinSaveError("New PINs don't match.")
+            return
+        }
+        setPinSaveStatus('saving')
+        try {
+            const res = await fetch('/api/timeclock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'changePin',
+                    employeeId,
+                    currentPin: pinDraft.currentPin,
+                    newPin: pinDraft.newPin,
+                    confirmPin: pinDraft.confirmPin,
+                }),
+            })
+            const resData = await res.json()
+            if (!res.ok) throw new Error(resData.error || 'Failed')
+            setPinSaveStatus('idle')
+            setEditingPin(false)
+            onPinChanged(pinDraft.newPin)
+            setPinDraft({ currentPin: '', newPin: '', confirmPin: '' })
+        } catch (err) {
+            setPinSaveStatus('error')
+            setPinSaveError(err.message || 'Something went wrong.')
+        }
+    }
 
     async function markEntryRead(entryId) {
         await fetch('/api/timeclock', {
@@ -657,6 +734,96 @@ function ProfileTab({ employeeId, pin }) {
 
     return (
         <div className="flex flex-col gap-6">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-white/40 text-xs uppercase tracking-widest">My Info</p>
+                    {!editingProfile && (
+                        <button onClick={() => setEditingProfile(true)} className="text-blue text-xs font-semibold">
+                            Edit
+                        </button>
+                    )}
+                </div>
+                {!editingProfile ? (
+                    <>
+                        <p className="text-white text-sm">{data.firstName} {data.lastName}</p>
+                        <p className="text-white/40 text-xs mt-1">{formatAddress(data.address) || 'No address on file'}</p>
+                    </>
+                ) : (
+                    <div className="flex flex-col gap-2">
+                        <div className="grid grid-cols-2 gap-2">
+                            <input type="text" placeholder="First name" value={profileDraft.firstName}
+                                onChange={(e) => setProfileDraft((d) => ({ ...d, firstName: e.target.value }))}
+                                className="bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue" />
+                            <input type="text" placeholder="Last name" value={profileDraft.lastName}
+                                onChange={(e) => setProfileDraft((d) => ({ ...d, lastName: e.target.value }))}
+                                className="bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue" />
+                        </div>
+                        <input type="text" placeholder="Street" value={profileDraft.street}
+                            onChange={(e) => setProfileDraft((d) => ({ ...d, street: e.target.value }))}
+                            className="bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue" />
+                        <div className="grid grid-cols-3 gap-2">
+                            <input type="text" placeholder="City" value={profileDraft.city}
+                                onChange={(e) => setProfileDraft((d) => ({ ...d, city: e.target.value }))}
+                                className="bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue" />
+                            <input type="text" placeholder="State" value={profileDraft.state}
+                                onChange={(e) => setProfileDraft((d) => ({ ...d, state: e.target.value }))}
+                                className="bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue" />
+                            <input type="text" placeholder="ZIP" value={profileDraft.zip}
+                                onChange={(e) => setProfileDraft((d) => ({ ...d, zip: e.target.value }))}
+                                className="bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue" />
+                        </div>
+                        {profileSaveStatus === 'error' && <p className="text-red-400 text-xs">Something went wrong — try again.</p>}
+                        <div className="flex gap-2 mt-1">
+                            <button onClick={handleSaveProfile} disabled={profileSaveStatus === 'saving'}
+                                className="flex-1 bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+                                {profileSaveStatus === 'saving' ? 'Saving...' : 'Save'}
+                            </button>
+                            <button onClick={() => setEditingProfile(false)}
+                                className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-white/40 text-xs uppercase tracking-widest">PIN</p>
+                    {!editingPin && (
+                        <button onClick={() => setEditingPin(true)} className="text-blue text-xs font-semibold">
+                            Change
+                        </button>
+                    )}
+                </div>
+                {!editingPin ? (
+                    <p className="text-white text-sm">••••</p>
+                ) : (
+                    <div className="flex flex-col gap-2">
+                        <input type="password" inputMode="numeric" maxLength={4} placeholder="Current PIN" value={pinDraft.currentPin}
+                            onChange={(e) => setPinDraft((d) => ({ ...d, currentPin: e.target.value }))}
+                            className="bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue" />
+                        <input type="password" inputMode="numeric" maxLength={4} placeholder="New 4-digit PIN" value={pinDraft.newPin}
+                            onChange={(e) => setPinDraft((d) => ({ ...d, newPin: e.target.value }))}
+                            className="bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue" />
+                        <input type="password" inputMode="numeric" maxLength={4} placeholder="Confirm new PIN" value={pinDraft.confirmPin}
+                            onChange={(e) => setPinDraft((d) => ({ ...d, confirmPin: e.target.value }))}
+                            className="bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue" />
+                        {pinSaveError && <p className="text-red-400 text-xs">{pinSaveError}</p>}
+                        <div className="flex gap-2 mt-1">
+                            <button onClick={handleChangePin} disabled={pinSaveStatus === 'saving'}
+                                className="flex-1 bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+                                {pinSaveStatus === 'saving' ? 'Saving...' : 'Save'}
+                            </button>
+                            <button onClick={() => { setEditingPin(false); setPinDraft({ currentPin: '', newPin: '', confirmPin: '' }); setPinSaveError('') }}
+                                className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
                     <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Total Earned</p>

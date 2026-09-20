@@ -98,7 +98,7 @@ export default async function handler(req, res) {
                         }`,
                         { employeeId }
                     ),
-                    readClient.fetch(`*[_type == "employee" && _id == $employeeId][0]{ payments }`, { employeeId }),
+                    readClient.fetch(`*[_type == "employee" && _id == $employeeId][0]{ payments, firstName, lastName, address }`, { employeeId }),
                 ])
 
                 const totalEarned = entries.reduce((sum, e) => sum + (Number(e.totalPay) || 0), 0)
@@ -111,6 +111,9 @@ export default async function handler(req, res) {
                     totalEarned,
                     totalPaid,
                     balance: Math.round((totalEarned - totalPaid) * 100) / 100,
+                    firstName: employeeDoc?.firstName || '',
+                    lastName: employeeDoc?.lastName || '',
+                    address: employeeDoc?.address || null,
                 })
             }
 
@@ -362,6 +365,44 @@ export default async function handler(req, res) {
                 if (body.notes !== undefined) update.notes = cleanText(body.notes, 3000)
                 if (body.active !== undefined) update.active = !!body.active
                 await writeClient.patch(employeeId).set(update).commit()
+                return res.status(200).json({ success: true })
+            }
+
+            // ---- employee self-service: edit their own name/address ----
+            if (action === 'selfUpdateProfile') {
+                const check = await verifyEmployeePin(body.employeeId, body.pin)
+                if (!check.ok) return res.status(check.status).json({ error: check.error })
+
+                const update = {}
+                if (body.firstName !== undefined) update.firstName = cleanText(body.firstName, 100)
+                if (body.lastName !== undefined) update.lastName = cleanText(body.lastName, 100)
+                if (body.address !== undefined) {
+                    update.address = {
+                        street: cleanText(body.address?.street, 200),
+                        city: cleanText(body.address?.city, 100),
+                        state: cleanText(body.address?.state, 50),
+                        zip: cleanText(body.address?.zip, 20),
+                    }
+                }
+                await writeClient.patch(body.employeeId).set(update).commit()
+                return res.status(200).json({ success: true })
+            }
+
+            // ---- employee self-service: change their own PIN (requires the
+            // current PIN as proof, same as any password-change flow) ----
+            if (action === 'changePin') {
+                const check = await verifyEmployeePin(body.employeeId, body.currentPin)
+                if (!check.ok) return res.status(check.status).json({ error: check.error })
+
+                const newPin = String(body.newPin || '')
+                if (!/^\d{4}$/.test(newPin)) {
+                    return res.status(400).json({ error: 'New PIN must be exactly 4 digits' })
+                }
+                if (newPin !== String(body.confirmPin || '')) {
+                    return res.status(400).json({ error: "New PINs don't match" })
+                }
+
+                await writeClient.patch(body.employeeId).set({ pin: newPin }).commit()
                 return res.status(200).json({ success: true })
             }
 

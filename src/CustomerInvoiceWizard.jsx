@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import emailjs from '@emailjs/browser'
+import { useState, useEffect, useRef } from 'react'
 import {
     cacheCustomers,
     getCachedCustomers,
@@ -10,6 +12,9 @@ import {
 } from './offlineQueue'
 import { generateInvoicePdf } from './invoicePdf.js'
 import Toast from './Toast.jsx'
+
+// Replace with the real template ID once it's created in EmailJS.
+const JOB_CONFIRMATION_TEMPLATE_ID = 'template_REPLACE_ME'
 
 const EMPTY_NEW_CUSTOMER = { firstName: '', lastName: '', bestPhone: '' }
 
@@ -64,9 +69,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     const [equipmentPrompts, setEquipmentPrompts] = useState([]) // [{ name, inventoryItemId }]
     const [equipmentPromptIndex, setEquipmentPromptIndex] = useState(0)
     const [equipmentLogDraft, setEquipmentLogDraft] = useState({ equipmentType: '', serialNumber: '', installDate: '', warrantyExpires: '', notes: '' })
-    const [equipmentLogStatus, setEquipmentLogStatus] = useState('idle') // idle | saving | error
-    // Load cached data immediately (works offline), then refresh from the
-    // server whenever we're online, and try to flush anything queued.
+    const [equipmentLogStatus, setEquipmentLogStatus] = useState('idle')
     useEffect(() => {
         getCachedCustomers().then(setCustomers).catch(() => { })
         getCachedInventory().then(setInventory).catch(() => { })
@@ -318,9 +321,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                 setStatus('idle')
                 setSaveMessage('Invoice saved.')
 
-                // If any catalog line item is flagged as trackable equipment,
-                // walk through a quick prompt to log its serial number and
-                // warranty before finishing — instead of requiring a separate
+                // If any catalog line item is flagged as trackable equipment,                // warranty before finishing — instead of requiring a separate
                 // trip to Property Detail afterward.
                 const flagged = lineItems
                     .filter((li) => li.itemType === 'catalog')
@@ -353,6 +354,9 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         setStage('done')
         setSaveMessage("Saved locally — will upload once you're back online.")
     }
+
+    // Fire-and-forget — never blocks the save flow or the equipment prompt.
+    // Its own status is only shown on the final "done" screen.
 
     async function handleLogEquipment(skip) {
         if (!skip) {
@@ -977,23 +981,22 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         <p className="text-white text-xl font-serif mb-2">Invoice saved</p>
                         <p className="text-white/50 text-sm mb-6">{saveMessage}</p>
                         {(
-                            <button
-                                onClick={async () => {
-                                    await generateInvoicePdf({
-                                        invoiceNumber: savedInvoiceNumber,
-                                        serviceDate,
-                                        customerName: selectedCustomer?.name,
-                                        workPerformed,
-                                        totalAmount,
-                                        laborCost: Number(laborCost) || 0,
-                                        payments: [],
-                                        lineItems: lineItems.map((li) =>
-                                            li.itemType === 'misc'
-                                                ? { itemType: 'misc', miscName: li.miscName, miscSellPrice: li.miscSellPrice }
-                                                : { itemType: 'catalog', inventoryItemName: li.name, inventoryItemPrice: li.unitPrice, quantity: li.quantity }
-                                        ),
-                                    })
-                                }}
+                            <button onClick={async () => {
+                                await generateInvoicePdf({
+                                    invoiceNumber: savedInvoiceNumber,
+                                    serviceDate,
+                                    customerName: selectedCustomer?.name,
+                                    workPerformed,
+                                    totalAmount,
+                                    laborCost: Number(laborCost) || 0,
+                                    payments: [],
+                                    lineItems: lineItems.map((li) =>
+                                        li.itemType === 'misc'
+                                            ? { itemType: 'misc', miscName: li.miscName, miscSellPrice: li.miscSellPrice }
+                                            : { itemType: 'catalog', inventoryItemName: li.name, inventoryItemPrice: li.unitPrice, quantity: li.quantity }
+                                    ),
+                                })
+                            }}
                                 className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-3"
                             >
                                 Print Invoice (PDF)

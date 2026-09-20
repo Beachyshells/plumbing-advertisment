@@ -100,7 +100,8 @@ export const queuePendingInvoice = (payload) => addToStore(STORE_NAMES.pendingIn
 export const getPendingInvoices = () => getAllFromStore(STORE_NAMES.pendingInvoices)
 export const removePendingInvoice = (localId) => deleteFromStore(STORE_NAMES.pendingInvoices, localId)
 
-export const queuePendingEmail = (payload) => addToStore(STORE_NAMES.pendingEmails, { payload })
+export const queuePendingEmail = (provider, payload, templateId) =>
+    addToStore(STORE_NAMES.pendingEmails, { provider, templateId, payload })
 export const getPendingEmails = () => getAllFromStore(STORE_NAMES.pendingEmails)
 export const removePendingEmail = (localId) => deleteFromStore(STORE_NAMES.pendingEmails, localId)
 
@@ -108,7 +109,18 @@ export async function syncPendingEmails() {
     const pending = await getPendingEmails()
     for (const item of pending) {
         try {
-            await emailjs.send('ADK_SERVICES', 'template_7w7ntzo', item.payload, '7derGOKaoYJKZFxce')
+            if (item.provider === 'resend') {
+                const res = await fetch('/api/send-confirmation-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item.payload),
+                })
+                if (!res.ok) throw new Error('Failed')
+            } else {
+                // EmailJS-based (default — also covers items queued before
+                // `provider` existed, which relied on the invoice template).
+                await emailjs.send('ADK_SERVICES', item.templateId || 'template_7w7ntzo', item.payload, '7derGOKaoYJKZFxce')
+            }
             await removePendingEmail(item.localId)
         } catch (err) {
             console.error('Sync failed for a pending email, will retry later:', err)

@@ -1457,7 +1457,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                 await emailjs.send('ADK_SERVICES', 'template_7w7ntzo', templateParams, '7derGOKaoYJKZFxce')
                 setEmailStatus('sent')
             } else {
-                await queuePendingEmail(templateParams)
+                await queuePendingEmail('emailjs', templateParams, 'template_7w7ntzo')
                 setEmailStatus('queued')
             }
         } catch (err) {
@@ -1465,6 +1465,45 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             setEmailStatus('error')
         }
     }
+
+    async function handleSendConfirmation() {
+        setConfirmationStatus('sending')
+        try {
+            const res = await fetch(`/api/customers?id=${invoice.customerId}`)
+            const { customer } = await res.json()
+
+            if (!customer?.email) {
+                setConfirmationStatus('no-email')
+                return
+            }
+
+            const payload = {
+                to: customer.email,
+                customerName: invoice.customerName || '',
+                workPerformed: invoice.workPerformed || '',
+                startDate: invoice.serviceDate || '',
+                serviceAddress: formatAddress(invoice.propertyAddress),
+            }
+
+            if (navigator.onLine) {
+                const sendRes = await fetch('/api/send-confirmation-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                })
+                if (!sendRes.ok) throw new Error('Failed')
+                setConfirmationStatus('sent')
+            } else {
+                await queuePendingEmail('resend', payload)
+                setConfirmationStatus('queued')
+            }
+        } catch (err) {
+            console.error(err)
+            setConfirmationStatus('error')
+        }
+    }
+
+
 
     async function handleSetJobStatus(newStatus) {
         setJobStatusUpdating(true)

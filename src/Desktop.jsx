@@ -456,10 +456,13 @@ function CustomerCard({ customer, onBack, onAddJob }) {
             .catch(() => setInvoiceStatus('error'))
     }
 
+    // Fetched on mount now (not just when Service History/Equipment is
+    // opened), since the Overview tab needs this to surface the active job.
     useEffect(() => {
-        if ((tab !== 'Service History' && tab !== 'Equipment') || invoiceStatus !== 'idle') return
         fetchInvoices()
-    }, [tab])
+    }, [])
+
+    const activeJob = invoices.find((inv) => inv.jobStatus === 'ongoing') || invoices.find((inv) => inv.jobStatus === 'notStarted')
 
     // Equipment belongs to the property, not the person — so once we know
     // every distinct property this customer has ever had a job at (from
@@ -539,6 +542,24 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                         </button>
                     </div>
                 </div>
+
+                {activeJob && (
+                    <button
+                        onClick={() => setSelectedInvoice(activeJob)}
+                        className="w-full text-left bg-white/5 hover:bg-white/10 border border-blue/40 rounded-2xl p-4 mb-6 transition-colors"
+                    >
+                        <div className="flex items-center justify-between gap-3 mb-1">
+                            <p className="text-white/40 text-xs uppercase tracking-widest">
+                                {activeJob.jobStatus === 'ongoing' ? 'Ongoing Job' : 'Upcoming Job'}
+                            </p>
+                            <span className={`text-xs font-semibold ${activeJob.jobStatus === 'ongoing' ? 'text-brand-green' : 'text-accent'}`}>
+                                {activeJob.jobStatus === 'ongoing' ? 'Ongoing' : 'Not Started'}
+                            </span>
+                        </div>
+                        <p className="text-white text-sm">{activeJob.workPerformed || 'No description'}</p>
+                        <p className="text-white/40 text-xs mt-1">{formatAddress(activeJob.propertyAddress)} · {activeJob.serviceDate}</p>
+                    </button>
+                )}
 
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
                     {TABS.map((t) => (
@@ -1111,7 +1132,7 @@ function InvoicesView({ onBack }) {
     const [status, setStatus] = useState('loading') // loading | ready | error
     const [search, setSearch] = useState('')
     const [selected, setSelected] = useState(null)
-    const [tab, setTab] = useState('active') // active | awaiting | completed
+    const [tab, setTab] = useState('notStarted') // notStarted | ongoing | completed | owed | deposits
 
     function fetchInvoices() {
         fetch('/api/invoices')
@@ -1136,11 +1157,23 @@ function InvoicesView({ onBack }) {
 
     const outstandingCount = invoices.filter((inv) => inv.paymentStatus === 'unpaid' || inv.paymentStatus === 'partial').length
 
-    const activeAndPending = invoices.filter((inv) => inv.jobStatus !== 'complete')
-    const awaitingPayment = invoices.filter((inv) => inv.jobStatus === 'complete' && inv.paymentStatus !== 'paid')
-    const completed = invoices.filter((inv) => inv.jobStatus === 'complete' && inv.paymentStatus === 'paid')
+    // Five tabs, deliberately non-overlapping except one case: a job that's
+    // complete but not fully paid shows only in "Owed" (not "Completed" too),
+    // and a job still in progress with money already on it shows only in
+    // "Deposits" — so nothing ever silently double-counts.
+    const notStartedJobs = invoices.filter((inv) => inv.jobStatus === 'notStarted' && inv.paymentStatus === 'unpaid')
+    const ongoingJobs = invoices.filter((inv) => inv.jobStatus === 'ongoing' && inv.paymentStatus === 'unpaid')
+    const completedJobs = invoices.filter((inv) => inv.jobStatus === 'complete' && inv.paymentStatus === 'paid')
+    const owedJobs = invoices.filter((inv) => inv.jobStatus === 'complete' && inv.paymentStatus !== 'paid')
+    const depositJobs = invoices.filter((inv) => inv.jobStatus !== 'complete' && inv.paymentStatus !== 'unpaid')
 
-    const tabInvoices = tab === 'active' ? activeAndPending : tab === 'awaiting' ? awaitingPayment : completed
+    const tabInvoices = {
+        notStarted: notStartedJobs,
+        ongoing: ongoingJobs,
+        completed: completedJobs,
+        owed: owedJobs,
+        deposits: depositJobs,
+    }[tab] || []
 
     const filtered = tabInvoices.filter((inv) => {
         const q = search.trim().toLowerCase()
@@ -1192,34 +1225,27 @@ function InvoicesView({ onBack }) {
                 )}
 
                 {status === 'ready' && (
-                    <div className="grid grid-cols-3 gap-2 mb-6">
-                        <button
-                            onClick={() => setTab('active')}
-                            className={`py-3 rounded-xl text-xs font-semibold transition-colors ${tab === 'active' ? 'bg-blue text-white' : 'bg-white/5 text-white/50 border border-white/10'
-                                }`}
-                        >
-                            Active & Pending
-                            <span className="block text-[10px] opacity-70 mt-0.5">{activeAndPending.length}</span>
-                        </button>
-                        <button
-                            onClick={() => setTab('awaiting')}
-                            className={`py-3 rounded-xl text-xs font-semibold transition-colors ${tab === 'awaiting' ? 'bg-accent text-white' : 'bg-white/5 text-white/50 border border-white/10'
-                                }`}
-                        >
-                            Awaiting Payment
-                            <span className="block text-[10px] opacity-70 mt-0.5">{awaitingPayment.length}</span>
-                        </button>
-                        <button
-                            onClick={() => setTab('completed')}
-                            className={`py-3 rounded-xl text-xs font-semibold transition-colors ${tab === 'completed' ? 'bg-brand-green text-white' : 'bg-white/5 text-white/50 border border-white/10'
-                                }`}
-                        >
-                            Completed
-                            <span className="block text-[10px] opacity-70 mt-0.5">{completed.length}</span>
-                        </button>
+                    <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+                        {[
+                            { key: 'notStarted', label: 'Not Started', count: notStartedJobs.length },
+                            { key: 'ongoing', label: 'Ongoing', count: ongoingJobs.length },
+                            { key: 'completed', label: 'Completed', count: completedJobs.length },
+                            { key: 'owed', label: 'Owed', count: owedJobs.length },
+                            { key: 'deposits', label: 'Deposits', count: depositJobs.length },
+                        ].map((t) => (
+                            <button
+                                key={t.key}
+                                onClick={() => setTab(t.key)}
+                                className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${tab === t.key
+                                    ? 'bg-blue text-white'
+                                    : 'bg-white/5 text-white/50 hover:bg-white/10 border border-white/10'
+                                    }`}
+                            >
+                                {t.label} <span className="opacity-70">({t.count})</span>
+                            </button>
+                        ))}
                     </div>
                 )}
-
                 <input
                     type="text"
                     value={search}

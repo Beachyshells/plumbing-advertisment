@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import MoneyInput from './MoneyInput.jsx'
 
 const DISCOUNT_REASONS = [
     { value: 'veteran', label: 'Veteran' },
@@ -45,13 +46,21 @@ function DiscountControls({ discount, onChange, appliedBy }) {
             </div>
             {discount.discountType !== 'none' && (
                 <div className="flex flex-col gap-2">
-                    <input
-                        type="number"
-                        placeholder={discount.discountType === 'percent' ? 'Percent (e.g. 20)' : 'Dollar amount (e.g. 15)'}
-                        value={discount.discountValue}
-                        onChange={(e) => onChange({ ...discount, discountValue: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue"
-                    />
+                    {discount.discountType === 'flat' ? (
+                        <MoneyInput
+                            placeholder="Dollar amount (e.g. 15.00)"
+                            value={discount.discountValue}
+                            onChange={(val) => onChange({ ...discount, discountValue: val })}
+                        />
+                    ) : (
+                        <input
+                            type="number"
+                            placeholder="Percent (e.g. 20)"
+                            value={discount.discountValue}
+                            onChange={(e) => onChange({ ...discount, discountValue: e.target.value })}
+                            className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue"
+                        />
+                    )}
                     <select
                         value={discount.discountReason}
                         onChange={(e) => onChange({ ...discount, discountReason: e.target.value })}
@@ -255,17 +264,13 @@ export default function EmployeePartsView({ propertyId, employeeId, pin, onBack 
                                                 <p className="text-white text-sm font-semibold">{li.miscName}</p>
                                                 <button onClick={() => removeLineItem(li.key)} className="text-red-400 text-xs shrink-0">Remove</button>
                                             </div>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-white/40 text-sm">$</span>
-                                                <input
-                                                    type="number"
+                                            <div className="mb-2">
+                                                <MoneyInput
+                                                    placeholder="0.00 (free)"
                                                     value={li.miscSellPrice}
-                                                    onChange={(e) => updateMiscPrice(li.key, e.target.value)}
-                                                    className="w-24 bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue"
+                                                    onChange={(val) => updateMiscPrice(li.key, val)}
                                                 />
-                                                <span className="text-white/30 text-xs">(0 for free)</span>
-                                            </div>
-                                            <input
+                                            </div>                                            <input
                                                 type="text"
                                                 placeholder="Note (e.g. gave customer old part)"
                                                 value={li.miscNote || ''}
@@ -355,13 +360,13 @@ export default function EmployeePartsView({ propertyId, employeeId, pin, onBack 
                                 onChange={(e) => setMiscDraft((d) => ({ ...d, miscName: e.target.value }))}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-base py-3 px-4 outline-none focus:border-blue mb-2"
                             />
-                            <input
-                                type="number"
-                                placeholder="Price (0 for free)"
-                                value={miscDraft.miscSellPrice}
-                                onChange={(e) => setMiscDraft((d) => ({ ...d, miscSellPrice: e.target.value }))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-base py-3 px-4 outline-none focus:border-blue mb-2"
-                            />
+                            <div className="mb-2">
+                                <MoneyInput
+                                    placeholder="Price (0 for free)"
+                                    value={miscDraft.miscSellPrice}
+                                    onChange={(val) => setMiscDraft((d) => ({ ...d, miscSellPrice: val }))}
+                                />
+                            </div>
                             <input
                                 type="text"
                                 placeholder="Note (optional)"

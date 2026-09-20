@@ -9,7 +9,9 @@ import {
     syncPendingData,
     countPendingItems,
 } from './offlineQueue'
+
 import { generateInvoicePdf } from './invoicePdf.js'
+import MoneyInput from './MoneyInput.jsx'
 import Toast from './Toast.jsx'
 
 // Replace with the real template ID once it's created in EmailJS.
@@ -692,13 +694,11 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 onKeyDown={(e) => e.key === 'Enter' && setStage('line-items')}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
-                            <input
-                                type="number"
+                            <MoneyInput
                                 placeholder="Labor cost"
                                 value={laborCost}
-                                onChange={(e) => setLaborCost(e.target.value)}
+                                onChange={setLaborCost}
                                 onKeyDown={(e) => e.key === 'Enter' && setStage('line-items')}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
 
                             <textarea
@@ -807,13 +807,11 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                 onKeyDown={(e) => e.key === 'Enter' && addMiscLineItem()}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
-                            <input
-                                type="number"
+                            <MoneyInput
                                 placeholder="Sell price (final, no markup)"
                                 value={miscDraft.miscSellPrice}
-                                onChange={(e) => setMiscDraft((prev) => ({ ...prev, miscSellPrice: e.target.value }))}
+                                onChange={(val) => setMiscDraft((prev) => ({ ...prev, miscSellPrice: val }))}
                                 onKeyDown={(e) => e.key === 'Enter' && addMiscLineItem()}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue"
                             />
                             <input
                                 type="text"

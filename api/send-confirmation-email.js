@@ -2,10 +2,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Update this once the domain is verified in Resend — must be an address
-// on that verified domain (e.g. confirmations@adkadvancedwatersolutions.com).
-const FROM_ADDRESS = 'Adirondack Advanced Water Solutions <REPLACE_ME@adkadvancedwatersolutions.com>'
-
+const FROM_ADDRESS = 'Adirondack Advanced Water Solutions <contact@adkadvancedwatersolutions.com>'
 function cleanText(value, maxLength = 500) {
     if (typeof value !== 'string') return ''
     return value.slice(0, maxLength)

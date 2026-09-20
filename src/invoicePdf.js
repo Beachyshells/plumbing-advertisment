@@ -198,6 +198,45 @@ export async function generateInvoicePdf(invoice) {
     doc.text(balance > 0 ? `BALANCE DUE: $${balance.toFixed(2)}` : 'PAID IN FULL', 566, y, { align: 'right' })
     y += 50
 
+    // ---- Receipts (only the ones marked to show on the customer invoice) ----
+    const receiptsToShow = (invoice.receipts || []).filter((r) => r.showOnInvoice && r.url)
+    if (receiptsToShow.length > 0) {
+        doc.addPage()
+        let ry = 50
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(14)
+        doc.setTextColor(...NAVY)
+        doc.text('Receipts', 36, ry)
+        ry += 24
+
+        const imgWidth = 250
+        const imgHeight = 180
+        const gap = 20
+        let col = 0
+
+        for (const receipt of receiptsToShow) {
+            const dataUrl = await loadImageAsDataUrl(receipt.url)
+            if (!dataUrl) continue
+
+            if (ry + imgHeight > 740) {
+                doc.addPage()
+                ry = 50
+                col = 0
+            }
+
+            const format = dataUrl.match(/data:image\/(\w+);/)?.[1]?.toUpperCase() || 'JPEG'
+            const x = 36 + col * (imgWidth + gap)
+            doc.addImage(dataUrl, format, x, ry, imgWidth, imgHeight)
+
+            if (col === 1) {
+                col = 0
+                ry += imgHeight + gap
+            } else {
+                col = 1
+            }
+        }
+    }
+
     // ---- Footer ----
     doc.setDrawColor(...GRAY_LINE)
     doc.setLineWidth(0.75)

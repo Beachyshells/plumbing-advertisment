@@ -126,12 +126,19 @@ function resolveInvoiceDiscount(submittedDiscount, existing, actorName) {
     return { ...newDiscount, discountAppliedBy: resolveDiscountAppliedBy(newDiscount, existingDiscount, actorName) }
 }
 
-async function uploadReceipt(base64Image) {
-    const [header, data] = base64Image.split(',')
+async function uploadReceipt(receipt) {
+    const dataUrl = receipt?.dataUrl
+    const showOnInvoice = !!receipt?.showOnInvoice
+    const [header, data] = dataUrl.split(',')
     const contentType = header.match(/data:(.*);base64/)?.[1] || 'image/jpeg'
     const buffer = Buffer.from(data, 'base64')
     const asset = await writeClient.assets.upload('image', buffer, { contentType })
-    return { _type: 'image', _key: randomKey(), asset: { _type: 'reference', _ref: asset._id } }
+    return {
+        _type: 'receiptPhoto',
+        _key: randomKey(),
+        image: { _type: 'image', asset: { _type: 'reference', _ref: asset._id } },
+        showOnInvoice,
+    }
 }
 
 async function nextInvoiceNumber() {
@@ -304,6 +311,11 @@ export default async function handler(req, res) {
                             "inventoryItemName": inventoryItem->name,
                             "inventoryItemPrice": inventoryItem->sellPrice,
                             "isEquipment": inventoryItem->isEquipment
+                        },
+
+                        receipts[]{
+                            showOnInvoice,
+                            "url": image.asset->url
                         }
                     }`,
                     { id }

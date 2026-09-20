@@ -273,13 +273,17 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     function handleReceiptFiles(fileList) {
         Array.from(fileList).forEach((file) => {
             const reader = new FileReader()
-            reader.onloadend = () => setReceipts((prev) => [...prev, reader.result])
+            reader.onloadend = () => setReceipts((prev) => [...prev, { dataUrl: reader.result, showOnInvoice: false }])
             reader.readAsDataURL(file)
         })
     }
 
     function removeReceipt(index) {
         setReceipts((prev) => prev.filter((_, i) => i !== index))
+    }
+
+    function toggleReceiptShow(index) {
+        setReceipts((prev) => prev.map((r, i) => (i === index ? { ...r, showOnInvoice: !r.showOnInvoice } : r)))
     }
 
     async function handleSaveInvoice(startNow) {
@@ -860,15 +864,24 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         >
                             + Take Photo / Upload Receipt
                         </button>
-                        <div className="grid grid-cols-3 gap-2 mb-6">
-                            {receipts.map((src, i) => (
-                                <div key={i} className="relative">
-                                    <img src={src} alt="Receipt" className="w-full h-24 object-cover rounded-lg" />
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            {receipts.map((r, i) => (
+                                <div key={i} className="relative bg-white/5 border border-white/10 rounded-xl p-2">
+                                    <div className="relative">
+                                        <img src={r.dataUrl} alt="Receipt" className="w-full h-24 object-cover rounded-lg" />
+                                        <button
+                                            onClick={() => removeReceipt(i)}
+                                            className="absolute top-1 right-1 bg-navy/80 text-red-400 text-xs rounded-full w-6 h-6"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
                                     <button
-                                        onClick={() => removeReceipt(i)}
-                                        className="absolute top-1 right-1 bg-navy/80 text-red-400 text-xs rounded-full w-6 h-6"
+                                        onClick={() => toggleReceiptShow(i)}
+                                        className={`w-full mt-2 py-1.5 rounded-lg text-xs font-semibold transition-colors ${r.showOnInvoice ? 'bg-blue text-white' : 'bg-white/5 text-white/50 border border-white/10'
+                                            }`}
                                     >
-                                        ✕
+                                        {r.showOnInvoice ? 'Shown on Invoice' : 'Store Only'}
                                     </button>
                                 </div>
                             ))}

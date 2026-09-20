@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import MoneyInput from './MoneyInput.jsx'
 import Toast from './Toast.jsx'
 
 function formatAddress(address) {
@@ -335,10 +336,11 @@ function EmployeeDetail({ employee: initialEmployee, onBack }) {
                 {showPaymentForm ? (
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-3 mb-6">
                         <p className="text-white text-lg font-serif mb-1">Record Payment</p>
-                        <input type="number" step="0.01" placeholder={`Amount (balance: ${formatMoney(balance)})`} value={paymentDraft.amount}
-                            onChange={(e) => setPaymentDraft((d) => ({ ...d, amount: e.target.value }))}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
-                        {paymentDraft.amount !== '' && (
+                        <MoneyInput
+                            placeholder={`Amount (balance: ${formatMoney(balance)})`}
+                            value={paymentDraft.amount}
+                            onChange={(val) => setPaymentDraft((d) => ({ ...d, amount: val }))}
+                        />                        {paymentDraft.amount !== '' && (
                             <p className={`text-center text-2xl font-serif ${Number(paymentDraft.amount) > balance ? 'text-red-400' : 'text-brand-green'}`}>
                                 {formatMoney(paymentDraft.amount)}
                             </p>
@@ -442,10 +444,11 @@ function EmployeeDetail({ employee: initialEmployee, onBack }) {
                                 </button>
                             ))}
                         </div>
-                        <input type="number" placeholder="Pay rate" value={editingEntry.payRate}
-                            onChange={(e) => setEditingEntry((d) => ({ ...d, payRate: e.target.value }))}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue" />
-                        <textarea placeholder="Jobs accomplished" value={editingEntry.jobsAccomplished}
+                        <MoneyInput
+                            placeholder="Pay rate"
+                            value={editingEntry.payRate}
+                            onChange={(val) => setEditingEntry((d) => ({ ...d, payRate: val }))}
+                        />                        <textarea placeholder="Jobs accomplished" value={editingEntry.jobsAccomplished}
                             onChange={(e) => setEditingEntry((d) => ({ ...d, jobsAccomplished: e.target.value }))}
                             className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue h-20 resize-none" />
                         <textarea placeholder="Notes" value={editingEntry.notes}

@@ -595,20 +595,6 @@ function TimeclockTab({ employeeId, pin }) {
                 Parts & Equipment
             </button>
 
-            <button
-                onClick={() => setShowParts(true)}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-3"
-            >
-                Parts & Equipment
-            </button>
-
-            <button
-                onClick={() => setShowParts(true)}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-3"
-            >
-                Parts & Equipment
-            </button>
-
             {!onBreak && (
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left mb-3">
                     <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Wrapping up for the day?</p>

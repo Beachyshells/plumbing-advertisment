@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import EmployeePartsView from './EmployeePartsView.jsx'
 import MoneyInput from './MoneyInput.jsx'
+import Toast from './Toast.jsx'
 
 const EMPTY_INTAKE = { firstName: '', lastName: '', phone: '', email: '', startDate: new Date().toISOString().slice(0, 10), pin: '', confirmPin: '' }
 
@@ -38,6 +39,7 @@ export default function Employee() {
     const [pinStatus, setPinStatus] = useState('idle') // idle | checking | error | locked
 
     const [tab, setTab] = useState('Timeclock')
+    const [portalToast, setPortalToast] = useState(null)
 
     useEffect(() => {
         fetch('/api/timeclock')
@@ -303,6 +305,7 @@ export default function Employee() {
     // ---- portal: Profile / Timeclock ----
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
+            <Toast message={portalToast} onDone={() => setPortalToast(null)} />
             <div className="w-full max-w-lg mx-auto">
                 <div className="flex items-center justify-between mb-6">
                     <div>
@@ -327,8 +330,8 @@ export default function Employee() {
                     ))}
                 </div>
 
-                {tab === 'Timeclock' && <TimeclockTab employeeId={selectedEmployee._id} pin={verifiedPin} />}
-                {tab === 'Profile' && <ProfileTab employeeId={selectedEmployee._id} pin={verifiedPin} onPinChanged={setVerifiedPin} />}
+                {tab === 'Timeclock' && <TimeclockTab employeeId={selectedEmployee._id} pin={verifiedPin} onToast={setPortalToast} />}
+                {tab === 'Profile' && <ProfileTab employeeId={selectedEmployee._id} pin={verifiedPin} onPinChanged={setVerifiedPin} onToast={setPortalToast} />}
             </div>
         </div>
     )
@@ -343,7 +346,7 @@ function ReviewRow({ label, value }) {
     )
 }
 
-function TimeclockTab({ employeeId, pin }) {
+function TimeclockTab({ employeeId, pin, onToast }) {
     const [status, setStatus] = useState('loading') // loading | not-clocked-in | clocked-in | clocking-out
     const [entry, setEntry] = useState(null)
     const [onBreak, setOnBreak] = useState(false)
@@ -429,9 +432,11 @@ function TimeclockTab({ employeeId, pin }) {
             })
             if (!res.ok) throw new Error('Failed')
             setActionStatus('idle')
+            onToast(action === 'breakStart' ? 'Break started' : 'Break ended')
             fetchStatus()
         } catch (err) {
             setActionStatus('error')
+            onToast("Couldn't update — try again")
         }
     }
 
@@ -449,6 +454,7 @@ function TimeclockTab({ employeeId, pin }) {
             setActionStatus('idle')
         } catch (err) {
             setActionStatus('error')
+            onToast("Couldn't clock out — try again")
         }
     }
 
@@ -615,7 +621,7 @@ function TimeclockTab({ employeeId, pin }) {
     )
 }
 
-function ProfileTab({ employeeId, pin, onPinChanged }) {
+function ProfileTab({ employeeId, pin, onPinChanged, onToast }) {
     const [data, setData] = useState(null)
     const [status, setStatus] = useState('loading') // loading | ready | error
 
@@ -672,6 +678,7 @@ function ProfileTab({ employeeId, pin, onPinChanged }) {
             if (!res.ok) throw new Error('Failed')
             setProfileSaveStatus('idle')
             setEditingProfile(false)
+            onToast('Profile updated')
             fetchHistory()
         } catch (err) {
             console.error(err)
@@ -708,6 +715,7 @@ function ProfileTab({ employeeId, pin, onPinChanged }) {
             setEditingPin(false)
             onPinChanged(pinDraft.newPin)
             setPinDraft({ currentPin: '', newPin: '', confirmPin: '' })
+            onToast('PIN changed')
         } catch (err) {
             setPinSaveStatus('error')
             setPinSaveError(err.message || 'Something went wrong.')

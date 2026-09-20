@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-
+import Toast from './Toast.jsx'
 function todayString() {
     return new Date().toISOString().slice(0, 10)
 }
@@ -12,7 +12,7 @@ export default function EquipmentLogView({ invoice, onBack }) {
     const [openItemName, setOpenItemName] = useState(null)
     const [draft, setDraft] = useState(null)
     const [saveStatus, setSaveStatus] = useState('idle') // idle | saving | error
-
+    const [toast, setToast] = useState(null)
     function load() {
         setStatus('loading')
         fetch(`/api/invoices?id=${invoice._id}`)
@@ -95,15 +95,18 @@ export default function EquipmentLogView({ invoice, onBack }) {
             setOpenItemName(null)
             setDraft(null)
             setSaveStatus('idle')
+            setToast('Equipment logged')
             load()
         } catch (err) {
             console.error(err)
             setSaveStatus('error')
+            setToast("Couldn't save — try again")
         }
     }
 
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
+            <Toast message={toast} onDone={() => setToast(null)} />
             <div className="w-full max-w-2xl mx-auto">
                 <button onClick={onBack} className="text-white/40 hover:text-white/70 text-sm mb-6 transition-colors">
                     ← Invoice

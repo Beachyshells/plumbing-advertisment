@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Toast from './Toast.jsx'
 
 function formatAddress(address) {
     if (!address || (!address.street && !address.city && !address.state)) return ''
@@ -54,7 +55,7 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
     const [selectedDay, setSelectedDay] = useState(null) // 'YYYY-MM-DD' or null
     const [cancelations, setCancelations] = useState([])
     const [confirmingId, setConfirmingId] = useState(null)
-
+    const [toast, setToast] = useState(null)
     const monthString = toMonthString(cursor)
     const todayFull = new Date().toISOString().slice(0, 10)
 
@@ -92,8 +93,10 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
             })
             if (!res.ok) throw new Error('Failed')
             setCancelations((prev) => prev.filter((c) => c._id !== id))
+            setToast('Cancelation confirmed')
         } catch (err) {
             console.error(err)
+            setToast("Couldn't confirm — try again")
         } finally {
             setConfirmingId(null)
         }
@@ -135,6 +138,7 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
 
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
+            <Toast message={toast} onDone={() => setToast(null)} />
             <div className="w-full max-w-5xl mx-auto">
                 <button onClick={onBack} className="text-white/40 hover:text-white/70 text-sm mb-6 transition-colors">
                     ← Desktop

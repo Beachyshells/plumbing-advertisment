@@ -2007,7 +2007,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                             {invoice.jobStatus === 'ongoing' ? 'Ongoing' : invoice.jobStatus === 'complete' ? 'Complete' : 'Not Started'}
                         </p>
                     </div>
-                    {invoice.jobStatus !== 'complete' && (
+                    {invoice.jobStatus !== 'complete' ? (
                         <button
                             onClick={() => handleSetJobStatus(invoice.jobStatus === 'ongoing' ? 'complete' : 'ongoing')}
                             disabled={jobStatusUpdating}
@@ -2015,6 +2015,14 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                                 }`}
                         >
                             {jobStatusUpdating ? 'Updating...' : invoice.jobStatus === 'ongoing' ? 'Complete Job' : 'Start Job'}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => handleSetJobStatus('ongoing')}
+                            disabled={jobStatusUpdating}
+                            className="px-4 py-2 rounded-xl text-sm font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-colors disabled:opacity-50"
+                        >
+                            {jobStatusUpdating ? 'Updating...' : 'Reopen Job'}
                         </button>
                     )}
                 </div>

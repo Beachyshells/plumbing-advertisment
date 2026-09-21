@@ -84,10 +84,12 @@ export default async function handler(req, res) {
             if (id) {
                 const contract = await readClient.fetch(
                     `*[_type == "contract" && _id == $id][0]{
-                        _id, contractId, status, scopeOfWork, totalPrice, priceNotes, termsText,
+                                             _id, contractId, status, scopeOfWork, totalPrice, priceNotes, termsText,
                         consentGiven, consentTimestamp, signerName, signedAt, signerIp, auditTrail,
+                        companyConsentGiven, companyConsentTimestamp, companySignerName, companySignedAt, companySignerIp,
                         "signedPdfUrl": signedPdf.asset->url,
                         "signatureImageUrl": signatureImage.asset->url,
+                        "companySignatureImageUrl": companySignatureImage.asset->url,
                         "templateName": template->name,
                         "templateType": template->templateType,
                         "customerId": customer->_id,
@@ -226,9 +228,12 @@ export default async function handler(req, res) {
             }
 
             if (action === 'sign') {
-                const { signerName, signatureDataUrl, consentGiven } = body
+                const { signerName, signatureDataUrl, consentGiven, signerRole } = body
                 if (!consentGiven) return res.status(400).json({ error: 'Consent is required to sign' })
                 if (!signerName || !signatureDataUrl) return res.status(400).json({ error: 'Missing signer name or signature' })
+                if (signerRole !== 'customer' && signerRole !== 'company') {
+                    return res.status(400).json({ error: 'Invalid signer role' })
+                }
 
                 const [header, data] = signatureDataUrl.split(',')
                 const contentType = header.match(/data:(.*);base64/)?.[1] || 'image/png'
@@ -237,21 +242,48 @@ export default async function handler(req, res) {
 
                 const now = new Date().toISOString()
 
+                const existing = await readClient.fetch(
+                    `*[_type == "contract" && _id == $id][0]{ signedAt, companySignedAt }`,
+                    { id: contractDocId }
+                )
+                if (!existing) return res.status(404).json({ error: 'Contract not found' })
+
+                const update = {}
+                if (signerRole === 'customer') {
+                    update.consentGiven = true
+                    update.consentTimestamp = now
+                    update.signerName = cleanText(signerName, 200)
+                    update.signatureImage = { _type: 'image', asset: { _type: 'reference', _ref: asset._id } }
+                    update.signedAt = now
+                    update.signerIp = ip
+                } else {
+                    update.companyConsentGiven = true
+                    update.companyConsentTimestamp = now
+                    update.companySignerName = cleanText(signerName, 200)
+                    update.companySignatureImage = { _type: 'image', asset: { _type: 'reference', _ref: asset._id } }
+                    update.companySignedAt = now
+                    update.companySignerIp = ip
+                }
+
+                // "Signed" only once BOTH sides have signed — otherwise it's
+                // partially signed, regardless of which side just went first.
+                const customerNowSigned = signerRole === 'customer' ? true : !!existing.signedAt
+                const companyNowSigned = signerRole === 'company' ? true : !!existing.companySignedAt
+                update.status = customerNowSigned && companyNowSigned ? 'signed' : 'partiallySigned'
+
                 await writeClient
                     .patch(contractDocId)
-                    .set({
-                        status: 'signed',
-                        consentGiven: true,
-                        consentTimestamp: now,
-                        signerName: cleanText(signerName, 200),
-                        signatureImage: { _type: 'image', asset: { _type: 'reference', _ref: asset._id } },
-                        signedAt: now,
-                        signerIp: ip,
-                    })
-                    .append('auditTrail', [{ _type: 'auditEvent', _key: randomKey(), event: 'signed', timestamp: now, ipAddress: ip }])
+                    .set(update)
+                    .append('auditTrail', [{
+                        _type: 'auditEvent',
+                        _key: randomKey(),
+                        event: signerRole === 'customer' ? 'signed_customer' : 'signed_company',
+                        timestamp: now,
+                        ipAddress: ip,
+                    }])
                     .commit()
 
-                return res.status(200).json({ success: true, signedAt: now })
+                return res.status(200).json({ success: true, signedAt: now, status: update.status })
             }
 
             if (action === 'void') {

@@ -10,6 +10,7 @@ const STATUS_COLORS = {
     draft: 'text-white/50',
     sent: 'text-accent',
     viewed: 'text-accent',
+    partiallySigned: 'text-accent',
     signed: 'text-brand-green',
     voided: 'text-red-400',
 }
@@ -77,10 +78,38 @@ function SignaturePad({ onChange }) {
     )
 }
 
+function SignatureCard({ label, signerName, signedAt, signerIp, signatureImageUrl, onSignClick }) {
+    const isSigned = !!signedAt
+    return (
+        <div className={`bg-white/5 border rounded-2xl p-5 ${isSigned ? 'border-brand-green/40' : 'border-white/10'}`}>
+            <p className={`text-sm font-semibold mb-1 ${isSigned ? 'text-brand-green' : 'text-white/40'}`}>
+                {label}{isSigned ? ' — Signed' : ' — Not Yet Signed'}
+            </p>
+            {isSigned ? (
+                <>
+                    <p className="text-white text-sm">{signerName}</p>
+                    <p className="text-white/40 text-xs mt-1">{signedAt}</p>
+                    <p className="text-white/30 text-xs">IP: {signerIp}</p>
+                    {signatureImageUrl && (
+                        <img src={signatureImageUrl} alt="Signature" className="bg-white rounded-lg mt-3 p-2 h-20" />
+                    )}
+                </>
+            ) : (
+                <button
+                    onClick={onSignClick}
+                    className="w-full bg-blue hover:bg-blue-light text-white text-sm font-semibold py-3 rounded-xl transition-colors active:scale-[0.98] mt-2"
+                >
+                    Sign as {label}
+                </button>
+            )}
+        </div>
+    )
+}
+
 export default function ContractDetailView({ contractId, onBack }) {
     const [contract, setContract] = useState(null)
     const [status, setStatus] = useState('loading') // loading | ready | error
-    const [signing, setSigning] = useState(false)
+    const [signingRole, setSigningRole] = useState(null) // null | 'customer' | 'company'
     const [consentGiven, setConsentGiven] = useState(false)
     const [signerName, setSignerName] = useState('')
     const [signatureDataUrl, setSignatureDataUrl] = useState(null)
@@ -103,8 +132,16 @@ export default function ContractDetailView({ contractId, onBack }) {
         load()
     }, [contractId])
 
+    function startSigning(role) {
+        setSigningRole(role)
+        setConsentGiven(false)
+        setSignerName('')
+        setSignatureDataUrl(null)
+        setSignStatus('idle')
+    }
+
     async function handleSign() {
-        if (!consentGiven || !signerName.trim() || !signatureDataUrl) return
+        if (!consentGiven || !signerName.trim() || !signatureDataUrl || !signingRole) return
         setSignStatus('saving')
         try {
             const res = await fetch('/api/contracts', {
@@ -116,12 +153,13 @@ export default function ContractDetailView({ contractId, onBack }) {
                     consentGiven: true,
                     signerName: signerName.trim(),
                     signatureDataUrl,
+                    signerRole: signingRole,
                 }),
             })
             if (!res.ok) throw new Error('Failed')
             setSignStatus('idle')
-            setSigning(false)
-            setToast('Contract signed')
+            setSigningRole(null)
+            setToast(signingRole === 'customer' ? 'Customer signature captured' : 'Company signature captured')
             load()
         } catch (err) {
             console.error(err)
@@ -137,6 +175,7 @@ export default function ContractDetailView({ contractId, onBack }) {
     }
 
     const customerName = [contract.customerFirstName, contract.customerLastName].filter(Boolean).join(' ')
+    const anySigned = contract.status === 'signed' || contract.status === 'partiallySigned'
 
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
@@ -149,12 +188,12 @@ export default function ContractDetailView({ contractId, onBack }) {
                 <div className="flex items-center justify-between mb-1">
                     <h1 className="font-serif text-2xl text-white">{contract.contractId}</h1>
                     <span className={`text-sm font-semibold uppercase ${STATUS_COLORS[contract.status] || 'text-white/50'}`}>
-                        {contract.status}
+                        {contract.status === 'partiallySigned' ? 'Partially Signed' : contract.status}
                     </span>
                 </div>
                 <p className="text-white/40 text-xs mb-6">{contract.templateName} — {customerName}</p>
 
-                {!signing && (
+                {!signingRole && (
                     <>
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
                             <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Scope of Work</p>
@@ -175,32 +214,36 @@ export default function ContractDetailView({ contractId, onBack }) {
                             onClick={() => generateContractPdf(contract)}
                             className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-4"
                         >
-                            {contract.status === 'signed' ? 'Print Contract (PDF)' : 'Print Blank Contract for Signature'}
+                            {anySigned ? 'Print Contract (PDF)' : 'Print Blank Contract for Signature'}
                         </button>
 
-                        {contract.status === 'signed' ? (
-                            <div className="bg-white/5 border border-brand-green/40 rounded-2xl p-5">
-                                <p className="text-brand-green text-sm font-semibold mb-1">Signed</p>
-                                <p className="text-white text-sm">{contract.signerName}</p>
-                                <p className="text-white/40 text-xs mt-1">{contract.signedAt}</p>
-                                <p className="text-white/30 text-xs">IP: {contract.signerIp}</p>
-                                {contract.signatureImageUrl && (
-                                    <img src={contract.signatureImageUrl} alt="Signature" className="bg-white rounded-lg mt-3 p-2 h-20" />
-                                )}
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => setSigning(true)}
-                                className="w-full bg-blue hover:bg-blue-light text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
-                            >
-                                Sign Now
-                            </button>
-                        )}
+                        <div className="flex flex-col gap-3">
+                            <SignatureCard
+                                label="Customer"
+                                signerName={contract.signerName}
+                                signedAt={contract.signedAt}
+                                signerIp={contract.signerIp}
+                                signatureImageUrl={contract.signatureImageUrl}
+                                onSignClick={() => startSigning('customer')}
+                            />
+                            <SignatureCard
+                                label="Company Representative"
+                                signerName={contract.companySignerName}
+                                signedAt={contract.companySignedAt}
+                                signerIp={contract.companySignerIp}
+                                signatureImageUrl={contract.companySignatureImageUrl}
+                                onSignClick={() => startSigning('company')}
+                            />
+                        </div>
                     </>
                 )}
 
-                {signing && (
+                {signingRole && (
                     <div className="flex flex-col gap-5">
+                        <p className="text-white/40 text-xs uppercase tracking-widest">
+                            Signing as {signingRole === 'customer' ? 'Customer' : 'Company Representative'}
+                        </p>
+
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
                             <p className="text-white/70 text-xs whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">{contract.termsText}</p>
                         </div>
@@ -243,7 +286,7 @@ export default function ContractDetailView({ contractId, onBack }) {
                                 {signStatus === 'saving' ? 'Signing...' : 'I Agree and Sign'}
                             </button>
                             <button
-                                onClick={() => setSigning(false)}
+                                onClick={() => setSigningRole(null)}
                                 className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
                             >
                                 Cancel

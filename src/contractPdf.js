@@ -111,63 +111,54 @@ export async function generateContractPdf(contract) {
     doc.line(36, y, 576, y)
     y += 24
 
-    // Customer signature — either the actual e-signature captured in-app,
-    // or blank lines for a wet-ink signature if this hasn't been signed yet.
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(9)
-    doc.setTextColor(...GRAY_LABEL)
-    doc.text('CUSTOMER', 36, y)
-    y += 16
-
-    if (contract.status === 'signed') {
-        if (contract.signatureImageUrl) {
-            const sigDataUrl = await loadImageAsDataUrl(contract.signatureImageUrl)
-            if (sigDataUrl) {
-                doc.addImage(sigDataUrl, 'PNG', 36, y, 160, 60)
-            }
+    // Draws one party's signature block — either their actual captured
+    // e-signature, or blank lines for a wet-ink signature if they haven't
+    // signed yet. Each party is checked independently, since a contract
+    // can be signed by one side and not the other at the same time.
+    async function drawSignatureSection(label, signerName, signedAt, signatureImageUrl) {
+        if (y > 700) {
+            doc.addPage()
+            y = 60
         }
-        y += 70
 
-        doc.setFont('helvetica', 'normal')
-        doc.setFontSize(10)
-        doc.setTextColor(...BLACK)
-        doc.text(contract.signerName || '', 36, y)
-        y += 14
+        doc.setFont('helvetica', 'bold')
         doc.setFontSize(9)
         doc.setTextColor(...GRAY_LABEL)
-        doc.text(`Signed ${contract.signedAt ? contract.signedAt.slice(0, 10) : ''}`, 36, y)
-        y += 30
-    } else {
-        doc.setFont('helvetica', 'normal')
-        doc.setFontSize(10)
-        doc.setTextColor(...BLACK)
-        doc.text('Signature: _____________________________', 36, y)
-        doc.text('Date: _______________', 400, y)
-        y += 26
-        doc.text('Print Name: _____________________________', 36, y)
-        y += 30
+        doc.text(label, 36, y)
+        y += 16
+
+        if (signedAt) {
+            if (signatureImageUrl) {
+                const sigDataUrl = await loadImageAsDataUrl(signatureImageUrl)
+                if (sigDataUrl) {
+                    doc.addImage(sigDataUrl, 'PNG', 36, y, 160, 60)
+                }
+            }
+            y += 70
+
+            doc.setFont('helvetica', 'normal')
+            doc.setFontSize(10)
+            doc.setTextColor(...BLACK)
+            doc.text(signerName || '', 36, y)
+            y += 14
+            doc.setFontSize(9)
+            doc.setTextColor(...GRAY_LABEL)
+            doc.text(`Signed ${signedAt.slice(0, 10)}`, 36, y)
+            y += 30
+        } else {
+            doc.setFont('helvetica', 'normal')
+            doc.setFontSize(10)
+            doc.setTextColor(...BLACK)
+            doc.text('Signature: _____________________________', 36, y)
+            doc.text('Date: _______________', 400, y)
+            y += 26
+            doc.text('Print Name: _____________________________', 36, y)
+            y += 30
+        }
     }
 
-    // Company representative — always blank lines for now, since Michael's
-    // side isn't captured electronically in-app yet, only the customer's is.
-    if (y > 700) {
-        doc.addPage()
-        y = 60
-    }
-
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(9)
-    doc.setTextColor(...GRAY_LABEL)
-    doc.text('COMPANY REPRESENTATIVE', 36, y)
-    y += 16
-
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(10)
-    doc.setTextColor(...BLACK)
-    doc.text('Signature: _____________________________', 36, y)
-    doc.text('Date: _______________', 400, y)
-    y += 26
-    doc.text('Print Name: _____________________________', 36, y)
+    await drawSignatureSection('CUSTOMER', contract.signerName, contract.signedAt, contract.signatureImageUrl)
+    await drawSignatureSection('COMPANY REPRESENTATIVE', contract.companySignerName, contract.companySignedAt, contract.companySignatureImageUrl)
 
     // ---- Footer ----
     doc.setDrawColor(...GRAY_LINE)

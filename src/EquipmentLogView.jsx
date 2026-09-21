@@ -30,10 +30,10 @@ export default function EquipmentLogView({ invoice, onBack }) {
                     return
                 }
 
-                return fetch(`/api/properties?id=${full.propertyId}`)
+                return fetch(`/api/equipment?propertyId=${full.propertyId}`)
                     .then((res) => res.json())
                     .then((data) => {
-                        setPropertyEquipment(data.property?.equipment || [])
+                        setPropertyEquipment(data.equipment || [])
                         setStatus('ready')
                     })
             })
@@ -65,7 +65,7 @@ export default function EquipmentLogView({ invoice, onBack }) {
             installDate: logged.installDate || '',
             warrantyExpires: logged.warrantyExpires || '',
             notes: logged.notes || '',
-            _editingKey: logged._key,
+            _editingKey: logged._id,
         })
         setSaveStatus('idle')
     }
@@ -74,21 +74,18 @@ export default function EquipmentLogView({ invoice, onBack }) {
         setSaveStatus('saving')
         try {
             const isNew = !draft._editingKey
-            const res = await fetch('/api/properties', {
-                method: 'PATCH',
+            const res = await fetch('/api/equipment', {
+                method: isNew ? 'POST' : 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     propertyId,
-                    action: isNew ? 'addEquipment' : 'updateEquipment',
-                    equipmentKey: isNew ? undefined : draft._editingKey,
-                    equipment: {
-                        equipmentType: draft.equipmentType,
-                        serialNumber: draft.serialNumber,
-                        installDate: draft.installDate,
-                        warrantyExpires: draft.warrantyExpires,
-                        notes: draft.notes,
-                        invoiceId: invoice._id,
-                    },
+                    equipmentId: isNew ? undefined : draft._editingKey,
+                    equipmentType: draft.equipmentType,
+                    serialNumber: draft.serialNumber,
+                    installDate: draft.installDate,
+                    warrantyExpires: draft.warrantyExpires,
+                    notes: draft.notes,
+                    invoiceId: invoice._id,
                 }),
             })
             if (!res.ok) throw new Error('Failed')

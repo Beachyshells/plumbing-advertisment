@@ -40,8 +40,7 @@ const PROPERTY_PROJECTION = `
     address,
     wellOrMunicipal,
     gateCodeKeyEntry,
-    mainShutoffLocation,
-    equipment
+    mainShutoffLocation
 `
 
 export default async function handler(req, res) {
@@ -110,73 +109,11 @@ export default async function handler(req, res) {
         }
 
         try {
-            if (action === 'addEquipment') {
-                const item = body.equipment || {}
-                const newItem = {
-                    _type: 'equipmentItem',
-                    _key: randomKey(),
-                    equipmentType: cleanText(item.equipmentType, 200),
-                    make: cleanText(item.make, 200),
-                    model: cleanText(item.model, 200),
-                    serialNumber: cleanText(item.serialNumber, 200),
-                    installDate: item.installDate || undefined,
-                    installedBy: cleanText(item.installedBy, 200),
-                    warrantyExpires: item.warrantyExpires || undefined,
-                    filterPartNumber: cleanText(item.filterPartNumber, 200),
-                    filterSize: cleanText(item.filterSize, 200),
-                    replaceEvery: cleanText(item.replaceEvery, 200),
-                    lastChanged: item.lastChanged || undefined,
-                    notes: cleanText(item.notes, 1000),
-                    invoiceId: cleanText(item.invoiceId, 200) || undefined,
-                }
-                await writeClient
-                    .patch(propertyId)
-                    .setIfMissing({ equipment: [] })
-                    .append('equipment', [newItem])
-                    .commit()
-                return res.status(200).json({ success: true })
-            }
+            // Note: equipment used to be managed here (addEquipment / updateEquipment /
+            // deleteEquipment) as an array embedded on the property. It now lives as
+            // its own document type — see api/equipment.js.
 
-            if (action === 'updateEquipment') {
-                const key = body.equipmentKey
-                const item = body.equipment || {}
-                if (!key) return res.status(400).json({ error: 'Missing equipmentKey' })
-
-                await writeClient
-                    .patch(propertyId)
-                    .set({
-                        [`equipment[_key=="${key}"].equipmentType`]: cleanText(item.equipmentType, 200),
-                        [`equipment[_key=="${key}"].make`]: cleanText(item.make, 200),
-                        [`equipment[_key=="${key}"].model`]: cleanText(item.model, 200),
-                        [`equipment[_key=="${key}"].serialNumber`]: cleanText(item.serialNumber, 200),
-                        [`equipment[_key=="${key}"].installDate`]: item.installDate || undefined,
-                        [`equipment[_key=="${key}"].installedBy`]: cleanText(item.installedBy, 200),
-                        [`equipment[_key=="${key}"].warrantyExpires`]: item.warrantyExpires || undefined,
-                        [`equipment[_key=="${key}"].filterPartNumber`]: cleanText(item.filterPartNumber, 200),
-                        [`equipment[_key=="${key}"].filterSize`]: cleanText(item.filterSize, 200),
-                        [`equipment[_key=="${key}"].replaceEvery`]: cleanText(item.replaceEvery, 200),
-                        [`equipment[_key=="${key}"].lastChanged`]: item.lastChanged || undefined,
-                        [`equipment[_key=="${key}"].notes`]: cleanText(item.notes, 1000),
-                        ...(item.invoiceId !== undefined
-                            ? { [`equipment[_key=="${key}"].invoiceId`]: cleanText(item.invoiceId, 200) || undefined }
-                            : {}),
-                    })
-                    .commit()
-                return res.status(200).json({ success: true })
-            }
-
-            if (action === 'deleteEquipment') {
-                const key = body.equipmentKey
-                if (!key) return res.status(400).json({ error: 'Missing equipmentKey' })
-                await writeClient
-                    .patch(propertyId)
-                    .unset([`equipment[_key=="${key}"]`])
-                    .commit()
-                return res.status(200).json({ success: true })
-            }
-
-            // action === 'update' (default) — editing the property's own core details
-            const address = body.address || {}
+            // action === 'update' (default) — editing the property's own core details            const address = body.address || {}
             const street = titleCase(cleanText(address.street))
             const city = titleCase(cleanText(address.city))
             const state = cleanText(address.state).toUpperCase()

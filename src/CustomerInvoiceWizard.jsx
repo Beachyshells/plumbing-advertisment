@@ -395,13 +395,13 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
         if (!skip) {
             setEquipmentLogStatus('saving')
             try {
-                const res = await fetch('/api/properties', {
-                    method: 'PATCH',
+                const res = await fetch('/api/equipment', {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         propertyId: selectedCustomer.propertyId,
-                        action: 'addEquipment',
-                        equipment: { ...equipmentLogDraft, invoiceId: savedInvoiceId },
+                        ...equipmentLogDraft,
+                        invoiceId: savedInvoiceId,
                     }),
                 })
                 if (!res.ok) throw new Error('Failed')

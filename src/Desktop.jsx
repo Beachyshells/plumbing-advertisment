@@ -496,9 +496,9 @@ function CustomerCard({ customer, onBack, onAddJob }) {
         setEquipmentAggStatus('loading')
         Promise.all(
             distinctProperties.map((p) =>
-                fetch(`/api/properties?id=${encodeURIComponent(p.propertyId)}`)
+                fetch(`/api/equipment?propertyId=${encodeURIComponent(p.propertyId)}`)
                     .then((res) => (res.ok ? res.json() : null))
-                    .then((data) => ({ ...p, equipment: data?.property?.equipment || [] }))
+                    .then((data) => ({ ...p, equipment: data?.equipment || [] }))
                     .catch(() => ({ ...p, equipment: [] }))
             )
         ).then((groups) => {
@@ -655,7 +655,7 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                                     <p className="text-white/40 text-xs uppercase tracking-widest mb-2">{formatAddress(group.address)}</p>
                                     <div className="flex flex-col gap-2">
                                         {group.equipment.map((item) => (
-                                            <div key={item._key} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                                            <div key={item._id} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
                                                 <p className="text-white text-base font-serif">
                                                     {[item.equipmentType, item.make, item.model].filter(Boolean).join(' — ') || 'Untitled unit'}
                                                 </p>
@@ -709,9 +709,10 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
         installDate: '', installedBy: '', warrantyExpires: '',
         filterPartNumber: '', filterSize: '', replaceEvery: '', lastChanged: '', notes: '',
     }
-    const [equipmentEditing, setEquipmentEditing] = useState(null) // null | 'new' | <key of item being edited>
+    const [equipmentEditing, setEquipmentEditing] = useState(null) // null | 'new' | <_id of item being edited>
     const [equipmentDraft, setEquipmentDraft] = useState(EMPTY_EQUIPMENT)
     const [equipmentStatus, setEquipmentStatus] = useState('idle') // idle | saving | error
+    const [propertyEquipment, setPropertyEquipment] = useState([])
 
     function refreshProperty() {
         fetch(`/api/properties?id=${encodeURIComponent(property._id)}`)
@@ -719,6 +720,13 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
             .then((data) => {
                 if (data?.property) setProperty(data.property)
             })
+            .catch(() => { })
+    }
+
+    function fetchPropertyEquipment() {
+        fetch(`/api/equipment?propertyId=${encodeURIComponent(property._id)}`)
+            .then((res) => (res.ok ? res.json() : { equipment: [] }))
+            .then((data) => setPropertyEquipment(data.equipment || []))
             .catch(() => { })
     }
 
@@ -749,25 +757,24 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
             lastChanged: item.lastChanged || '',
             notes: item.notes || '',
         })
-        setEquipmentEditing(item._key)
+        setEquipmentEditing(item._id)
     }
 
     async function handleSaveEquipment() {
         setEquipmentStatus('saving')
         try {
             const isNew = equipmentEditing === 'new'
-            const res = await fetch('/api/properties', {
-                method: 'PATCH',
+            const res = await fetch('/api/equipment', {
+                method: isNew ? 'POST' : 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     propertyId: property._id,
-                    action: isNew ? 'addEquipment' : 'updateEquipment',
-                    equipmentKey: isNew ? undefined : equipmentEditing,
-                    equipment: equipmentDraft,
+                    equipmentId: isNew ? undefined : equipmentEditing,
+                    ...equipmentDraft,
                 }),
             })
             if (!res.ok) throw new Error('Failed')
-            refreshProperty()
+            fetchPropertyEquipment()
             setEquipmentEditing(null)
             setEquipmentStatus('idle')
         } catch (err) {
@@ -776,14 +783,14 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
         }
     }
 
-    async function handleDeleteEquipment(key) {
+    async function handleDeleteEquipment(equipmentId) {
         try {
-            await fetch('/api/properties', {
-                method: 'PATCH',
+            await fetch('/api/equipment', {
+                method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ propertyId: property._id, action: 'deleteEquipment', equipmentKey: key }),
+                body: JSON.stringify({ equipmentId }),
             })
-            refreshProperty()
+            fetchPropertyEquipment()
         } catch (err) {
             console.error(err)
         }
@@ -842,6 +849,7 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
         fetchInvoices()
         refreshProperty()
         fetchLinkedCustomers()
+        fetchPropertyEquipment()
     }, [])
 
     if (selectedInvoice) {
@@ -973,8 +981,8 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
                 )}
                 <p className="text-white text-lg font-serif mb-4">Equipment</p>
                 <div className="flex flex-col gap-3 mb-8">
-                    {(property.equipment || []).map((item) => (
-                        <div key={item._key} className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                    {propertyEquipment.map((item) => (
+                        <div key={item._id} className="bg-white/5 border border-white/10 rounded-2xl p-5">
                             <div className="flex items-start justify-between gap-3 mb-2">
                                 <div>
                                     <p className="text-white text-base font-serif">
@@ -988,7 +996,7 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
                                 </div>
                                 <div className="flex gap-2 shrink-0">
                                     <button onClick={() => openEditEquipmentForm(item)} className="text-white/40 hover:text-white text-sm">✎</button>
-                                    <button onClick={() => handleDeleteEquipment(item._key)} className="text-red-400 hover:text-red-300 text-sm">✕</button>
+                                    <button onClick={() => handleDeleteEquipment(item._id)} className="text-red-400 hover:text-red-300 text-sm">✕</button>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-white/50">
@@ -1002,7 +1010,7 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
                             {item.notes && <p className="text-white/40 text-xs mt-2 italic">{item.notes}</p>}
                         </div>
                     ))}
-                    {(!property.equipment || property.equipment.length === 0) && equipmentEditing !== 'new' && (
+                    {propertyEquipment.length === 0 && equipmentEditing !== 'new' && (
                         <p className="text-white/40 text-sm">No equipment recorded yet.</p>
                     )}
                 </div>

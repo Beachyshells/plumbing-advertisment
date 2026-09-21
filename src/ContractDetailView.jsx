@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Toast from './Toast.jsx'
+import { generateContractPdf } from './contractPdf.js'
 
 function formatMoney(amount) {
     return `$${Number(amount || 0).toFixed(2)}`
@@ -169,6 +170,13 @@ export default function ContractDetailView({ contractId, onBack }) {
                             <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Full Contract Text</p>
                             <p className="text-white/70 text-xs whitespace-pre-wrap leading-relaxed">{contract.termsText}</p>
                         </div>
+
+                        <button
+                            onClick={() => generateContractPdf(contract)}
+                            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-4"
+                        >
+                            {contract.status === 'signed' ? 'Print Contract (PDF)' : 'Print Blank Contract for Signature'}
+                        </button>
 
                         {contract.status === 'signed' ? (
                             <div className="bg-white/5 border border-brand-green/40 rounded-2xl p-5">

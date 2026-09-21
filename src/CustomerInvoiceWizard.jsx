@@ -1058,20 +1058,13 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         <p className="text-white/50 text-sm mb-6">{saveMessage}</p>
                         {(
                             <button onClick={async () => {
-                                await generateInvoicePdf({
-                                    invoiceNumber: savedInvoiceNumber,
-                                    serviceDate,
-                                    customerName: selectedCustomer?.name,
-                                    workPerformed,
-                                    totalAmount,
-                                    laborCost: Number(laborCost) || 0,
-                                    payments: [],
-                                    lineItems: lineItems.map((li) =>
-                                        li.itemType === 'misc'
-                                            ? { itemType: 'misc', miscName: li.miscName, miscSellPrice: li.miscSellPrice }
-                                            : { itemType: 'catalog', inventoryItemName: li.name, inventoryItemPrice: li.unitPrice, quantity: li.quantity }
-                                    ),
-                                })
+                                try {
+                                    const res = await fetch(`/api/invoices?id=${savedInvoiceId}`)
+                                    const { invoice: fullInvoice } = await res.json()
+                                    await generateInvoicePdf(fullInvoice)
+                                } catch (err) {
+                                    console.error(err)
+                                }
                             }}
                                 className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98] mb-3"
                             >

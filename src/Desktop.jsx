@@ -7,6 +7,8 @@ import EmployeesAdmin from './EmployeesAdmin.jsx'
 import CalendarView from './CalendarView.jsx'
 import EquipmentLogView from './EquipmentLogView.jsx'
 import MoneyInput from './MoneyInput.jsx'
+import ContractWizard from './ContractWizard.jsx'
+import ContractDetailView from './ContractDetailView.jsx'
 import Toast from './Toast.jsx'
 
 
@@ -18,6 +20,14 @@ function formatAddress(address) {
 
 function formatMoney(amount) {
     return `$${Number(amount || 0).toFixed(2)}`
+}
+
+const STATUS_COLORS = {
+    draft: 'text-white/50',
+    sent: 'text-accent',
+    viewed: 'text-accent',
+    signed: 'text-brand-green',
+    voided: 'text-red-400',
 }
 
 const DISCOUNT_REASONS = [
@@ -451,6 +461,22 @@ function CustomerCard({ customer, onBack, onAddJob }) {
     const [equipmentGroups, setEquipmentGroups] = useState([]) // [{ propertyId, address, equipment }]
     const [equipmentAggStatus, setEquipmentAggStatus] = useState('idle') // idle | loading | ready | error
 
+    const [contracts, setContracts] = useState([])
+    const [contractsStatus, setContractsStatus] = useState('idle') // idle | loading | ready | error
+    const [showNewContract, setShowNewContract] = useState(false)
+    const [selectedContractId, setSelectedContractId] = useState(null)
+
+    function fetchContracts() {
+        setContractsStatus('loading')
+        fetch(`/api/contracts?customerId=${encodeURIComponent(customer._id)}`)
+            .then((res) => res.json())
+            .then((data) => {
+                setContracts(data.contracts || [])
+                setContractsStatus('ready')
+            })
+            .catch(() => setContractsStatus('error'))
+    }
+
     function fetchInvoices() {
         setInvoiceStatus('loading')
         fetch(`/api/invoices?customerId=${encodeURIComponent(customer._id)}`)
@@ -469,9 +495,13 @@ function CustomerCard({ customer, onBack, onAddJob }) {
     // opened), since the Overview tab needs this to surface the active job.
     useEffect(() => {
         fetchInvoices()
+        fetchContracts()
     }, [])
 
     const activeJob = invoices.find((inv) => inv.jobStatus === 'ongoing') || invoices.find((inv) => inv.jobStatus === 'notStarted')
+    // A new contract needs a property — use whichever one their most recent
+    // job was at, since that's the best default we have without asking.
+    const contractPropertyId = invoices[0]?.propertyId
 
     // Equipment belongs to the property, not the person — so once we know
     // every distinct property this customer has ever had a job at (from
@@ -514,6 +544,33 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                 onBack={() => {
                     setSelectedInvoice(null)
                     fetchInvoices()
+                }}
+            />
+        )
+    }
+
+    if (showNewContract) {
+        return (
+            <ContractWizard
+                customerId={customer._id}
+                propertyId={contractPropertyId}
+                onBack={() => setShowNewContract(false)}
+                onCreated={(id) => {
+                    setShowNewContract(false)
+                    setSelectedContractId(id)
+                    fetchContracts()
+                }}
+            />
+        )
+    }
+
+    if (selectedContractId) {
+        return (
+            <ContractDetailView
+                contractId={selectedContractId}
+                onBack={() => {
+                    setSelectedContractId(null)
+                    fetchContracts()
                 }}
             />
         )
@@ -679,9 +736,40 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                     )}
 
                     {tab === 'Contracts' && (
-                        <p className="text-white/40 text-sm text-center py-10">
-                            Nothing here yet — coming in a future update.
-                        </p>
+                        <div className="flex flex-col gap-3">
+                            {contractPropertyId ? (
+                                <button
+                                    onClick={() => setShowNewContract(true)}
+                                    className="w-full bg-blue hover:bg-blue-light text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-2"
+                                >
+                                    + New Contract
+                                </button>
+                            ) : (
+                                <p className="text-white/40 text-xs text-center mb-2">Add a job for this customer before creating a contract.</p>
+                            )}
+
+                            {contractsStatus === 'loading' && <p className="text-white/40 text-sm text-center py-6">Loading...</p>}
+                            {contractsStatus === 'ready' && contracts.length === 0 && (
+                                <p className="text-white/40 text-sm text-center py-6">No contracts yet.</p>
+                            )}
+                            {contracts.map((c) => (
+                                <button
+                                    key={c._id}
+                                    onClick={() => setSelectedContractId(c._id)}
+                                    className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-white text-sm font-semibold">
+                                            {c.contractId}{c.isAddendum ? ' (Addendum)' : ''}
+                                        </p>
+                                        <span className={`text-xs font-semibold uppercase ${STATUS_COLORS[c.status] || 'text-white/50'}`}>
+                                            {c.status}
+                                        </span>
+                                    </div>
+                                    <p className="text-white/40 text-xs mt-0.5">{c.templateName}</p>
+                                </button>
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>

@@ -988,9 +988,9 @@ function PropertyDetail({ property: initialProperty, onBack, onViewCustomer }) {
                         <div key={item._id} className="bg-white/5 border border-white/10 rounded-2xl p-5">
                             <div className="flex items-start justify-between gap-3 mb-2">
                                 <div>
-                                    <p className="text-white text-base font-serif">{item.equipmentType || 'Untitled unit'}</p>
+                                    <p className="text-light-blue text-base font-serif">{item.equipmentType || 'Untitled unit'}</p>
                                     {(item.make || item.model) && (
-                                        <p className="text-light-blue text-xs mt-0.5">
+                                        <p className="text-white/50 text-xs mt-0.5">
                                             {[item.make ? `Make: ${item.make}` : null, item.model ? `Model: ${item.model}` : null].filter(Boolean).join(' · ')}
                                         </p>
                                     )}

@@ -58,6 +58,7 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     const [catalogSearchTerm, setCatalogSearchTerm] = useState('')
     const [catalogOpen, setCatalogOpen] = useState(false)
     const [categoryFilter, setCategoryFilter] = useState('all')
+    const [openCategoryGroups, setOpenCategoryGroups] = useState({})
     const [miscDraft, setMiscDraft] = useState({ miscName: '', miscSellPrice: '', miscNote: '' })
 
     const [receipts, setReceipts] = useState([]) // array of base64 data URLs
@@ -129,18 +130,45 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
 
     const CATEGORY_PILLS = ['All', 'Equipment', 'Plumbing', 'Electrical', 'Heating', 'Other']
 
+    // One consistent color per category, used for both the filter pills and
+    // the item cards in the grouped view — so a category reads the same way
+    // everywhere in this screen.
+    const CATEGORY_COLORS = {
+        Equipment: { active: 'bg-purple-500 text-white', inactive: 'text-purple-300 border-purple-500/40', accent: 'border-l-purple-500' },
+        Plumbing: { active: 'bg-blue-500 text-white', inactive: 'text-blue-300 border-blue-500/40', accent: 'border-l-blue-500' },
+        Electrical: { active: 'bg-yellow-500 text-navy', inactive: 'text-yellow-300 border-yellow-500/40', accent: 'border-l-yellow-500' },
+        Heating: { active: 'bg-orange-500 text-white', inactive: 'text-orange-300 border-orange-500/40', accent: 'border-l-orange-500' },
+        Other: { active: 'bg-white/30 text-white', inactive: 'text-white/50 border-white/20', accent: 'border-l-white/30' },
+    }
+
+    function matchesSearch(item) {
+        const term = catalogSearchTerm.trim().toLowerCase()
+        return !term || item.name?.toLowerCase().includes(term)
+    }
+
+    function itemCategory(item) {
+        return item.isEquipment ? 'Equipment' : (item.category || 'Other')
+    }
+
     const filteredInventory = inventory
         .filter((item) => {
             if (categoryFilter === 'all') return true
             if (categoryFilter === 'Equipment') return item.isEquipment
             return item.category === categoryFilter
         })
-        .filter((item) => {
-            const term = catalogSearchTerm.trim().toLowerCase()
-            if (!term) return true
-            return item.name?.toLowerCase().includes(term)
-        })
+        .filter(matchesSearch)
         .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+
+    // Only built/used when "All" is selected — groups every matching item
+    // under its category so a long catalog is browsable instead of one
+    // giant list.
+    const groupedInventory = CATEGORY_PILLS
+        .filter((cat) => cat !== 'All')
+        .map((cat) => ({
+            category: cat,
+            items: inventory.filter((item) => itemCategory(item) === cat).filter(matchesSearch).sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+        }))
+        .filter((group) => group.items.length > 0)
 
     function selectExistingCustomer(customer) {
         const fullName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim()
@@ -762,18 +790,21 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         {catalogOpen && (
                             <>
                                 <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
-                                    {CATEGORY_PILLS.map((pill) => (
-                                        <button
-                                            key={pill}
-                                            onClick={() => setCategoryFilter(pill === 'All' ? 'all' : pill)}
-                                            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${(pill === 'All' && categoryFilter === 'all') || categoryFilter === pill
-                                                ? 'bg-blue text-white'
-                                                : 'bg-white/5 text-white/50 border border-white/10'
-                                                }`}
-                                        >
-                                            {pill}
-                                        </button>
-                                    ))}
+                                    {CATEGORY_PILLS.map((pill) => {
+                                        const isActive = (pill === 'All' && categoryFilter === 'all') || categoryFilter === pill
+                                        const colors = CATEGORY_COLORS[pill]
+                                        const activeClass = pill === 'All' ? 'bg-blue text-white' : colors.active
+                                        const inactiveClass = pill === 'All' ? 'bg-white/5 text-white/50 border border-white/10' : `bg-white/5 border ${colors.inactive}`
+                                        return (
+                                            <button
+                                                key={pill}
+                                                onClick={() => setCategoryFilter(pill === 'All' ? 'all' : pill)}
+                                                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${isActive ? activeClass : inactiveClass}`}
+                                            >
+                                                {pill}
+                                            </button>
+                                        )
+                                    })}
                                 </div>
                                 <input
                                     type="text"
@@ -782,18 +813,53 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                                     placeholder="Search parts..."
                                     className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue mb-2"
                                 />
-                                <div className="flex flex-col gap-2 mb-5 max-h-64 overflow-y-auto no-scrollbar border border-white/10 rounded-xl p-2">
-                                    {filteredInventory.map((item) => (
-                                        <button
-                                            key={item._id}
-                                            onClick={() => addCatalogLineItem(item)}
-                                            className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
-                                        >
-                                            <p className="text-white text-sm">{item.name}</p>
-                                            <p className="text-white/40 text-xs">{formatMoney(item.sellPrice)}</p>
-                                        </button>
-                                    ))}
-                                </div>
+
+                                {categoryFilter === 'all' ? (
+                                    <div className="flex flex-col gap-2 mb-5 max-h-80 overflow-y-auto no-scrollbar border border-white/10 rounded-xl p-2">
+                                        {groupedInventory.map((group) => {
+                                            const isOpen = openCategoryGroups[group.category] || catalogSearchTerm.trim() !== ''
+                                            const colors = CATEGORY_COLORS[group.category]
+                                            return (
+                                                <div key={group.category}>
+                                                    <button
+                                                        onClick={() => setOpenCategoryGroups((prev) => ({ ...prev, [group.category]: !prev[group.category] }))}
+                                                        className={`w-full flex items-center justify-between border-l-4 ${colors.accent} bg-white/5 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors`}
+                                                    >
+                                                        <p className="text-white text-sm font-semibold">{group.category} <span className="text-white/40 font-normal">({group.items.length})</span></p>
+                                                        <span className="text-white/40 text-sm">{isOpen ? '▾' : '▸'}</span>
+                                                    </button>
+                                                    {isOpen && (
+                                                        <div className="flex flex-col gap-2 mt-2 mb-2 pl-2">
+                                                            {group.items.map((item) => (
+                                                                <button
+                                                                    key={item._id}
+                                                                    onClick={() => addCatalogLineItem(item)}
+                                                                    className={`text-left bg-white/5 hover:bg-white/10 border-l-4 ${colors.accent} border-y border-r border-white/10 rounded-xl px-4 py-3 transition-colors`}
+                                                                >
+                                                                    <p className="text-white text-sm">{item.name}</p>
+                                                                    <p className="text-white/40 text-xs">{formatMoney(item.sellPrice)}</p>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-2 mb-5 max-h-64 overflow-y-auto no-scrollbar border border-white/10 rounded-xl p-2">
+                                        {filteredInventory.map((item) => (
+                                            <button
+                                                key={item._id}
+                                                onClick={() => addCatalogLineItem(item)}
+                                                className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                            >
+                                                <p className="text-white text-sm">{item.name}</p>
+                                                <p className="text-white/40 text-xs">{formatMoney(item.sellPrice)}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </>
                         )}
 

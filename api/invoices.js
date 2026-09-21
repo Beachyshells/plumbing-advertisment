@@ -289,8 +289,10 @@ export default async function handler(req, res) {
                         discountType,
                         discountValue,
                         discountReason,
-                        discountReasonNote,
+                                               discountReasonNote,
                         discountAppliedBy,
+                        confirmationEmailSent,
+                        confirmationEmailSentAt,
                         "propertyId": property->_id,
                         "customerEmail": customer->email,
                         "customerBillingAddress": customer->billingAddress,
@@ -570,6 +572,15 @@ export default async function handler(req, res) {
             if (action === 'acknowledgeCancelation') {
                 await writeClient.patch(invoiceId).set({ cancelAcknowledged: true }).commit()
                 return res.status(200).json({ success: true, cancelAcknowledged: true })
+            }
+
+            // Called right after the customer confirmation email actually
+            // sends — records it permanently so the "Send" button can't
+            // accidentally fire twice after a page refresh or re-navigation.
+            if (action === 'markConfirmationSent') {
+                const sentAt = new Date().toISOString()
+                await writeClient.patch(invoiceId).set({ confirmationEmailSent: true, confirmationEmailSentAt: sentAt }).commit()
+                return res.status(200).json({ success: true, confirmationEmailSentAt: sentAt })
             }
 
             // Employee-facing, from the field — adding/removing parts & equipment,

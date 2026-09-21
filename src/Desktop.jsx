@@ -1735,6 +1735,16 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                     body: JSON.stringify(payload),
                 })
                 if (!sendRes.ok) throw new Error('Failed')
+
+                // Record it permanently on the invoice so the button locks
+                // itself — a refresh or renavigation won't offer to send again.
+                await fetch('/api/invoices', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ invoiceId: invoice._id, action: 'markConfirmationSent' }),
+                })
+                setInvoice((prev) => ({ ...prev, confirmationEmailSent: true }))
+
                 setConfirmationStatus('sent')
             } else {
                 await queuePendingEmail('resend', payload)
@@ -1745,7 +1755,6 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             setConfirmationStatus('error')
         }
     }
-
 
 
     async function handleSetJobStatus(newStatus) {
@@ -2279,13 +2288,28 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                 {emailStatus === 'error' && <p className="text-red-400 text-xs text-center mb-3">Something went wrong sending.</p>}
                 {!['sent', 'queued', 'no-email', 'error'].includes(emailStatus) && <div className="mb-3" />}
 
-                <button
-                    onClick={handleSendConfirmation}
-                    disabled={confirmationStatus === 'sending'}
-                    className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-3"
-                >
-                    {confirmationStatus === 'sending' ? 'Sending...' : 'Send Customer Confirmation'}
-                </button>
+                {invoice.confirmationEmailSent ? (
+                    <div className="mb-3">
+                        <div className="w-full bg-white/5 border border-brand-green/40 text-brand-green text-sm font-semibold py-3 rounded-xl text-center">
+                            ✓ Confirmation Sent
+                        </div>
+                        <button
+                            onClick={handleSendConfirmation}
+                            disabled={confirmationStatus === 'sending'}
+                            className="w-full text-white/30 hover:text-white/60 disabled:opacity-50 text-xs text-center pt-2 transition-colors"
+                        >
+                            {confirmationStatus === 'sending' ? 'Sending...' : 'Resend confirmation email'}
+                        </button>
+                    </div>
+                ) : (
+                    <button
+                        onClick={handleSendConfirmation}
+                        disabled={confirmationStatus === 'sending'}
+                        className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-3"
+                    >
+                        {confirmationStatus === 'sending' ? 'Sending...' : 'Send Customer Confirmation'}
+                    </button>
+                )}
                 {confirmationStatus === 'sent' && <p className="text-brand-green text-xs text-center mb-6">Confirmation sent to customer.</p>}
                 {confirmationStatus === 'queued' && <p className="text-accent text-xs text-center mb-6">Offline — will send once you're back online.</p>}
                 {confirmationStatus === 'no-email' && <p className="text-red-400 text-xs text-center mb-6">This customer has no email on file.</p>}

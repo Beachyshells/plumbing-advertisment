@@ -14,8 +14,9 @@
 
   /* Silver Metallic Palette */
   --color-silver: #c0c0c0;
-  --gradient-silver: linear-gradient(180deg, #ffffff 0%, #e5e7eb 25%, #9ca3af 50%, #e5e7eb 75%, #ffffff 100%);
-}
+/* Ultra-sharp 6-stop metallic chrome gradient */
+ --gradient-silver: linear-gradient(180deg, #ffffff 0%, #f4f4f5 10%, #b0b0b3 22%, #6b6b6e 38%, #e8e8ea 50%, #6b6b6e 62%, #b0b0b3 78%, #f4f4f5 90%, #ffffff 100%);
+  }
 
 html,
 body {
@@ -33,13 +34,21 @@ body {
     scrollbar-width: none;
 }
 
-/* Metallic Silver Text Utilities */
+/* Sharp Metallic Silver Utility */
 .text-silver {
   background: var(--gradient-silver);
+  background-size: 100% 300%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  animation: silver-shine 4s ease-in-out infinite;
+}
+
+@keyframes silver-shine {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 0% 100%; }
 }
 
 .text-silver-solid {

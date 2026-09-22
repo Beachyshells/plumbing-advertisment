@@ -164,9 +164,10 @@ export default function App() {
         id="home"
         className="relative min-h-[80svh] lg:min-h-svh w-full overflow-hidden bg-navy"
       >
-        {/* FIXED IMAGE LAYER — stable height, won't jump with the address bar */}
+        {/* IMAGE LAYER — sticky + shorter on mobile/tablet so text scrolls
+            naturally beneath it; fixed + full height on desktop, unchanged */}
         <div
-          className="fixed top-0 left-0 right-0 h-lvh z-0 lg:w-1/2"
+          className="sticky top-0 h-[52svh] lg:fixed lg:top-0 lg:left-0 lg:right-0 lg:h-lvh z-0 lg:w-1/2"
           style={{
             opacity: Math.max(1 - scrollY / ((viewportH || 800) * 0.85), 0), transition: 'opacity 0.1s linear',
           }}
@@ -179,6 +180,9 @@ export default function App() {
             style={{ pointerEvents: 'none' }}
           />
 
+          {/* Dark blue "glass" tint — mobile/tablet only */}
+          <div className="absolute inset-0 bg-navy/45 lg:hidden" />
+
           {/* Gradient overlay: clear at top, dark at bottom */}
           <div
             className="absolute inset-0 lg:hidden"
@@ -188,8 +192,10 @@ export default function App() {
           />
         </div>
 
-        {/* TEXT — scrolls over the fixed image */}
-        <div className="relative z-10 flex flex-col justify-end pb-10 min-h-[80svh] lg:min-h-svh px-6 lg:px-14 lg:justify-center lg:pt-24 lg:w-1/2 lg:ml-auto landscape:justify-center landscape:pt-24 landscape:pb-16">
+        {/* TEXT — normal document flow below the sticky image on mobile/tablet
+            (so it scrolls up and over it naturally); absolute overlay on
+            desktop, exactly as before */}
+        <div className="relative z-10 flex flex-col justify-start pt-8 pb-10 px-6 lg:absolute lg:inset-0 lg:justify-center lg:pt-24 lg:px-14 lg:w-1/2 lg:ml-auto landscape:justify-center landscape:pt-24 landscape:pb-16">
           <motion.div
             className="max-w-xl lg:ml-auto"
             initial="hidden"
@@ -484,7 +490,7 @@ export default function App() {
           {/* VAN BANNER */}
           <div className="relative w-full h-56 md:h-80 overflow-hidden">
             <img src={vanFull} alt="Adirondack Advanced Water Solutions service van" className="w-full h-full object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy-600 via-navy-600/30 to-transparent" />
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${vanFull})` }} />
           </div>
 
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">

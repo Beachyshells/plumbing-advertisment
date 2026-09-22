@@ -15,11 +15,7 @@
   /* Silver Metallic Palette */
   --color-silver: #c0c0c0;
 /* Ultra-sharp 6-stop metallic chrome gradient */
- --gradient-silver: linear-gradient(180deg, #ffffff 0%, #f4f4f5 10%, #b0b0b3 22%, #6b6b6e 38%, #e8e8ea 50%, #6b6b6e 62%, #b0b0b3 78%, #f4f4f5 90%, #ffffff 100%);
-  }
-
-html,
-body {
+--gradient-silver: linear-gradient(180deg, #ffffff 0%, #f0f0f0 30%, #ffffff 50%, #f0f0f0 70%, #ffffff 100%);body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -36,14 +32,29 @@ body {
 
 /* Sharp Metallic Silver Utility */
 .text-silver {
-  background: var(--gradient-silver);
-  background-size: 100% 300%;
+  background: repeating-linear-gradient(90deg, #1a1a1a 0px, #1a1a1a 3px, #ffffff 4px, #1a1a1a 5px, #1a1a1a 8px);  background-size: 100% 200%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
-  animation: silver-shine 4s ease-in-out infinite;
+  -webkit-text-stroke: 1px #1a1a1a;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.25));
+  animation: silver-shine 6s ease-in-out infinite;
+}
+
+@keyframes silver-shine {
+  0%, 100% { background-position: 0% 20%; }
+  50% { background-position: 0% 60%; }
+}
+
+@keyframes silver-shine {
+  0%, 100% { background-position: 0% 20%; }
+  50% { background-position: 0% 40%; }
+}
+
+@keyframes silver-shine {
+  0%, 100% { background-position: 0% 10%; }
+  50% { background-position: 0% 60%; }
 }
 
 @keyframes silver-shine {

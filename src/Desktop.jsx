@@ -1454,6 +1454,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [editGate, setEditGate] = useState('none') // none | confirming | editing
     const [confirmText, setConfirmText] = useState('')
     const [editData, setEditData] = useState(null)
+    const [editingMiscKey, setEditingMiscKey] = useState(null)
     const [invoiceDiscount, setInvoiceDiscount] = useState(EMPTY_DISCOUNT)
     const [invoiceDiscountAppliedBy, setInvoiceDiscountAppliedBy] = useState('')
     const [inventory, setInventory] = useState([])
@@ -1491,6 +1492,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
 
     async function startEditing() {
         setEditStatus('loading')
+        setEditingMiscKey(null)
         try {
             const [invoiceRes, inventoryRes] = await Promise.all([
                 fetch(`/api/invoices?id=${invoice._id}`),
@@ -1576,6 +1578,13 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         setEditData((prev) => ({
             ...prev,
             lineItems: prev.lineItems.map((li) => (li.key === key ? { ...li, quantity: Number(quantity) || 1 } : li)),
+        }))
+    }
+
+    function updateEditMiscItem(key, updates) {
+        setEditData((prev) => ({
+            ...prev,
+            lineItems: prev.lineItems.map((li) => (li.key === key ? { ...li, ...updates } : li)),
         }))
     }
 
@@ -2005,27 +2014,65 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                         <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Line items</p>
                         <div className="flex flex-col gap-2 mb-4">
                             {editData.lineItems.map((li) => (
-                                <div key={li.key} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                                    <div className="flex-1">
-                                        <p className="text-white text-sm">{li.itemType === 'misc' ? li.miscName : li.name}</p>
-                                        {li.itemType === 'misc' ? (
-                                            <p className="text-white/40 text-xs">{li.miscNote || 'One-off item'} · {formatMoney(li.miscSellPrice)}</p>
-                                        ) : (
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    value={li.quantity}
-                                                    onChange={(e) => updateEditQuantity(li.key, e.target.value)}
-                                                    className="w-16 bg-white/10 border border-white/10 rounded-lg text-white text-sm py-1 px-2"
-                                                />
-                                                <p className="text-white/40 text-xs">× {formatMoney(li.unitPrice)}</p>
+                                <div key={li.key} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                                    {li.itemType === 'misc' && editingMiscKey === li.key ? (
+                                        <div className="flex flex-col gap-2">
+                                            <input
+                                                type="text"
+                                                value={li.miscName}
+                                                onChange={(e) => updateEditMiscItem(li.key, { miscName: e.target.value })}
+                                                placeholder="Item name"
+                                                className="w-full bg-white/10 border border-white/10 rounded-lg text-white text-sm py-2 px-3"
+                                            />
+                                            <MoneyInput
+                                                value={li.miscSellPrice}
+                                                onChange={(val) => updateEditMiscItem(li.key, { miscSellPrice: val })}
+                                            />
+                                            <input
+                                                type="text"
+                                                value={li.miscNote || ''}
+                                                onChange={(e) => updateEditMiscItem(li.key, { miscNote: e.target.value })}
+                                                placeholder="Note (optional)"
+                                                className="w-full bg-white/10 border border-white/10 rounded-lg text-white text-sm py-2 px-3"
+                                            />
+                                            <button
+                                                onClick={() => setEditingMiscKey(null)}
+                                                className="text-blue text-xs font-semibold self-start"
+                                            >
+                                                Done
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex-1">
+                                                <p className="text-white text-sm">{li.itemType === 'misc' ? li.miscName : li.name}</p>
+                                                {li.itemType === 'misc' ? (
+                                                    <p className="text-white/40 text-xs">{li.miscNote || 'One-off item'} · {formatMoney(li.miscSellPrice)}</p>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            value={li.quantity}
+                                                            onChange={(e) => updateEditQuantity(li.key, e.target.value)}
+                                                            className="w-16 bg-white/10 border border-white/10 rounded-lg text-white text-sm py-1 px-2"
+                                                        />
+                                                        <p className="text-white/40 text-xs">× {formatMoney(li.unitPrice)}</p>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                    <button onClick={() => removeEditLineItem(li.key)} className="text-red-400 text-sm shrink-0">
-                                        Remove
-                                    </button>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                {li.itemType === 'misc' && (
+                                                    <button onClick={() => setEditingMiscKey(li.key)} className="text-blue text-sm">
+                                                        Edit
+                                                    </button>
+                                                )}
+                                                <button onClick={() => removeEditLineItem(li.key)} className="text-red-400 text-sm">
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>

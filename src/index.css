@@ -11,6 +11,10 @@
   --color-accent: #6daee0;
   --color-brand-green: #1a9e4a;
   --color-body: #e0e7f1;
+
+  /* Silver Metallic Palette */
+  --color-silver: #c0c0c0;
+  --gradient-silver: linear-gradient(180deg, #ffffff 0%, #e5e7eb 25%, #9ca3af 50%, #e5e7eb 75%, #ffffff 100%);
 }
 
 html,
@@ -27,4 +31,17 @@ body {
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+/* Metallic Silver Text Utilities */
+.text-silver {
+  background: var(--gradient-silver);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.text-silver-solid {
+  color: var(--color-silver);
 }

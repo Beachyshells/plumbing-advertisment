@@ -11,6 +11,10 @@
         {
             "source": "/employee",
             "destination": "/employee.html"
+        },
+        {
+            "source": "/sign-contract",
+            "destination": "/sign-contract.html"
         }
     ],
     "headers": [

@@ -115,6 +115,7 @@ export default function ContractDetailView({ contractId, onBack }) {
     const [signatureDataUrl, setSignatureDataUrl] = useState(null)
     const [signStatus, setSignStatus] = useState('idle') // idle | saving | error
     const [toast, setToast] = useState(null)
+    const [sendStatus, setSendStatus] = useState('idle') // idle | sending | error
 
     function load() {
         setStatus('loading')
@@ -167,6 +168,37 @@ export default function ContractDetailView({ contractId, onBack }) {
         }
     }
 
+    async function handleSendToCustomer() {
+        if (!contract.customerEmail) return
+        setSendStatus('sending')
+        try {
+            const sendRes = await fetch('/api/send-contract-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: contract.customerEmail,
+                    customerName,
+                    contractDocId: contractId,
+                    contractLabel: contract.contractId,
+                }),
+            })
+            if (!sendRes.ok) throw new Error('Failed')
+
+            await fetch('/api/contracts', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: contractId, action: 'send' }),
+            })
+
+            setSendStatus('idle')
+            setToast('Emailed to customer')
+            load()
+        } catch (err) {
+            console.error(err)
+            setSendStatus('error')
+        }
+    }
+
     if (status === 'loading') {
         return <div className="min-h-screen bg-navy px-4 py-10"><p className="text-white/40 text-sm text-center py-10">Loading...</p></div>
     }
@@ -192,6 +224,21 @@ export default function ContractDetailView({ contractId, onBack }) {
                     </span>
                 </div>
                 <p className="text-white/40 text-xs mb-6">{contract.templateName} — {customerName}</p>
+
+                {!signingRole && contract.status !== 'signed' && (
+                    contract.customerEmail ? (
+                        <button
+                            onClick={handleSendToCustomer}
+                            disabled={sendStatus === 'sending'}
+                            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-4"
+                        >
+                            {sendStatus === 'sending' ? 'Sending...' : `Email to ${contract.customerEmail} to Sign`}
+                        </button>
+                    ) : (
+                        <p className="text-white/30 text-xs text-center mb-4">No email on file for this customer — can't send a signing link.</p>
+                    )
+                )}
+                {sendStatus === 'error' && <p className="text-red-400 text-xs text-center mb-4">Couldn't send — try again.</p>}
 
                 {!signingRole && (
                     <>

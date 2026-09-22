@@ -198,7 +198,7 @@ export default function App() {
           >
             <motion.h1 variants={fadeUp} className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal leading-tight text-body my-6">
               Pure as the mountains.<br />
-              <motion.em variants={fadeUp} className="italic text-accent">Right from your tap.</motion.em>
+              <motion.em variants={fadeUp} className="italic text-silver">Right from your tap.</motion.em>
             </motion.h1>
             <motion.p variants={fadeUp} className="text-sm text-body lg:text-body leading-relaxed mb-8">
               Well pumps, advanced filtration, and water solutions — built for the Adirondacks. When something goes wrong, we answer.

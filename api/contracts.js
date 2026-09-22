@@ -84,7 +84,7 @@ export default async function handler(req, res) {
             if (id) {
                 const contract = await readClient.fetch(
                     `*[_type == "contract" && _id == $id][0]{
-                                             _id, contractId, status, scopeOfWork, totalPrice, priceNotes, termsText,
+                        _id, contractId, status, scopeOfWork, totalPrice, priceNotes, termsText,
                         consentGiven, consentTimestamp, signerName, signedAt, signerIp, auditTrail,
                         companyConsentGiven, companyConsentTimestamp, companySignerName, companySignedAt, companySignerIp,
                         "signedPdfUrl": signedPdf.asset->url,
@@ -95,6 +95,8 @@ export default async function handler(req, res) {
                         "customerId": customer->_id,
                         "customerFirstName": customer->firstName,
                         "customerLastName": customer->lastName,
+                        "customerEmail": customer->email,
+                        "customerPhone": customer->phone,
                         "propertyId": property->_id,
                         "propertyAddress": property->address,
                         "invoiceId": invoice->_id,

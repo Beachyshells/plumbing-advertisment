@@ -294,9 +294,13 @@ export default async function handler(req, res) {
                         confirmationEmailSent,
                         confirmationEmailSentAt,
                         "propertyId": property->_id,
+                        "propertyAddress": property->address,
+                        "customerFirstName": customer->firstName,
+                        "customerLastName": customer->lastName,
+                        "additionalContactFirstName": customer->additionalContactFirstName,
+                        "additionalContactLastName": customer->additionalContactLastName,
                         "customerEmail": customer->email,
                         "customerBillingAddress": customer->billingAddress,
-
                         lineItems[]{
                             _key,
                             itemType,
@@ -323,6 +327,9 @@ export default async function handler(req, res) {
                     { id }
                 )
                 if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
+                const primary = [invoice.customerFirstName, invoice.customerLastName].filter(Boolean).join(' ')
+                const secondary = [invoice.additionalContactFirstName, invoice.additionalContactLastName].filter(Boolean).join(' ')
+                invoice.customerName = secondary ? `${primary} / ${secondary}` : primary
                 return res.status(200).json({ invoice })
             }
 

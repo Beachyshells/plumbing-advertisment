@@ -156,6 +156,44 @@ export async function generateInvoicePdf(invoice) {
         y += 22
     }
 
+    // ---- Discount (only shown when one actually applies) ----
+    const rawSubtotal =
+        items.reduce((sum, item) => {
+            const amount = item.itemType === 'misc' ? item.miscSellPrice : (item.inventoryItemPrice || 0) * (item.quantity || 1)
+            return sum + (Number(amount) || 0)
+        }, 0) + (Number(invoice.laborCost) || 0)
+    const discountAmount = Math.max(rawSubtotal - (Number(invoice.totalAmount) || 0), 0)
+
+    if (discountAmount > 0) {
+        const DISCOUNT_REASON_LABELS = {
+            veteran: 'Veteran',
+            senior: 'Senior',
+            loyalCustomer: 'Loyal Customer',
+            employeeFamily: 'Employee / Family',
+            referral: 'Referral',
+            damageCredit: 'Damage / Complaint Credit',
+            other: 'Other',
+        }
+        const reasonLabel = (reason, note) => {
+            if (!reason) return null
+            if (reason === 'other') return note || 'Other'
+            return DISCOUNT_REASON_LABELS[reason] || null
+        }
+        const reasons = [
+            reasonLabel(invoice.discountReason, invoice.discountReasonNote),
+            ...items.map((item) => reasonLabel(item.discountReason, item.discountReasonNote)),
+        ].filter(Boolean)
+        const uniqueReasons = [...new Set(reasons)]
+        const discountLabel = uniqueReasons.length > 0 ? `${uniqueReasons.join(' + ')} Discount` : 'Discount'
+
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(10)
+        doc.setTextColor(200, 100, 0)
+        doc.text(discountLabel, 46, y)
+        doc.text(`-$${discountAmount.toFixed(2)}`, 566, y, { align: 'right' })
+        y += 22
+    }
+
     doc.setDrawColor(...GRAY_LINE)
     doc.setLineWidth(1)
     doc.line(36, y - 6, 576, y - 6)

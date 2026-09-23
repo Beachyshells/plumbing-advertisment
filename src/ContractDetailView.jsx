@@ -6,13 +6,17 @@ function formatMoney(amount) {
     return `$${Number(amount || 0).toFixed(2)}`
 }
 
-const STATUS_COLORS = {
-    draft: 'text-white/50',
-    sent: 'text-accent',
-    viewed: 'text-accent',
-    partiallySigned: 'text-accent',
-    signed: 'text-brand-green',
-    voided: 'text-red-400',
+// A real colored pill for every status, not just plain text — voided in
+// particular gets a strong red badge with strikethrough, so a canceled
+// contract is unmistakable at a glance, not something you have to read
+// carefully to notice.
+const STATUS_BADGE = {
+    draft: 'bg-white/10 text-white/60',
+    sent: 'bg-accent/20 text-accent',
+    viewed: 'bg-accent/20 text-accent',
+    partiallySigned: 'bg-accent/20 text-accent',
+    signed: 'bg-brand-green/20 text-brand-green',
+    voided: 'bg-red-500/20 text-red-400 line-through',
 }
 
 function SignaturePad({ onChange }) {
@@ -116,7 +120,8 @@ export default function ContractDetailView({ contractId, onBack }) {
     const [signStatus, setSignStatus] = useState('idle') // idle | saving | error
     const [toast, setToast] = useState(null)
     const [sendStatus, setSendStatus] = useState('idle') // idle | sending | error
-
+    const [voidConfirming, setVoidConfirming] = useState(false)
+    const [voidStatus, setVoidStatus] = useState('idle') // idle | saving | error
     function load() {
         setStatus('loading')
         fetch(`/api/contracts?id=${contractId}`)
@@ -199,6 +204,25 @@ export default function ContractDetailView({ contractId, onBack }) {
         }
     }
 
+    async function handleVoid() {
+        setVoidStatus('saving')
+        try {
+            const res = await fetch('/api/contracts', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: contractId, action: 'void' }),
+            })
+            if (!res.ok) throw new Error('Failed')
+            setVoidStatus('idle')
+            setVoidConfirming(false)
+            setToast('Contract voided')
+            load()
+        } catch (err) {
+            console.error(err)
+            setVoidStatus('error')
+        }
+    }
+
     if (status === 'loading') {
         return <div className="min-h-screen bg-navy px-4 py-10"><p className="text-white/40 text-sm text-center py-10">Loading...</p></div>
     }
@@ -219,13 +243,19 @@ export default function ContractDetailView({ contractId, onBack }) {
 
                 <div className="flex items-center justify-between mb-1">
                     <h1 className="font-serif text-2xl text-white">{contract.contractId}</h1>
-                    <span className={`text-sm font-semibold uppercase ${STATUS_COLORS[contract.status] || 'text-white/50'}`}>
+                    <span className={`text-xs font-bold uppercase px-3 py-1 rounded-full ${STATUS_BADGE[contract.status] || 'bg-white/10 text-white/60'}`}>
                         {contract.status === 'partiallySigned' ? 'Partially Signed' : contract.status}
                     </span>
                 </div>
                 <p className="text-white/40 text-xs mb-6">{contract.templateName} — {customerName}</p>
 
-                {!signingRole && contract.status !== 'signed' && (
+                {contract.status === 'voided' && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4 text-center">
+                        <p className="text-red-400 text-sm font-semibold">This contract has been voided.</p>
+                    </div>
+                )}
+
+                {!signingRole && contract.status !== 'signed' && contract.status !== 'voided' && (
                     contract.customerEmail ? (
                         <button
                             onClick={handleSendToCustomer}
@@ -264,24 +294,57 @@ export default function ContractDetailView({ contractId, onBack }) {
                             {anySigned ? 'Print Contract (PDF)' : 'Print Blank Contract for Signature'}
                         </button>
 
-                        <div className="flex flex-col gap-3">
-                            <SignatureCard
-                                label="Customer"
-                                signerName={contract.signerName}
-                                signedAt={contract.signedAt}
-                                signerIp={contract.signerIp}
-                                signatureImageUrl={contract.signatureImageUrl}
-                                onSignClick={() => startSigning('customer')}
-                            />
-                            <SignatureCard
-                                label="Company Representative"
-                                signerName={contract.companySignerName}
-                                signedAt={contract.companySignedAt}
-                                signerIp={contract.companySignerIp}
-                                signatureImageUrl={contract.companySignatureImageUrl}
-                                onSignClick={() => startSigning('company')}
-                            />
-                        </div>
+                        {contract.status !== 'voided' && (
+                            <div className="flex flex-col gap-3 mb-4">
+                                <SignatureCard
+                                    label="Customer"
+                                    signerName={contract.signerName}
+                                    signedAt={contract.signedAt}
+                                    signerIp={contract.signerIp}
+                                    signatureImageUrl={contract.signatureImageUrl}
+                                    onSignClick={() => startSigning('customer')}
+                                />
+                                <SignatureCard
+                                    label="Company Representative"
+                                    signerName={contract.companySignerName}
+                                    signedAt={contract.companySignedAt}
+                                    signerIp={contract.companySignerIp}
+                                    signatureImageUrl={contract.companySignatureImageUrl}
+                                    onSignClick={() => startSigning('company')}
+                                />
+                            </div>
+                        )}
+
+                        {contract.status !== 'voided' && (
+                            voidConfirming ? (
+                                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                                    <p className="text-white text-sm mb-3">Void this contract? This can't be undone.</p>
+                                    {voidStatus === 'error' && <p className="text-red-400 text-xs mb-2">Something went wrong — try again.</p>}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={handleVoid}
+                                            disabled={voidStatus === 'saving'}
+                                            className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+                                        >
+                                            {voidStatus === 'saving' ? 'Voiding...' : 'Yes, Void It'}
+                                        </button>
+                                        <button
+                                            onClick={() => setVoidConfirming(false)}
+                                            className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setVoidConfirming(true)}
+                                    className="w-full text-red-400/70 hover:text-red-400 text-xs py-2 transition-colors"
+                                >
+                                    Void This Contract
+                                </button>
+                            )
+                        )}
                     </>
                 )}
 

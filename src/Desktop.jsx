@@ -22,12 +22,13 @@ function formatMoney(amount) {
     return `$${Number(amount || 0).toFixed(2)}`
 }
 
-const STATUS_COLORS = {
-    draft: 'text-white/50',
-    sent: 'text-accent',
-    viewed: 'text-accent',
-    signed: 'text-brand-green',
-    voided: 'text-red-400',
+const STATUS_BADGE = {
+    draft: 'bg-white/10 text-white/60',
+    sent: 'bg-accent/20 text-accent',
+    viewed: 'bg-accent/20 text-accent',
+    partiallySigned: 'bg-accent/20 text-accent',
+    signed: 'bg-brand-green/20 text-brand-green',
+    voided: 'bg-red-500/20 text-red-400 line-through',
 }
 
 const DISCOUNT_REASONS = [
@@ -762,8 +763,8 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                                         <p className="text-white text-sm font-semibold">
                                             {c.contractId}{c.isAddendum ? ' (Addendum)' : ''}
                                         </p>
-                                        <span className={`text-xs font-semibold uppercase ${STATUS_COLORS[c.status] || 'text-white/50'}`}>
-                                            {c.status}
+                                        <span className={`text-xs font-bold uppercase px-2.5 py-1 rounded-full ${STATUS_BADGE[c.status] || 'bg-white/10 text-white/60'}`}>
+                                            {c.status === 'partiallySigned' ? 'Partially Signed' : c.status}
                                         </span>
                                     </div>
                                     <p className="text-white/40 text-xs mt-0.5">{c.templateName}</p>

@@ -1059,8 +1059,14 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
                         {(
                             <button onClick={async () => {
                                 try {
-                                    const res = await fetch(`/api/invoices?id=${savedInvoiceId}`)
-                                    const { invoice: fullInvoice } = await res.json()
+                                    let fullInvoice = null
+                                    for (let attempt = 0; attempt < 3; attempt++) {
+                                        const res = await fetch(`/api/invoices?id=${savedInvoiceId}`)
+                                        const data = await res.json()
+                                        fullInvoice = data.invoice
+                                        if (fullInvoice?.propertyAddress?.street) break
+                                        await new Promise((resolve) => setTimeout(resolve, 500))
+                                    }
                                     await generateInvoicePdf(fullInvoice)
                                 } catch (err) {
                                     console.error(err)

@@ -1433,6 +1433,19 @@ function InvoicesView({ onBack }) {
 function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [invoice, setInvoice] = useState(initialInvoice)
     const [toast, setToast] = useState(null)
+
+    // Always pull the full, authoritative record the moment this opens —
+    // whatever list this invoice was opened from may not have asked for
+    // every field (e.g. confirmation-sent status), so never trust the
+    // passed-in version alone for anything status-sensitive.
+    useEffect(() => {
+        fetch(`/api/invoices?id=${initialInvoice._id}`)
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.invoice) setInvoice(data.invoice)
+            })
+            .catch(() => { })
+    }, [])
     const [showEquipmentLog, setShowEquipmentLog] = useState(false)
     const [jobStatusUpdating, setJobStatusUpdating] = useState(false)
     const [showCancelForm, setShowCancelForm] = useState(false)

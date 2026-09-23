@@ -91,9 +91,9 @@ function DiscountControls({ discount, onChange, appliedBy }) {
                         onChange={(e) => onChange({ ...discount, discountReason: e.target.value })}
                         className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-sm py-2 px-3 outline-none focus:border-blue"
                     >
-                        <option value="" disabled>Reason...</option>
+                        <option value="" disabled style={{ color: '#111', backgroundColor: '#fff' }}>Reason...</option>
                         {DISCOUNT_REASONS.map((r) => (
-                            <option key={r.value} value={r.value}>{r.label}</option>
+                            <option key={r.value} value={r.value} style={{ color: '#111', backgroundColor: '#fff' }}>{r.label}</option>
                         ))}
                     </select>
                     {discount.discountReason === 'other' && (
@@ -1690,8 +1690,25 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             }, 0)
             const totalPaid = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
 
-            const formatAddr = (addr) =>
-                addr ? [addr.street, [addr.city, addr.state].filter(Boolean).join(', ')].filter(Boolean).join(', ') : ''
+            // Collect every discount reason actually in play — the invoice's
+            // own discount, plus any individual line item's — so the email
+            // can name what kind of discount this is, not just show a number.
+            const reasonLabel = (reason, note) => {
+                if (!reason) return null
+                if (reason === 'other') return note || 'Other'
+                const match = DISCOUNT_REASONS.find((r) => r.value === reason)
+                return match ? match.label : null
+            }
+            const discountReasons = [
+                reasonLabel(fullInvoice.discountReason, fullInvoice.discountReasonNote),
+                ...items.map((item) => reasonLabel(item.discountReason, item.discountReasonNote)),
+            ].filter(Boolean)
+            const uniqueReasons = [...new Set(discountReasons)]
+            const discountLabel = uniqueReasons.length > 0 ? `${uniqueReasons.join(' + ')} Discount` : 'Discount'
+
+            const discountAmountRaw = Math.max((Number(fullInvoice.laborCost) || 0) + partsTotal - (Number(fullInvoice.totalAmount) || 0), 0)
+
+            const formatAddr = (addr) => addr ? [addr.street, [addr.city, addr.state].filter(Boolean).join(', ')].filter(Boolean).join(', ') : ''
             const billingAddr = fullInvoice.customerBillingAddress?.street ? fullInvoice.customerBillingAddress : invoice.propertyAddress
 
             const templateParams = {
@@ -1712,7 +1729,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                 cost: {
                     labor: (Number(fullInvoice.laborCost) || 0).toFixed(2),
                     parts: partsTotal.toFixed(2),
-                    total: (Number(fullInvoice.totalAmount) || 0).toFixed(2),
+                    discount_line: discountAmountRaw > 0 ? `${discountLabel}: -$${discountAmountRaw.toFixed(2)}` : '', total: (Number(fullInvoice.totalAmount) || 0).toFixed(2),
                     paid: totalPaid.toFixed(2),
                     balance: Math.max((Number(fullInvoice.totalAmount) || 0) - totalPaid, 0).toFixed(2),
                 },

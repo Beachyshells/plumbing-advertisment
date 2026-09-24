@@ -293,7 +293,7 @@ export default async function handler(req, res) {
                         discountAppliedBy,
                         confirmationEmailSent,
                         confirmationEmailSentAt,
-"customerId": customer_id,
+"customerId": customer->_id,
                         "propertyId": property->_id,
                         "propertyAddress": property->address,
                         "customerFirstName": customer->firstName,

@@ -66,11 +66,63 @@ function fillTemplate(bodyText, values) {
         .replaceAll('{{parentContractId}}', values.parentContractId || '')
 }
 
-// A template is treated as an addendum template if its wording refers to
-// the original contract's number. That's the one thing an addendum can't
-// be filled in correctly without, so it's the check that matters.
+// A template is an addendum template if its Type says so. Older templates
+// are also recognized by their wording referring to the original contract's
+// number, so nothing breaks if a Type was set wrong.
 function isAddendumTemplate(template) {
-    return (template?.bodyText || '').includes('{{parentContractId}}')
+    return template?.templateType === 'addendum' || (template?.bodyText || '').includes('{{parentContractId}}')
+}
+
+// Printed in the header of every layout-2 contract, and saved on each one so
+// an old contract keeps the details that were true when it was signed.
+const COMPANY_INFO = {
+    name: 'Adirondack Advanced Water Solutions',
+    street: '18 Nichols Rd',
+    cityStateZip: 'West Chazy, NY 12992',
+    phone: '(518) 534-9949',
+    email: 'contact@adkadvancedwatersolutions.com',
+}
+
+const LINE_ITEM_KINDS = ['part', 'equipment', 'labor', 'other']
+const PRICE_BASES = ['total', 'perVisit', 'perYear']
+
+function cleanDate(value) {
+    return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined
+}
+
+function cleanMoney(value) {
+    if (value === '' || value === null || value === undefined) return undefined
+    const n = Number(value)
+    return Number.isFinite(n) ? Math.round(n * 100) / 100 : undefined
+}
+
+// Items listed by name and quantity only — never a price, per how the
+// contract is meant to read (one Total at the bottom).
+function cleanLineItems(items, { allowChangeType }) {
+    if (!Array.isArray(items)) return []
+    return items.slice(0, 100).flatMap((item) => {
+        const name = cleanText(item?.name, 200).trim()
+        if (!name) return []
+        const quantity = Number(item.quantity)
+        const kind = LINE_ITEM_KINDS.includes(item.kind) ? item.kind : 'part'
+        const out = {
+            _type: 'contractLineItem',
+            _key: randomKey(),
+            name,
+            quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+            kind,
+        }
+        if (kind === 'equipment') {
+            const make = cleanText(item.make, 100).trim()
+            const model = cleanText(item.model, 100).trim()
+            if (make) out.make = make
+            if (model) out.model = model
+        }
+        if (allowChangeType && (item.changeType === 'add' || item.changeType === 'remove')) {
+            out.changeType = item.changeType
+        }
+        return [out]
+    })
 }
 
 // Checks that `parent` can serve as the original for an addendum belonging
@@ -95,11 +147,50 @@ export default async function handler(req, res) {
     // ---- GET: templates list, one contract, or a customer's contracts ----
     if (req.method === 'GET') {
         try {
-            const { id, customerId, templates, all } = req.query
+            const { id, customerId, templates, all, prefillInvoice } = req.query
+
+            // Suggested contract details from a job, so the wizard starts
+            // filled in instead of blank. Nothing is saved here — Michael
+            // reviews and edits before the contract is created.
+            if (prefillInvoice) {
+                const invoice = await readClient.fetch(
+                    `*[_type == "customerInvoice" && _id == $id][0]{
+                        _id, serviceDate, workPerformed, laborCost, totalAmount,
+                        lineItems[]{
+                            itemType, quantity, miscName,
+                            "catalogName": inventoryItem->name,
+                            "isEquipment": inventoryItem->isEquipment
+                        }
+                    }`,
+                    { id: prefillInvoice }
+                )
+                if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
+
+                const lineItems = (invoice.lineItems || []).flatMap((li) => {
+                    if (li.itemType === 'misc') {
+                        return li.miscName ? [{ name: li.miscName, quantity: 1, kind: 'part' }] : []
+                    }
+                    if (!li.catalogName) return []
+                    return [{ name: li.catalogName, quantity: Number(li.quantity) || 1, kind: li.isEquipment ? 'equipment' : 'part' }]
+                })
+                if (Number(invoice.laborCost) > 0) {
+                    lineItems.push({ name: 'Labor', quantity: 1, kind: 'labor' })
+                }
+
+                return res.status(200).json({
+                    prefill: {
+                        invoiceId: invoice._id,
+                        workDescription: invoice.workPerformed || '',
+                        lineItems,
+                        totalPrice: invoice.totalAmount ?? null,
+                        startDate: invoice.serviceDate || '',
+                    },
+                })
+            }
 
             if (templates) {
                 const list = await readClient.fetch(
-                    `*[_type == "contractTemplate" && active == true] | order(templateType asc){
+                    `*[_type == "contractTemplate" && active == true] | order(templateType asc, name asc){
                         _id, name, templateType, bodyText, scopeOptions
                     }`
                 )
@@ -110,6 +201,8 @@ export default async function handler(req, res) {
                 const contract = await readClient.fetch(
                     `*[_type == "contract" && _id == $id][0]{
                         _id, contractId, status, scopeOfWork, totalPrice, priceNotes, termsText,
+                        layoutVersion, companyInfo, workDescription, lineItems, startDate, estimatedCompletionDate,
+                        visitFrequency, priceBasis, depositAmount, originalContractTotal, originalSignedAt,
                         consentGiven, consentTimestamp, signerName, signedAt, signerIp, auditTrail,
                         companyConsentGiven, companyConsentTimestamp, companySignerName, companySignedAt, companySignerIp,
                         "signedPdfUrl": signedPdf.asset->url,
@@ -142,7 +235,7 @@ export default async function handler(req, res) {
                 // Send back just the yes/no, not the whole template wording.
                 const { templateBodyText, ...rest } = contract
                 return res.status(200).json({
-                    contract: { ...rest, templateIsAddendum: isAddendumTemplate({ bodyText: templateBodyText }) },
+                    contract: { ...rest, templateIsAddendum: isAddendumTemplate({ templateType: rest.templateType, bodyText: templateBodyText }) },
                 })
             }
 
@@ -190,6 +283,9 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         const body = req.body || {}
         const { templateId, customerId, propertyId, invoiceId, scopeOfWork, totalPrice, priceNotes, parentContractDocId, serviceDate } = body
+        // Layout 2 is only used when the wizard asks for it, so anything
+        // still using the original wizard keeps working exactly as before.
+        const isLayout2 = Number(body.layoutVersion) === 2
 
         if (!templateId || !customerId || !propertyId) {
             return res.status(400).json({ error: 'Missing templateId, customerId, or propertyId' })
@@ -197,7 +293,7 @@ export default async function handler(req, res) {
 
         try {
             const [template, customer, property, parent] = await Promise.all([
-                readClient.fetch(`*[_type == "contractTemplate" && _id == $id][0]{ bodyText }`, { id: templateId }),
+                readClient.fetch(`*[_type == "contractTemplate" && _id == $id][0]{ bodyText, templateType }`, { id: templateId }),
                 readClient.fetch(`*[_type == "customerProfile" && _id == $id][0]{ firstName, lastName }`, { id: customerId }),
                 readClient.fetch(`*[_type == "property" && _id == $id][0]{ address }`, { id: propertyId }),
                 parentContractDocId
@@ -235,6 +331,93 @@ export default async function handler(req, res) {
             })
 
             const ip = getClientIp(req)
+
+            if (isLayout2) {
+                const templateType = template.templateType || 'oneTime'
+                const isAddendum = !!parent
+                const isRecurring = templateType === 'recurring'
+                const isWaiver = templateType === 'liabilityWaiver'
+
+                const price = cleanMoney(totalPrice)
+                // An addendum can lower the price, so only it may be negative.
+                if (price !== undefined && price < 0 && !isAddendum) {
+                    return res.status(400).json({ error: 'Total price can\'t be negative' })
+                }
+                const deposit = isAddendum || isWaiver ? undefined : cleanMoney(body.depositAmount)
+                if (deposit !== undefined && (deposit < 0 || (price !== undefined && deposit > price))) {
+                    return res.status(400).json({ error: 'Deposit must be between $0 and the total price' })
+                }
+
+                const startDate = cleanDate(body.startDate)
+                const estimatedCompletionDate = isRecurring || isWaiver ? undefined : cleanDate(body.estimatedCompletionDate)
+                if (startDate && estimatedCompletionDate && estimatedCompletionDate < startDate) {
+                    return res.status(400).json({ error: 'Estimated completion can\'t be before the start date' })
+                }
+
+                // For an addendum, save the contract total before this change
+                // (the original plus any earlier addenda that weren't voided)
+                // and when the original was fully signed.
+                let originalContractTotal
+                let originalSignedAt
+                if (isAddendum) {
+                    const history = await readClient.fetch(
+                        `*[_type == "contract" && _id == $id][0]{
+                            totalPrice, status, signedAt, companySignedAt,
+                            "earlierAddenda": *[_type == "contract" && status != "voided" && (parentContract._ref == ^._id || linkedParentContract._ref == ^._id)].totalPrice
+                        }`,
+                        { id: parentContractDocId }
+                    )
+                    originalContractTotal = cleanMoney(
+                        (Number(history?.totalPrice) || 0) + (history?.earlierAddenda || []).reduce((sum, n) => sum + (Number(n) || 0), 0)
+                    )
+                    if (history?.status === 'signed') {
+                        originalSignedAt = [history.signedAt, history.companySignedAt].filter(Boolean).sort().pop()
+                    }
+                }
+
+                const created = await writeClient.create({
+                    _type: 'contract',
+                    contractId,
+                    layoutVersion: 2,
+                    companyInfo: { ...COMPANY_INFO },
+                    template: { _type: 'reference', _ref: templateId },
+                    parentContract: parentContractDocId ? { _type: 'reference', _ref: parentContractDocId } : undefined,
+                    customer: { _type: 'reference', _ref: customerId },
+                    property: { _type: 'reference', _ref: propertyId },
+                    invoice: invoiceId ? { _type: 'reference', _ref: invoiceId } : undefined,
+                    workDescription: cleanText(body.workDescription, 2000),
+                    lineItems: cleanLineItems(body.lineItems, { allowChangeType: isAddendum }),
+                    scopeOfWork: (Array.isArray(scopeOfWork) ? scopeOfWork : []).map((s) => cleanText(s, 300)).filter(Boolean).slice(0, 50),
+                    startDate,
+                    estimatedCompletionDate,
+                    visitFrequency: isRecurring ? cleanText(body.visitFrequency, 100) : undefined,
+                    priceBasis: isRecurring && PRICE_BASES.includes(body.priceBasis) ? body.priceBasis : 'total',
+                    totalPrice: price,
+                    depositAmount: deposit,
+                    originalContractTotal,
+                    originalSignedAt,
+                    priceNotes: cleanText(priceNotes, 500),
+                    // Layout 2 templates hold only the terms. Filling
+                    // placeholders anyway means an older template picked by
+                    // mistake doesn't show raw {{braces}}.
+                    termsText: fillTemplate(template.bodyText, {
+                        customerName,
+                        propertyAddress,
+                        scopeOfWork: '',
+                        totalPrice: price !== undefined ? `$${price.toFixed(2)}` : '',
+                        serviceDate: startDate || '',
+                        parentContractId: parent?.contractId || '',
+                    }),
+                    status: 'draft',
+                    consentGiven: false,
+                    auditTrail: [
+                        { _type: 'auditEvent', _key: randomKey(), event: 'created', timestamp: new Date().toISOString(), ipAddress: ip },
+                    ],
+                    createdAt: new Date().toISOString(),
+                })
+
+                return res.status(200).json({ success: true, id: created._id, contractId })
+            }
 
             const created = await writeClient.create({
                 _type: 'contract',

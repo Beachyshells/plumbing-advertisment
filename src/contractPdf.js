@@ -15,32 +15,29 @@ function loadImageAsDataUrl(url) {
     })
 }
 
-// Loads a signature image for the PDF. Sanity can hand the image back as a
-// flattened white-background JPEG, which avoids transparency problems; if
-// that fails it tries the original file. Returns null (and logs why) if
-// neither loads, so the PDF can say the signature is on file instead of
-// silently leaving a blank space.
-async function loadSignatureImage(url) {
-    if (!url) return null
-    const candidates = url.includes('cdn.sanity.io/images/') ? [`${url}?fm=jpg&bg=ffffff&w=600`, url] : [url]
-    for (const candidate of candidates) {
+// Places a signature image on the PDF. Tries the exact method that has
+// always worked first (the original file, loaded the same way as the logo),
+// and only if that fails, a flattened white-background JPEG from Sanity.
+// Returns true if a signature was placed.
+async function placeSignature(doc, url, x, y, width, height) {
+    if (!url) return false
+    const attempts = [url]
+    if (url.includes('cdn.sanity.io/images/')) attempts.push(`${url}?fm=jpg&bg=ffffff`)
+    for (const attempt of attempts) {
+        const dataUrl = await loadImageAsDataUrl(attempt)
+        if (!dataUrl || !dataUrl.startsWith('data:image/')) {
+            console.error('Signature image did not load:', attempt)
+            continue
+        }
+        const format = dataUrl.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG'
         try {
-            const res = await fetch(candidate)
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            const blob = await res.blob()
-            const dataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader()
-                reader.onloadend = () => resolve(reader.result)
-                reader.onerror = () => reject(new Error('Could not read image'))
-                reader.readAsDataURL(blob)
-            })
-            const format = /jpe?g/i.test(blob.type || '') ? 'JPEG' : 'PNG'
-            return { dataUrl, format }
+            doc.addImage(dataUrl, format, x, y, width, height)
+            return true
         } catch (err) {
-            console.error('Signature image failed to load:', candidate, err)
+            console.error('Could not place signature image:', attempt, err)
         }
     }
-    return null
+    return false
 }
 
 // Picks the right layout: contracts created with the sectioned layout get
@@ -167,16 +164,7 @@ async function generateOriginalContractPdf(contract) {
         if (signedAt) {
             // Same sturdier loading as the new layout — the page layout of
             // older contracts is unchanged, only how the image is fetched.
-            const sig = await loadSignatureImage(signatureImageUrl)
-            let drawn = false
-            if (sig) {
-                try {
-                    doc.addImage(sig.dataUrl, sig.format, 36, y, 160, 60)
-                    drawn = true
-                } catch (err) {
-                    console.error('Could not place signature image:', err)
-                }
-            }
+            const drawn = await placeSignature(doc, signatureImageUrl, 36, y, 160, 60)
             if (!drawn) {
                 doc.setFont('helvetica', 'italic')
                 doc.setFontSize(9)
@@ -422,16 +410,7 @@ async function generateLayout2Pdf(contract) {
         doc.text(label, LEFT, y)
         y += 14
         if (signedAt) {
-            const sig = await loadSignatureImage(signatureImageUrl)
-            let drawn = false
-            if (sig) {
-                try {
-                    doc.addImage(sig.dataUrl, sig.format, LEFT, y, 160, 60)
-                    drawn = true
-                } catch (err) {
-                    console.error('Could not place signature image:', err)
-                }
-            }
+            const drawn = await placeSignature(doc, signatureImageUrl, LEFT, y, 160, 60)
             if (!drawn) {
                 doc.setFont('helvetica', 'italic')
                 doc.setFontSize(9)

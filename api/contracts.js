@@ -66,6 +66,31 @@ function fillTemplate(bodyText, values) {
         .replaceAll('{{parentContractId}}', values.parentContractId || '')
 }
 
+// A template is treated as an addendum template if its wording refers to
+// the original contract's number. That's the one thing an addendum can't
+// be filled in correctly without, so it's the check that matters.
+function isAddendumTemplate(template) {
+    return (template?.bodyText || '').includes('{{parentContractId}}')
+}
+
+// Checks that `parent` can serve as the original for an addendum belonging
+// to `customerId`. Returns an error message, or null if it's fine.
+function checkParent(parent, customerId) {
+    if (!parent) return 'Original contract not found'
+    if (parent.isAddendum) return 'That contract is itself an addendum — pick the original contract instead'
+    if (parent.status === 'voided') return 'That contract has been voided and can\'t have addenda'
+    if (parent.customerId !== customerId) return 'That contract belongs to a different customer'
+    return null
+}
+
+const PARENT_CHECK_PROJECTION = `{
+    _id,
+    contractId,
+    status,
+    "customerId": customer._ref,
+    "isAddendum": defined(parentContract) || defined(linkedParentContract)
+}`
+
 export default async function handler(req, res) {
     // ---- GET: templates list, one contract, or a customer's contracts ----
     if (req.method === 'GET') {
@@ -102,6 +127,12 @@ export default async function handler(req, res) {
                         "invoiceId": invoice->_id,
                         "parentContractId": parentContract->contractId,
                         "parentContractDocId": parentContract->_id,
+                        "linkedParentContractId": linkedParentContract->contractId,
+                        "linkedParentContractDocId": linkedParentContract->_id,
+                        "addenda": *[_type == "contract" && (parentContract._ref == ^._id || linkedParentContract._ref == ^._id)] | order(createdAt asc){
+                            _id, contractId, status, createdAt,
+                            "isLinkedOnly": !defined(parentContract)
+                        },
                         createdAt
                     }`,
                     { id }
@@ -115,7 +146,8 @@ export default async function handler(req, res) {
                     `*[_type == "contract" && customer._ref == $customerId] | order(createdAt desc){
                         _id, contractId, status, totalPrice, createdAt,
                         "templateName": template->name,
-                        "isAddendum": defined(parentContract)
+                        "isAddendum": defined(parentContract) || defined(linkedParentContract),
+                        "parentDocId": coalesce(parentContract._ref, linkedParentContract._ref)
                     }`,
                     { customerId }
                 )
@@ -144,11 +176,22 @@ export default async function handler(req, res) {
                 readClient.fetch(`*[_type == "customerProfile" && _id == $id][0]{ firstName, lastName }`, { id: customerId }),
                 readClient.fetch(`*[_type == "property" && _id == $id][0]{ address }`, { id: propertyId }),
                 parentContractDocId
-                    ? readClient.fetch(`*[_type == "contract" && _id == $id][0]{ contractId }`, { id: parentContractDocId })
+                    ? readClient.fetch(`*[_type == "contract" && _id == $id][0]${PARENT_CHECK_PROJECTION}`, { id: parentContractDocId })
                     : null,
             ])
 
             if (!template) return res.status(404).json({ error: 'Template not found' })
+
+            // Stops addenda from being created without an original — that's
+            // how an unlinked addendum with a blank "Addendum to ___" happens.
+            if (isAddendumTemplate(template) && !parentContractDocId) {
+                return res.status(400).json({ error: 'This is an addendum template — choose the original contract it amends' })
+            }
+
+            if (parentContractDocId) {
+                const parentError = checkParent(parent, customerId)
+                if (parentError) return res.status(400).json({ error: parentError })
+            }
 
             const customerName = [customer?.firstName, customer?.lastName].filter(Boolean).join(' ')
             const propertyAddress = formatAddress(property?.address)
@@ -195,7 +238,7 @@ export default async function handler(req, res) {
         }
     }
 
-    // ---- PATCH: send / view / sign / void ----
+    // ---- PATCH: send / view / sign / void / link ----
     if (req.method === 'PATCH') {
         const body = req.body || {}
         const action = body.action
@@ -295,6 +338,81 @@ export default async function handler(req, res) {
                     .append('auditTrail', [{ _type: 'auditEvent', _key: randomKey(), event: 'voided', timestamp: new Date().toISOString(), ipAddress: ip }])
                     .commit()
                 return res.status(200).json({ success: true })
+            }
+
+            // Grouping-only link for an addendum that already went out without
+            // being connected to its original. Never touches the contract
+            // number, the signed text, or the signatures — it only records
+            // which original this belongs with. Pass parentId: null to unlink.
+            if (action === 'link') {
+                const parentId = body.parentId || null
+
+                const child = await readClient.fetch(
+                    `*[_type == "contract" && _id == $id][0]{
+                        _id, status,
+                        "customerId": customer._ref,
+                        "hasRealParent": defined(parentContract),
+                        "linkedParentId": linkedParentContract._ref,
+                        "addendaCount": count(*[_type == "contract" && (parentContract._ref == ^._id || linkedParentContract._ref == ^._id)])
+                    }`,
+                    { id: contractDocId }
+                )
+                if (!child) return res.status(404).json({ error: 'Contract not found' })
+
+                if (child.hasRealParent) {
+                    return res.status(400).json({ error: 'This addendum is already attached to its original contract' })
+                }
+                if (child.status === 'draft') {
+                    return res.status(400).json({
+                        error: 'This addendum hasn\'t been sent yet — void it and create it from the original contract\'s "Add Addendum" button so its number and wording are filled in correctly',
+                    })
+                }
+
+                // ---- Unlink ----
+                if (!parentId) {
+                    if (!child.linkedParentId) return res.status(400).json({ error: 'This contract isn\'t linked to anything' })
+                    await writeClient
+                        .patch(contractDocId)
+                        .unset(['linkedParentContract'])
+                        .append('auditTrail', [{ _type: 'auditEvent', _key: randomKey(), event: 'unlinked_from_original', timestamp: new Date().toISOString(), ipAddress: ip }])
+                        .commit()
+                    return res.status(200).json({ success: true })
+                }
+
+                // ---- Link ----
+                if (parentId === contractDocId) {
+                    return res.status(400).json({ error: 'A contract can\'t be linked to itself' })
+                }
+                if (child.addendaCount > 0) {
+                    return res.status(400).json({ error: 'This contract has its own addenda, so it can\'t be filed under another contract' })
+                }
+                if (child.linkedParentId === parentId) {
+                    return res.status(200).json({ success: true }) // already linked there — nothing to do
+                }
+
+                const parent = await readClient.fetch(
+                    `*[_type == "contract" && _id == $id][0]${PARENT_CHECK_PROJECTION}`,
+                    { id: parentId }
+                )
+                const parentError = checkParent(parent, child.customerId)
+                if (parentError) return res.status(400).json({ error: parentError })
+
+                const now = new Date().toISOString()
+                const events = []
+                // Switching from one original to another records both halves,
+                // so the history shows it was moved rather than silently changed.
+                if (child.linkedParentId) {
+                    events.push({ _type: 'auditEvent', _key: randomKey(), event: 'unlinked_from_original', timestamp: now, ipAddress: ip })
+                }
+                events.push({ _type: 'auditEvent', _key: randomKey(), event: 'linked_to_original', timestamp: now, ipAddress: ip })
+
+                await writeClient
+                    .patch(contractDocId)
+                    .set({ linkedParentContract: { _type: 'reference', _ref: parentId } })
+                    .append('auditTrail', events)
+                    .commit()
+
+                return res.status(200).json({ success: true, linkedParentContractId: parent.contractId })
             }
 
             return res.status(400).json({ error: 'Unknown action' })

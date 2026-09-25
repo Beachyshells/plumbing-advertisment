@@ -110,7 +110,11 @@ function SignatureCard({ label, signerName, signedAt, signerIp, signatureImageUr
     )
 }
 
-export default function ContractDetailView({ contractId, onBack }) {
+// onOpenContract(id) switches this view to another contract (the original,
+// or one of its addenda). onAddAddendum(parent) starts the wizard for a new
+// addendum to this contract. Both are optional — if a parent screen doesn't
+// pass them, those buttons simply don't show.
+export default function ContractDetailView({ contractId, onBack, onOpenContract, onAddAddendum }) {
     const [contract, setContract] = useState(null)
     const [status, setStatus] = useState('loading') // loading | ready | error
     const [signingRole, setSigningRole] = useState(null) // null | 'customer' | 'company'
@@ -122,6 +126,16 @@ export default function ContractDetailView({ contractId, onBack }) {
     const [sendStatus, setSendStatus] = useState('idle') // idle | sending | error
     const [voidConfirming, setVoidConfirming] = useState(false)
     const [voidStatus, setVoidStatus] = useState('idle') // idle | saving | error
+
+    // "Link to original" panel — only for addenda that already went out
+    // without being attached to their original contract.
+    const [linkOpen, setLinkOpen] = useState(false)
+    const [linkOptions, setLinkOptions] = useState([])
+    const [linkOptionsStatus, setLinkOptionsStatus] = useState('idle') // idle | loading | ready | error
+    const [linkChoice, setLinkChoice] = useState(null)
+    const [linkStatus, setLinkStatus] = useState('idle') // idle | saving | error
+    const [linkError, setLinkError] = useState('')
+
     function load() {
         setStatus('loading')
         fetch(`/api/contracts?id=${contractId}`)
@@ -136,7 +150,58 @@ export default function ContractDetailView({ contractId, onBack }) {
 
     useEffect(() => {
         load()
+        // Moving between an original and its addenda reuses this screen,
+        // so reset anything that was open on the previous contract.
+        setSigningRole(null)
+        setVoidConfirming(false)
+        setLinkOpen(false)
+        setLinkChoice(null)
+        setLinkStatus('idle')
+        setLinkError('')
     }, [contractId])
+
+    function openLinkPanel() {
+        setLinkOpen(true)
+        setLinkChoice(null)
+        setLinkStatus('idle')
+        setLinkError('')
+        setLinkOptionsStatus('loading')
+        fetch(`/api/contracts?customerId=${encodeURIComponent(contract.customerId)}`)
+            .then((res) => res.json())
+            .then((data) => {
+                // Same rules the API enforces: originals only, not voided, not this one.
+                setLinkOptions(
+                    (data.contracts || []).filter(
+                        (c) => !c.isAddendum && c.status !== 'voided' && c._id !== contractId
+                    )
+                )
+                setLinkOptionsStatus('ready')
+            })
+            .catch(() => setLinkOptionsStatus('error'))
+    }
+
+    async function handleLink(parentId) {
+        setLinkStatus('saving')
+        setLinkError('')
+        try {
+            const res = await fetch('/api/contracts', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: contractId, action: 'link', parentId }),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) throw new Error(data.error || 'Failed')
+            setLinkStatus('idle')
+            setLinkOpen(false)
+            setLinkChoice(null)
+            setToast(parentId ? 'Linked to original contract' : 'Link removed')
+            load()
+        } catch (err) {
+            console.error(err)
+            setLinkError(err.message && err.message !== 'Failed' ? err.message : '')
+            setLinkStatus('error')
+        }
+    }
 
     function startSigning(role) {
         setSigningRole(role)
@@ -233,6 +298,21 @@ export default function ContractDetailView({ contractId, onBack }) {
     const customerName = [contract.customerFirstName, contract.customerLastName].filter(Boolean).join(' ')
     const anySigned = contract.status === 'signed' || contract.status === 'partiallySigned'
 
+    const hasRealParent = !!contract.parentContractDocId
+    const hasLinkedParent = !!contract.linkedParentContractDocId
+    const addenda = contract.addenda || []
+    // An addendum-template contract that hasn't been linked yet is still an
+    // addendum, so it doesn't get its own "Add Addendum" button.
+    const isOriginal = !hasRealParent && !hasLinkedParent && !contract.templateIsAddendum
+    // Linking is only for contracts that already went out (drafts get
+    // recreated from the original instead) and that aren't originals with
+    // addenda of their own.
+    const canLink = !hasRealParent && addenda.length === 0 && contract.status !== 'draft'
+    // Addendum-template contracts (and ones already linked) get the full
+    // button. Anything else gets a small text link, in case an addendum was
+    // made from a regular template — without cluttering normal contracts.
+    const linkIsPrimary = contract.templateIsAddendum || hasLinkedParent
+
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
             <Toast message={toast} onDone={() => setToast(null)} />
@@ -248,6 +328,30 @@ export default function ContractDetailView({ contractId, onBack }) {
                     </span>
                 </div>
                 <p className="text-white/40 text-xs mb-6">{contract.templateName} — {customerName}</p>
+
+                {(hasRealParent || hasLinkedParent) && (
+                    <div className="bg-blue/20 border border-blue/40 rounded-xl px-4 py-3 mb-4 flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-white text-sm">
+                                Addendum to{' '}
+                                <span className="font-semibold">
+                                    {hasRealParent ? contract.parentContractId : contract.linkedParentContractId}
+                                </span>
+                            </p>
+                            {hasLinkedParent && (
+                                <p className="text-white/40 text-xs mt-0.5">Linked after it was sent — the signed document itself wasn't changed.</p>
+                            )}
+                        </div>
+                        {onOpenContract && (
+                            <button
+                                onClick={() => onOpenContract(hasRealParent ? contract.parentContractDocId : contract.linkedParentContractDocId)}
+                                className="shrink-0 text-white text-xs font-semibold bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg transition-colors"
+                            >
+                                Open Original
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {contract.status === 'voided' && (
                     <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4 text-center">
@@ -312,6 +416,127 @@ export default function ContractDetailView({ contractId, onBack }) {
                                     signatureImageUrl={contract.companySignatureImageUrl}
                                     onSignClick={() => startSigning('company')}
                                 />
+                            </div>
+                        )}
+
+                        {isOriginal && (addenda.length > 0 || (onAddAddendum && contract.status !== 'voided')) && (
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
+                                <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Addenda</p>
+                                {addenda.length === 0 && <p className="text-white/40 text-sm mb-3">No addenda yet.</p>}
+                                {addenda.length > 0 && (
+                                    <div className="flex flex-col gap-2 mb-3">
+                                        {addenda.map((a) => (
+                                            <button
+                                                key={a._id}
+                                                onClick={() => onOpenContract && onOpenContract(a._id)}
+                                                disabled={!onOpenContract}
+                                                className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-white text-sm font-semibold">{a.contractId}</p>
+                                                    <span className={`text-xs font-bold uppercase px-2.5 py-1 rounded-full ${STATUS_BADGE[a.status] || 'bg-white/10 text-white/60'}`}>
+                                                        {a.status === 'partiallySigned' ? 'Partially Signed' : a.status}
+                                                    </span>
+                                                </div>
+                                                {a.isLinkedOnly && <p className="text-white/40 text-xs mt-0.5">Linked after sending</p>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                                {onAddAddendum && contract.status !== 'voided' && (
+                                    <button
+                                        onClick={() =>
+                                            onAddAddendum({
+                                                _id: contract._id,
+                                                contractId: contract.contractId,
+                                                propertyId: contract.propertyId,
+                                                invoiceId: contract.invoiceId,
+                                            })
+                                        }
+                                        className="w-full bg-blue hover:bg-blue-light text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+                                    >
+                                        + Add Addendum
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {canLink && !linkOpen && (
+                            <div className="flex flex-col gap-2 mb-4">
+                                {linkIsPrimary ? (
+                                    <button
+                                        onClick={openLinkPanel}
+                                        className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+                                    >
+                                        {hasLinkedParent ? 'Change Linked Original' : 'Link to Original Contract'}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={openLinkPanel}
+                                        className="w-full text-white/40 hover:text-white/70 text-xs py-1 transition-colors"
+                                    >
+                                        Is this actually an addendum? Link it to its original
+                                    </button>
+                                )}
+                                {hasLinkedParent && (
+                                    <button
+                                        onClick={() => handleLink(null)}
+                                        disabled={linkStatus === 'saving'}
+                                        className="w-full text-white/40 hover:text-white/70 text-xs py-1 transition-colors"
+                                    >
+                                        {linkStatus === 'saving' ? 'Removing...' : 'Remove Link'}
+                                    </button>
+                                )}
+                                {linkStatus === 'error' && !linkOpen && (
+                                    <p className="text-red-400 text-xs text-center">{linkError || 'Something went wrong — try again.'}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {canLink && linkOpen && (
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
+                                <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Link to Original Contract</p>
+                                <p className="text-white/50 text-xs mb-4">
+                                    Files this under the original so they show together. The contract number, wording, and signatures stay exactly as they are, and the link is recorded in the audit trail.
+                                </p>
+                                {linkOptionsStatus === 'loading' && <p className="text-white/40 text-sm text-center py-4">Loading...</p>}
+                                {linkOptionsStatus === 'error' && <p className="text-red-400 text-sm text-center py-4">Couldn't load this customer's contracts.</p>}
+                                {linkOptionsStatus === 'ready' && linkOptions.length === 0 && (
+                                    <p className="text-white/40 text-sm text-center py-4">No other original contracts for this customer.</p>
+                                )}
+                                {linkOptionsStatus === 'ready' && linkOptions.length > 0 && (
+                                    <div className="flex flex-col gap-2 mb-4">
+                                        {linkOptions.map((c) => (
+                                            <button
+                                                key={c._id}
+                                                onClick={() => setLinkChoice(c)}
+                                                className={`text-left px-4 py-3 rounded-xl text-sm transition-colors border ${linkChoice?._id === c._id
+                                                    ? 'bg-blue text-white border-blue'
+                                                    : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
+                                                    }`}
+                                            >
+                                                <span className="font-semibold">{c.contractId}</span>
+                                                <span className="text-xs opacity-70"> — {c.templateName}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                                {linkStatus === 'error' && <p className="text-red-400 text-xs text-center mb-2">{linkError || 'Something went wrong — try again.'}</p>}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleLink(linkChoice._id)}
+                                        disabled={!linkChoice || linkStatus === 'saving'}
+                                        className="flex-1 bg-blue hover:bg-blue-light disabled:opacity-40 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+                                    >
+                                        {linkStatus === 'saving' ? 'Linking...' : linkChoice ? `Link to ${linkChoice.contractId}` : 'Pick a contract'}
+                                    </button>
+                                    <button
+                                        onClick={() => setLinkOpen(false)}
+                                        className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         )}
 

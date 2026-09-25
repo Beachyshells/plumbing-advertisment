@@ -466,6 +466,9 @@ function CustomerCard({ customer, onBack, onAddJob }) {
     const [contractsStatus, setContractsStatus] = useState('idle') // idle | loading | ready | error
     const [showNewContract, setShowNewContract] = useState(false)
     const [selectedContractId, setSelectedContractId] = useState(null)
+    // Set when "+ Add Addendum" is pressed on an original contract —
+    // holds { _id, contractId, propertyId, invoiceId } of that original.
+    const [addendumParent, setAddendumParent] = useState(null)
 
     function fetchContracts() {
         setContractsStatus('loading')
@@ -503,6 +506,19 @@ function CustomerCard({ customer, onBack, onAddJob }) {
     // A new contract needs a property — use whichever one their most recent
     // job was at, since that's the best default we have without asking.
     const contractPropertyId = invoices[0]?.propertyId
+
+    // Originals first (newest first, as the API returns them), each followed
+    // by its own addenda in the order they were made. An addendum whose
+    // original isn't in this list still shows, just not nested.
+    const contractIds = new Set(contracts.map((c) => c._id))
+    const groupedContracts = contracts
+        .filter((c) => !c.isAddendum || !contractIds.has(c.parentDocId))
+        .map((c) => ({
+            ...c,
+            children: contracts
+                .filter((a) => a.isAddendum && a.parentDocId === c._id)
+                .sort((x, y) => (x.createdAt || '').localeCompare(y.createdAt || '')),
+        }))
 
     // Equipment belongs to the property, not the person — so once we know
     // every distinct property this customer has ever had a job at (from
@@ -565,6 +581,22 @@ function CustomerCard({ customer, onBack, onAddJob }) {
         )
     }
 
+    if (addendumParent) {
+        return (
+            <ContractWizard
+                customerId={customer._id}
+                propertyId={addendumParent.propertyId || contractPropertyId}
+                parentContract={addendumParent}
+                onBack={() => setAddendumParent(null)}
+                onCreated={(id) => {
+                    setAddendumParent(null)
+                    setSelectedContractId(id)
+                    fetchContracts()
+                }}
+            />
+        )
+    }
+
     if (selectedContractId) {
         return (
             <ContractDetailView
@@ -573,6 +605,8 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                     setSelectedContractId(null)
                     fetchContracts()
                 }}
+                onOpenContract={(id) => setSelectedContractId(id)}
+                onAddAddendum={(parent) => setAddendumParent(parent)}
             />
         )
     }
@@ -753,22 +787,40 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                             {contractsStatus === 'ready' && contracts.length === 0 && (
                                 <p className="text-white/40 text-sm text-center py-6">No contracts yet.</p>
                             )}
-                            {contracts.map((c) => (
-                                <button
-                                    key={c._id}
-                                    onClick={() => setSelectedContractId(c._id)}
-                                    className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-white text-sm font-semibold">
-                                            {c.contractId}{c.isAddendum ? ' (Addendum)' : ''}
-                                        </p>
-                                        <span className={`text-xs font-bold uppercase px-2.5 py-1 rounded-full ${STATUS_BADGE[c.status] || 'bg-white/10 text-white/60'}`}>
-                                            {c.status === 'partiallySigned' ? 'Partially Signed' : c.status}
-                                        </span>
-                                    </div>
-                                    <p className="text-white/40 text-xs mt-0.5">{c.templateName}</p>
-                                </button>
+                            {groupedContracts.map((c) => (
+                                <div key={c._id} className="flex flex-col gap-2">
+                                    <button
+                                        onClick={() => setSelectedContractId(c._id)}
+                                        className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-white text-sm font-semibold">
+                                                {c.contractId}{c.isAddendum ? ' (Addendum)' : ''}
+                                            </p>
+                                            <span className={`text-xs font-bold uppercase px-2.5 py-1 rounded-full ${STATUS_BADGE[c.status] || 'bg-white/10 text-white/60'}`}>
+                                                {c.status === 'partiallySigned' ? 'Partially Signed' : c.status}
+                                            </span>
+                                        </div>
+                                        <p className="text-white/40 text-xs mt-0.5">{c.templateName}</p>
+                                    </button>
+                                    {c.children.map((a) => (
+                                        <button
+                                            key={a._id}
+                                            onClick={() => setSelectedContractId(a._id)}
+                                            className="ml-6 text-left bg-white/5 hover:bg-white/10 border border-white/10 border-l-2 border-l-blue rounded-xl px-4 py-2.5 transition-colors"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-white text-sm font-semibold">
+                                                    ↳ {a.contractId} (Addendum)
+                                                </p>
+                                                <span className={`text-xs font-bold uppercase px-2.5 py-1 rounded-full ${STATUS_BADGE[a.status] || 'bg-white/10 text-white/60'}`}>
+                                                    {a.status === 'partiallySigned' ? 'Partially Signed' : a.status}
+                                                </span>
+                                            </div>
+                                            <p className="text-white/40 text-xs mt-0.5">{a.templateName}</p>
+                                        </button>
+                                    ))}
+                                </div>
                             ))}
                         </div>
                     )}

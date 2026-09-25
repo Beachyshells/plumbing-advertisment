@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Toast from './Toast.jsx'
 import { generateContractPdf } from './contractPdf.js'
+import ContractSections from './ContractSections.jsx'
 
 function formatMoney(amount) {
     return `$${Number(amount || 0).toFixed(2)}`
@@ -126,6 +127,9 @@ export default function ContractDetailView({ contractId, onBack, onOpenContract,
     const [sendStatus, setSendStatus] = useState('idle') // idle | sending | error
     const [voidConfirming, setVoidConfirming] = useState(false)
     const [voidStatus, setVoidStatus] = useState('idle') // idle | saving | error
+    const [printStatus, setPrintStatus] = useState('idle') // idle | making | error
+    const [copyStatus, setCopyStatus] = useState('idle') // idle | sending | error
+    const [copyError, setCopyError] = useState('')
 
     // "Link to original" panel — only for addenda that already went out
     // without being attached to their original contract.
@@ -269,6 +273,44 @@ export default function ContractDetailView({ contractId, onBack, onOpenContract,
         }
     }
 
+    // Always prints from freshly loaded data, so a signature added a moment
+    // ago (e.g. the customer just signed from their email link) is included.
+    async function handlePrint() {
+        setPrintStatus('making')
+        try {
+            const res = await fetch(`/api/contracts?id=${contractId}`)
+            const data = await res.json()
+            const fresh = data.contract || contract
+            if (data.contract) setContract(data.contract)
+            await generateContractPdf(fresh)
+            setPrintStatus('idle')
+        } catch (err) {
+            console.error(err)
+            setPrintStatus('error')
+        }
+    }
+
+    async function handleEmailCopy() {
+        setCopyStatus('sending')
+        setCopyError('')
+        try {
+            const res = await fetch('/api/contracts', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: contractId, action: 'emailCopy' }),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) throw new Error(data.error || 'Failed')
+            setCopyStatus('idle')
+            setToast(`Signed copy emailed to ${data.emailedTo}`)
+            load()
+        } catch (err) {
+            console.error(err)
+            setCopyError(err.message && err.message !== 'Failed' ? err.message : '')
+            setCopyStatus('error')
+        }
+    }
+
     async function handleVoid() {
         setVoidStatus('saving')
         try {
@@ -307,6 +349,7 @@ export default function ContractDetailView({ contractId, onBack, onOpenContract,
     // Linking is only for contracts that already went out (drafts get
     // recreated from the original instead) and that aren't originals with
     // addenda of their own.
+    const lastCopyEmailedAt = [...(contract.auditTrail || [])].reverse().find((e) => e.event === 'copy_emailed')?.timestamp
     const canLink = !hasRealParent && addenda.length === 0 && contract.status !== 'draft'
     // Addendum-template contracts (and ones already linked) get the full
     // button. Anything else gets a small text link, in case an addendum was
@@ -376,27 +419,64 @@ export default function ContractDetailView({ contractId, onBack, onOpenContract,
 
                 {!signingRole && (
                     <>
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
-                            <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Scope of Work</p>
-                            <ul className="text-white text-sm mb-4 flex flex-col gap-1">
-                                {(contract.scopeOfWork || []).map((item) => <li key={item}>• {item}</li>)}
-                            </ul>
-                            <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Total Price</p>
-                            <p className="text-white text-lg font-serif">{formatMoney(contract.totalPrice)}</p>
-                            {contract.priceNotes && <p className="text-white/40 text-xs mt-2 italic">{contract.priceNotes}</p>}
-                        </div>
+                        {Number(contract.layoutVersion) === 2 ? (
+                            <div className="mb-4">
+                                <ContractSections contract={contract} />
+                            </div>
+                        ) : (
+                            <>
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
+                                    <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Scope of Work</p>
+                                    <ul className="text-white text-sm mb-4 flex flex-col gap-1">
+                                        {(contract.scopeOfWork || []).map((item) => <li key={item}>• {item}</li>)}
+                                    </ul>
+                                    <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Total Price</p>
+                                    <p className="text-white text-lg font-serif">{formatMoney(contract.totalPrice)}</p>
+                                    {contract.priceNotes && <p className="text-white/40 text-xs mt-2 italic">{contract.priceNotes}</p>}
+                                </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
-                            <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Full Contract Text</p>
-                            <p className="text-white/70 text-xs whitespace-pre-wrap leading-relaxed">{contract.termsText}</p>
-                        </div>
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
+                                    <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Full Contract Text</p>
+                                    <p className="text-white/70 text-xs whitespace-pre-wrap leading-relaxed">{contract.termsText}</p>
+                                </div>
+                            </>
+                        )}
+
+                        {contract.status === 'signed' && (
+                            <div className="bg-white/5 border border-brand-green/40 rounded-2xl p-5 mb-4">
+                                <p className="text-brand-green text-sm font-semibold mb-1">Fully signed</p>
+                                {lastCopyEmailedAt ? (
+                                    <p className="text-white/50 text-xs mb-3">Signed copy last emailed {new Date(lastCopyEmailedAt).toLocaleString()}.</p>
+                                ) : (
+                                    <p className="text-white/50 text-xs mb-3">The customer hasn't been sent their signed copy yet.</p>
+                                )}
+                                {contract.customerEmail ? (
+                                    <button
+                                        onClick={handleEmailCopy}
+                                        disabled={copyStatus === 'sending'}
+                                        className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+                                    >
+                                        {copyStatus === 'sending'
+                                            ? 'Sending...'
+                                            : `${lastCopyEmailedAt ? 'Resend' : 'Email'} Signed Copy to ${contract.customerEmail}`}
+                                    </button>
+                                ) : (
+                                    <p className="text-white/40 text-xs">No email on file for this customer — print the PDF and give them a paper copy instead.</p>
+                                )}
+                                {copyStatus === 'error' && (
+                                    <p className="text-red-400 text-xs text-center mt-2">{copyError || 'Couldn\'t send — try again.'}</p>
+                                )}
+                            </div>
+                        )}
 
                         <button
-                            onClick={() => generateContractPdf(contract)}
-                            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-4"
+                            onClick={handlePrint}
+                            disabled={printStatus === 'making'}
+                            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-4"
                         >
-                            {anySigned ? 'Print Contract (PDF)' : 'Print Blank Contract for Signature'}
+                            {printStatus === 'making' ? 'Preparing PDF...' : anySigned ? 'Print Contract (PDF)' : 'Print Blank Contract for Signature'}
                         </button>
+                        {printStatus === 'error' && <p className="text-red-400 text-xs text-center -mt-2 mb-4">Couldn't make the PDF — try again.</p>}
 
                         {contract.status !== 'voided' && (
                             <div className="flex flex-col gap-3 mb-4">

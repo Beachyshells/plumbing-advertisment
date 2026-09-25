@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import ContractSections from './ContractSections.jsx'
+import { generateContractPdf } from './contractPdf.js'
 
 function formatMoney(amount) {
     return `$${Number(amount || 0).toFixed(2)}`
@@ -74,6 +76,8 @@ export default function ContractSignPage() {
     const [signerName, setSignerName] = useState('')
     const [signatureDataUrl, setSignatureDataUrl] = useState(null)
     const [signStatus, setSignStatus] = useState('idle') // idle | saving | done | error
+    const [signedStatusAfter, setSignedStatusAfter] = useState(null) // contract status right after signing
+    const [pdfStatus, setPdfStatus] = useState('idle') // idle | making | error
 
     const contractDocId = new URLSearchParams(window.location.search).get('id')
 
@@ -118,6 +122,8 @@ export default function ContractSignPage() {
                 }),
             })
             if (!res.ok) throw new Error('Failed')
+            const data = await res.json().catch(() => ({}))
+            setSignedStatusAfter(data.status || null)
             setSignStatus('done')
         } catch (err) {
             console.error(err)
@@ -146,6 +152,18 @@ export default function ContractSignPage() {
 
     const alreadySigned = !!contract.signedAt
     const bothSigned = contract.status === 'signed'
+    const isLayout2 = Number(contract.layoutVersion) === 2
+
+    async function handleDownload() {
+        setPdfStatus('making')
+        try {
+            await generateContractPdf(contract)
+            setPdfStatus('idle')
+        } catch (err) {
+            console.error(err)
+            setPdfStatus('error')
+        }
+    }
 
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
@@ -155,28 +173,59 @@ export default function ContractSignPage() {
                     <p className="text-white/40 text-xs mt-1">Contract {contract.contractId}</p>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
-                    <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Scope of Work</p>
-                    <ul className="text-white text-sm mb-4 flex flex-col gap-1">
-                        {(contract.scopeOfWork || []).map((item) => <li key={item}>• {item}</li>)}
-                    </ul>
-                    <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Total Price</p>
-                    <p className="text-white text-lg font-serif">{formatMoney(contract.totalPrice)}</p>
-                    {contract.priceNotes && <p className="text-white/40 text-xs mt-2 italic">{contract.priceNotes}</p>}
-                </div>
+                {isLayout2 ? (
+                    <div className="mb-6">
+                        <ContractSections contract={contract} />
+                    </div>
+                ) : (
+                    <>
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
+                            <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Scope of Work</p>
+                            <ul className="text-white text-sm mb-4 flex flex-col gap-1">
+                                {(contract.scopeOfWork || []).map((item) => <li key={item}>• {item}</li>)}
+                            </ul>
+                            <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Total Price</p>
+                            <p className="text-white text-lg font-serif">{formatMoney(contract.totalPrice)}</p>
+                            {contract.priceNotes && <p className="text-white/40 text-xs mt-2 italic">{contract.priceNotes}</p>}
+                        </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6">
-                    <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Full Contract Text</p>
-                    <p className="text-white/70 text-xs whitespace-pre-wrap leading-relaxed">{contract.termsText}</p>
-                </div>
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-6">
+                            <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Full Contract Text</p>
+                            <p className="text-white/70 text-xs whitespace-pre-wrap leading-relaxed">{contract.termsText}</p>
+                        </div>
+                    </>
+                )}
 
-                {alreadySigned || signStatus === 'done' ? (
+                {signStatus === 'done' ? (
+                    // Just signed: thank them and tell them the copy is coming.
+                    <div className="bg-white/5 border border-brand-green/40 rounded-2xl p-5 text-center">
+                        <p className="text-brand-green text-lg font-semibold mb-1">✓ Thank You for Signing</p>
+                        <p className="text-white/60 text-sm">
+                            {signedStatusAfter === 'signed'
+                                ? 'Your contract is fully signed. We\'ll email you a copy of the signed contract shortly.'
+                                : 'Adirondack Advanced Water Solutions will sign to finalize your contract, and then we\'ll email you a copy of the signed contract.'}
+                        </p>
+                    </div>
+                ) : bothSigned ? (
+                    // Opened from the "your signed copy" email: let them download it.
+                    <div className="bg-white/5 border border-brand-green/40 rounded-2xl p-5 text-center">
+                        <p className="text-brand-green text-lg font-semibold mb-1">✓ Fully Signed</p>
+                        <p className="text-white/60 text-sm">This contract has been signed by both parties. Please keep a copy for your records.</p>
+                        <button
+                            onClick={handleDownload}
+                            disabled={pdfStatus === 'making'}
+                            className="w-full mt-4 bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+                        >
+                            {pdfStatus === 'making' ? 'Preparing...' : 'Download Your Signed Copy (PDF)'}
+                        </button>
+                        {pdfStatus === 'error' && <p className="text-red-400 text-xs mt-2">Couldn't make the PDF — please try again.</p>}
+                    </div>
+                ) : alreadySigned ? (
+                    // Came back to the link after signing, before ADK signed.
                     <div className="bg-white/5 border border-brand-green/40 rounded-2xl p-5 text-center">
                         <p className="text-brand-green text-lg font-semibold mb-1">✓ You've Signed This Contract</p>
-                        <p className="text-white/50 text-sm">
-                            {bothSigned
-                                ? 'This contract is fully signed by both parties.'
-                                : 'Adirondack Advanced Water Solutions will also sign to finalize this contract.'}
+                        <p className="text-white/60 text-sm">
+                            Adirondack Advanced Water Solutions will sign to finalize your contract, and then we'll email you a copy of the signed contract.
                         </p>
                     </div>
                 ) : (

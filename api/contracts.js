@@ -1,4 +1,5 @@
 import { createClient } from '@sanity/client'
+import { Resend } from 'resend'
 
 const readClient = createClient({
     projectId: 't9p92c4q',
@@ -15,6 +16,33 @@ const writeClient = createClient({
     token: process.env.SANITY_WRITE_TOKEN,
     useCdn: false,
 })
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+const FROM_ADDRESS = 'Adirondack Advanced Water Solutions <contact@adkadvancedwatersolutions.com>'
+
+// Emails the customer a link to their fully signed contract, where they can
+// view and download it. Michael sends this with a button once both sides
+// have signed. Returns true if the email went out.
+async function emailSignedCopy(req, contract) {
+    if (!contract?.customerEmail) return false
+    const copyUrl = `https://${req.headers.host}/sign-contract?id=${encodeURIComponent(contract._id)}`
+    try {
+        const { error } = await resend.emails.send({
+            from: FROM_ADDRESS,
+            to: contract.customerEmail,
+            subject: `Your signed contract${contract.contractId ? ` — ${contract.contractId}` : ''}`,
+            text: `Hi ${contract.customerFirstName || 'there'},\n\nThank you! Your contract with Adirondack Advanced Water Solutions has been signed by both parties.\n\nYou can view and download your signed copy here:\n\n${copyUrl}\n\nPlease keep it for your records. If you have any questions, just reply to this email or give us a call.\n\nThank you,\nAdirondack Advanced Water Solutions`,
+        })
+        if (error) {
+            console.error('Resend rejected the signed-copy email:', error)
+            return false
+        }
+        return true
+    } catch (err) {
+        console.error('Failed to send signed-copy email:', err)
+        return false
+    }
+}
 
 function cleanText(value, maxLength = 1000) {
     if (typeof value !== 'string') return ''
@@ -537,6 +565,34 @@ export default async function handler(req, res) {
                     .commit()
 
                 return res.status(200).json({ success: true, signedAt: now, status: update.status })
+            }
+
+            // Michael's "Email Signed Copy" button — only once both sides have
+            // signed. Can be pressed again to resend; each send is logged.
+            if (action === 'emailCopy') {
+                const contract = await readClient.fetch(
+                    `*[_type == "contract" && _id == $id][0]{
+                        _id, contractId, status,
+                        "customerEmail": customer->email,
+                        "customerFirstName": customer->firstName
+                    }`,
+                    { id: contractDocId }
+                )
+                if (!contract) return res.status(404).json({ error: 'Contract not found' })
+                if (contract.status !== 'signed') {
+                    return res.status(400).json({ error: 'Both sides need to sign before a copy can be emailed' })
+                }
+                if (!contract.customerEmail) {
+                    return res.status(400).json({ error: 'No email on file for this customer' })
+                }
+                const sent = await emailSignedCopy(req, contract)
+                if (!sent) return res.status(502).json({ error: 'The email service didn\'t accept the email — try again' })
+                const now = new Date().toISOString()
+                await writeClient
+                    .patch(contractDocId)
+                    .append('auditTrail', [{ _type: 'auditEvent', _key: randomKey(), event: 'copy_emailed', timestamp: now, ipAddress: ip }])
+                    .commit()
+                return res.status(200).json({ success: true, emailedTo: contract.customerEmail, emailedAt: now })
             }
 
             if (action === 'void') {

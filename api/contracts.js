@@ -95,7 +95,7 @@ export default async function handler(req, res) {
     // ---- GET: templates list, one contract, or a customer's contracts ----
     if (req.method === 'GET') {
         try {
-            const { id, customerId, templates } = req.query
+            const { id, customerId, templates, all } = req.query
 
             if (templates) {
                 const list = await readClient.fetch(
@@ -117,6 +117,7 @@ export default async function handler(req, res) {
                         "companySignatureImageUrl": companySignatureImage.asset->url,
                         "templateName": template->name,
                         "templateType": template->templateType,
+                        "templateBodyText": template->bodyText,
                         "customerId": customer->_id,
                         "customerFirstName": customer->firstName,
                         "customerLastName": customer->lastName,
@@ -138,7 +139,11 @@ export default async function handler(req, res) {
                     { id }
                 )
                 if (!contract) return res.status(404).json({ error: 'Contract not found' })
-                return res.status(200).json({ contract })
+                // Send back just the yes/no, not the whole template wording.
+                const { templateBodyText, ...rest } = contract
+                return res.status(200).json({
+                    contract: { ...rest, templateIsAddendum: isAddendumTemplate({ bodyText: templateBodyText }) },
+                })
             }
 
             if (customerId) {
@@ -147,14 +152,34 @@ export default async function handler(req, res) {
                         _id, contractId, status, totalPrice, createdAt,
                         "templateName": template->name,
                         "isAddendum": defined(parentContract) || defined(linkedParentContract),
-                        "parentDocId": coalesce(parentContract._ref, linkedParentContract._ref)
+                        "parentDocId": coalesce(parentContract._ref, linkedParentContract._ref),
+                        "propertyId": property._ref,
+                        "invoiceId": invoice._ref
                     }`,
                     { customerId }
                 )
                 return res.status(200).json({ contracts })
             }
 
-            return res.status(400).json({ error: 'Missing id, customerId, or templates param' })
+            // Every contract for the Desktop "Contracts" hub — enough to list,
+            // search, and nest addenda, not the full signing details.
+            if (all) {
+                const contracts = await readClient.fetch(
+                    `*[_type == "contract"] | order(createdAt desc){
+                        _id, contractId, status, totalPrice, createdAt,
+                        "templateName": template->name,
+                        "isAddendum": defined(parentContract) || defined(linkedParentContract),
+                        "parentDocId": coalesce(parentContract._ref, linkedParentContract._ref),
+                        "customerId": customer._ref,
+                        "customerFirstName": customer->firstName,
+                        "customerLastName": customer->lastName,
+                        "propertyAddress": property->address
+                    }`
+                )
+                return res.status(200).json({ contracts })
+            }
+
+            return res.status(400).json({ error: 'Missing id, customerId, templates, or all param' })
         } catch (err) {
             console.error('Failed to fetch contract(s):', err)
             return res.status(500).json({ error: 'Could not load contract data' })

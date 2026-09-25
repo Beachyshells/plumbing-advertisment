@@ -9,6 +9,7 @@ import EquipmentLogView from './EquipmentLogView.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import ContractWizard from './ContractWizard.jsx'
 import ContractDetailView from './ContractDetailView.jsx'
+import ContractsView from './ContractsView.jsx'
 import Toast from './Toast.jsx'
 
 
@@ -199,6 +200,10 @@ export default function Desktop() {
         return <CalendarView onBack={backToHub} onOpenInvoice={openInvoiceFromCalendar} />
     }
 
+    if (view === 'contracts') {
+        return <ContractsView onBack={backToHub} />
+    }
+
     if (view === 'calendar-invoice' && calendarInvoice) {
         return (
             <InvoiceDetail
@@ -247,8 +252,8 @@ export default function Desktop() {
                     />
                     <Tile
                         title="Contracts"
-                        subtitle="Coming soon"
-                        disabled
+                        subtitle="Create, sign, and track"
+                        onClick={() => setView('contracts')}
                     />
                 </div>
             </div>

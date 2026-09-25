@@ -448,6 +448,7 @@ export default function ContractDetailView({ contractId, onBack, onOpenContract,
                                         onClick={() =>
                                             onAddAddendum({
                                                 _id: contract._id,
+                                                customerId: contract.customerId,
                                                 contractId: contract.contractId,
                                                 propertyId: contract.propertyId,
                                                 invoiceId: contract.invoiceId,

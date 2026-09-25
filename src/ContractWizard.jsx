@@ -14,7 +14,9 @@ function isAddendumTemplate(template) {
 // when starting from an original contract's "+ Add Addendum" button. When it's
 // not passed and an addendum template is picked, the wizard asks which
 // original contract it amends before going on.
-export default function ContractWizard({ customerId, propertyId, parentContract: presetParent, onBack, onCreated }) {
+// invoiceId is optional — pass it when the contract is being made for a
+// specific job, so the contract is linked to that invoice.
+export default function ContractWizard({ customerId, propertyId, invoiceId, parentContract: presetParent, onBack, onCreated }) {
     const [stage, setStage] = useState('template') // template | parent | details | review
     const [status, setStatus] = useState('loading') // loading | ready | error
     const [templates, setTemplates] = useState([])
@@ -104,7 +106,7 @@ export default function ContractWizard({ customerId, propertyId, parentContract:
     // takes the original's property and invoice instead of the defaults.
     const effectiveParent = isAddendumTemplate(selectedTemplate) || isAddendumMode ? chosenParent : null
     const effectivePropertyId = effectiveParent?.propertyId || propertyId
-    const effectiveInvoiceId = effectiveParent?.invoiceId || undefined
+    const effectiveInvoiceId = effectiveParent?.invoiceId || invoiceId || undefined
 
     async function handleCreate() {
         setSaveStatus('saving')

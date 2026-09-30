@@ -277,6 +277,13 @@ export default async function handler(req, res) {
                         "propertyId": property->_id,
                         "propertyAddress": property->address,
                         "invoiceId": invoice->_id,
+                        // The job an addendum's price change gets billed to:
+                        // its own, or its original contract's.
+                        "billInvoice": coalesce(
+                            invoice->{ _id, invoiceNumber, "lineNotes": lineItems[].miscNote },
+                            parentContract->invoice->{ _id, invoiceNumber, "lineNotes": lineItems[].miscNote },
+                            linkedParentContract->invoice->{ _id, invoiceNumber, "lineNotes": lineItems[].miscNote }
+                        ),
                         "parentContractId": parentContract->contractId,
                         "parentContractDocId": parentContract->_id,
                         "linkedParentContractId": linkedParentContract->contractId,
@@ -524,6 +531,65 @@ export default async function handler(req, res) {
 
         try {
             const ip = getClientIp(req)
+
+            // Change a draft's job details (sectioned layout only). Once a
+            // contract is sent, what the customer saw is locked — changes go
+            // through an addendum instead.
+            if (action === 'editDraft') {
+                const draft = await readClient.fetch(
+                    `*[_type == "contract" && _id == $id][0]{
+                        status, layoutVersion,
+                        "templateType": template->templateType,
+                        "isAddendum": defined(parentContract) || defined(linkedParentContract)
+                    }`,
+                    { id: contractDocId }
+                )
+                if (!draft) return res.status(404).json({ error: 'Contract not found' })
+                if (draft.status !== 'draft') return res.status(400).json({ error: 'Only a draft can be changed — this one has already been sent' })
+                if (Number(draft.layoutVersion) !== 2) return res.status(400).json({ error: 'This older-style draft can\'t be edited — void it and create a new one' })
+
+                const templateType = draft.templateType || 'oneTime'
+                const isAddendum = !!draft.isAddendum
+                const isRecurring = templateType === 'recurring'
+                const isWaiver = templateType === 'liabilityWaiver'
+
+                const price = cleanMoney(body.totalPrice)
+                if (price !== undefined && price < 0 && !isAddendum) {
+                    return res.status(400).json({ error: 'Total price can\'t be negative' })
+                }
+                const deposit = isAddendum || isWaiver ? undefined : cleanMoney(body.depositAmount)
+                if (deposit !== undefined && (deposit < 0 || (price !== undefined && deposit > price))) {
+                    return res.status(400).json({ error: 'Deposit must be between $0 and the total price' })
+                }
+                const startDate = cleanDate(body.startDate)
+                const estimatedCompletionDate = isRecurring || isWaiver ? undefined : cleanDate(body.estimatedCompletionDate)
+                if (startDate && estimatedCompletionDate && estimatedCompletionDate < startDate) {
+                    return res.status(400).json({ error: 'Estimated completion can\'t be before the start date' })
+                }
+
+                const set = {
+                    workDescription: cleanText(body.workDescription, 2000),
+                    lineItems: cleanLineItems(body.lineItems, { allowChangeType: isAddendum }),
+                    scopeOfWork: (Array.isArray(body.scopeOfWork) ? body.scopeOfWork : []).map((s) => cleanText(s, 300)).filter(Boolean).slice(0, 50),
+                    priceBasis: isRecurring && PRICE_BASES.includes(body.priceBasis) ? body.priceBasis : 'total',
+                    priceNotes: cleanText(body.priceNotes, 500),
+                }
+                const unset = []
+                const setOrClear = (field, value) => {
+                    if (value === undefined || value === '') unset.push(field)
+                    else set[field] = value
+                }
+                setOrClear('totalPrice', price)
+                setOrClear('depositAmount', deposit)
+                setOrClear('startDate', startDate)
+                setOrClear('estimatedCompletionDate', estimatedCompletionDate)
+                setOrClear('visitFrequency', isRecurring ? cleanText(body.visitFrequency, 100) : undefined)
+
+                let patch = writeClient.patch(contractDocId).set(set)
+                if (unset.length) patch = patch.unset(unset)
+                await patch.append('auditTrail', [{ _type: 'auditEvent', _key: randomKey(), event: 'edited', timestamp: new Date().toISOString(), ipAddress: ip }]).commit()
+                return res.status(200).json({ success: true })
+            }
 
             if (action === 'send') {
                 await writeClient

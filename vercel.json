@@ -15,6 +15,10 @@
         {
             "source": "/sign-contract",
             "destination": "/sign-contract.html"
+        },
+        {
+            "source": "/proposal",
+            "destination": "/proposal.html"
         }
     ],
     "headers": [

@@ -464,6 +464,60 @@ export default async function handler(req, res) {
         }
 
         try {
+            // Adds a signed addendum's price change to this job's bill as one
+            // line ("Addendum C-1004-A1: ..."), recalculating the total the
+            // same way an edit does. Refuses to add the same addendum twice.
+            if (action === 'addAddendum') {
+                const contract = await readClient.fetch(
+                    `*[_type == "contract" && _id == $id][0]{
+                        contractId, status, totalPrice, workDescription,
+                        "isAddendum": defined(parentContract) || defined(linkedParentContract)
+                    }`,
+                    { id: body.contractDocId }
+                )
+                if (!contract?.isAddendum) return res.status(400).json({ error: 'That contract isn\'t an addendum' })
+                if (contract.status !== 'signed') return res.status(400).json({ error: 'Only a fully signed addendum can be added to the bill' })
+                const price = Number(contract.totalPrice)
+                if (!Number.isFinite(price) || price === 0) return res.status(400).json({ error: 'This addendum has no price change to add' })
+
+                const existing = await readClient.fetch(
+                    `*[_type == "customerInvoice" && _id == $id][0]{
+                        payments, status, laborCost,
+                        discountType, discountValue, discountReason, discountReasonNote, discountAppliedBy,
+                        lineItems[]{ _key, itemType, quantity, miscName, miscSellPrice, miscNote, discountType, discountValue, discountReason, discountReasonNote, discountAppliedBy, "inventoryItemId": inventoryItem->_id }
+                    }`,
+                    { id: invoiceId }
+                )
+                if (!existing) return res.status(404).json({ error: 'Invoice not found' })
+                if (existing.status === 'canceled') return res.status(400).json({ error: 'That job was canceled' })
+
+                const note = `From signed addendum ${contract.contractId}`
+                if ((existing.lineItems || []).some((li) => li.miscNote === note)) {
+                    return res.status(400).json({ error: `Addendum ${contract.contractId} is already on this bill` })
+                }
+
+                const description = cleanText(contract.workDescription || '', 150).split('\n')[0]
+                const submitted = [
+                    ...(existing.lineItems || []).map(toResolveInput),
+                    {
+                        itemType: 'misc',
+                        miscName: `Addendum ${contract.contractId}${description ? `: ${description}` : ''}`,
+                        miscSellPrice: price,
+                        miscNote: note,
+                    },
+                ]
+                const existingLineItemsByKey = new Map((existing.lineItems || []).map((li) => [li._key, li]))
+                const { resolvedLineItems, lineItemsTotal } = await resolveLineItems(submitted, existingLineItemsByKey, 'Michael')
+                const subtotal = lineItemsTotal + (Number(existing.laborCost) || 0)
+                const invoiceDiscountOut = resolveInvoiceDiscount(undefined, existing, 'Michael')
+                const totalAmount = applyDiscount(subtotal, invoiceDiscountOut.discountType, invoiceDiscountOut.discountValue)
+                const totalPaid = (existing.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+                const paymentStatus = totalPaid >= totalAmount && totalAmount > 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'unpaid'
+
+                await writeClient.patch(invoiceId).set({ lineItems: resolvedLineItems, totalAmount, paymentStatus }).commit()
+                return res.status(200).json({ success: true, totalAmount })
+            }
+
             if (action === 'payment') {
                 const amount = Number(body.amount)
                 if (!amount || amount <= 0) {

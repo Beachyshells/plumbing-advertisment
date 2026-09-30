@@ -16,6 +16,7 @@ export default defineConfig({
         desktop: resolve(__dirname, 'desktop.html'),
         employee: resolve(__dirname, 'employee.html'),
         signContract: resolve(__dirname, 'sign-contract.html'),
+        proposal: resolve(__dirname, 'proposal.html'),
 
       },
     },

@@ -12,6 +12,7 @@ import MoneyInput from './MoneyInput.jsx'
 import ContractWizard from './ContractWizard.jsx'
 import ContractDetailView from './ContractDetailView.jsx'
 import ContractsView from './ContractsView.jsx'
+import ProposalsView from './ProposalsView.jsx'
 import Toast from './Toast.jsx'
 
 
@@ -206,6 +207,10 @@ export default function Desktop() {
         return <ContractsView onBack={backToHub} />
     }
 
+    if (view === 'proposals') {
+        return <ProposalsView onBack={backToHub} />
+    }
+
     if (view === 'calendar-invoice' && calendarInvoice) {
         return (
             <InvoiceDetail
@@ -251,6 +256,11 @@ export default function Desktop() {
                         title="Employees"
                         subtitle="Roster, timecards, pay"
                         onClick={() => setView('employees')}
+                    />
+                    <Tile
+                        title="Proposals"
+                        subtitle="Quote, send, turn into a job"
+                        onClick={() => setView('proposals')}
                     />
                     <Tile
                         title="Contracts"

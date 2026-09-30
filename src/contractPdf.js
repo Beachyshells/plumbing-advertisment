@@ -521,6 +521,7 @@ async function generateLayout2Pdf(contract) {
             signed_company: 'Signed by company representative',
             voided: 'Voided',
             copy_emailed: 'Signed copy emailed to customer',
+            edited: 'Draft edited',
             linked_to_original: 'Linked to original contract',
             unlinked_from_original: 'Unlinked from original contract',
         }

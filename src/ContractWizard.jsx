@@ -59,14 +59,24 @@ function startDateLabel(templateType, isAddendum) {
 // invoiceId is optional — pass it when the job is already known (the
 // Contracts hub asks for it first). If it isn't passed, the wizard asks
 // which job the contract is for, so it can fill in the details from it.
-export default function ContractWizard({ customerId, propertyId, invoiceId: presetInvoiceId, parentContract: presetParent, onBack, onCreated }) {
-    const [stage, setStage] = useState('template') // template | parent | job | details | review
+//
+// editContract is optional — pass a draft contract (as loaded by its
+// contract page) to change it instead of creating a new one. The wizard
+// opens straight on its details, filled in with what the draft says.
+export default function ContractWizard({ customerId, propertyId, invoiceId: presetInvoiceId, parentContract: presetParent, editContract, onBack, onCreated }) {
+    const editing = !!editContract
+    const [stage, setStage] = useState(editing ? 'details' : 'template') // template | parent | job | details | review
     const [status, setStatus] = useState('loading') // loading | ready | error
     const [templates, setTemplates] = useState([])
-    const [selectedTemplate, setSelectedTemplate] = useState(null)
+    const [selectedTemplate, setSelectedTemplate] = useState(
+        editing ? { _id: null, name: editContract.templateName, templateType: editContract.templateType, bodyText: '', scopeOptions: [] } : null
+    )
 
     // ---- Original contract (addenda) ----
-    const [chosenParent, setChosenParent] = useState(presetParent || null)
+    const editParent = editing && (editContract.parentContractId || editContract.linkedParentContractId)
+        ? { _id: editContract.parentContractDocId || editContract.linkedParentContractDocId, contractId: editContract.parentContractId || editContract.linkedParentContractId }
+        : null
+    const [chosenParent, setChosenParent] = useState(presetParent || editParent)
     const [parentOptions, setParentOptions] = useState([])
     const [parentOptionsStatus, setParentOptionsStatus] = useState('idle') // idle | loading | ready | error
 
@@ -76,18 +86,22 @@ export default function ContractWizard({ customerId, propertyId, invoiceId: pres
     const [jobOptionsStatus, setJobOptionsStatus] = useState('idle') // idle | loading | ready | error
 
     // ---- Details ----
-    const [workDescription, setWorkDescription] = useState('')
-    const [rows, setRows] = useState([])
-    const [extraScope, setExtraScope] = useState([])
+    const [workDescription, setWorkDescription] = useState(editContract?.workDescription || '')
+    const [rows, setRows] = useState(() =>
+        (editContract?.lineItems || []).map((li) =>
+            newRow({ name: li.name || '', quantity: li.quantity || 1, kind: li.kind || 'part', make: li.make || '', model: li.model || '', changeType: li.changeType || 'add' })
+        )
+    )
+    const [extraScope, setExtraScope] = useState(editContract?.scopeOfWork || [])
     const [customScopeItem, setCustomScopeItem] = useState('')
-    const [totalPrice, setTotalPrice] = useState('')
-    const [priceDirection, setPriceDirection] = useState('add') // addenda: add | lower
-    const [priceBasis, setPriceBasis] = useState('total')
-    const [depositAmount, setDepositAmount] = useState('')
-    const [startDate, setStartDate] = useState(todayIso)
-    const [estimatedCompletionDate, setEstimatedCompletionDate] = useState('')
-    const [visitFrequency, setVisitFrequency] = useState('')
-    const [priceNotes, setPriceNotes] = useState('')
+    const [totalPrice, setTotalPrice] = useState(editContract?.totalPrice != null ? String(Math.abs(Number(editContract.totalPrice))) : '')
+    const [priceDirection, setPriceDirection] = useState(Number(editContract?.totalPrice) < 0 ? 'lower' : 'add') // addenda: add | lower
+    const [priceBasis, setPriceBasis] = useState(editContract?.priceBasis || 'total')
+    const [depositAmount, setDepositAmount] = useState(editContract?.depositAmount ? String(editContract.depositAmount) : '')
+    const [startDate, setStartDate] = useState(editContract?.startDate || todayIso())
+    const [estimatedCompletionDate, setEstimatedCompletionDate] = useState(editContract?.estimatedCompletionDate || '')
+    const [visitFrequency, setVisitFrequency] = useState(editContract?.visitFrequency || '')
+    const [priceNotes, setPriceNotes] = useState(editContract?.priceNotes || '')
 
     const [prefillStatus, setPrefillStatus] = useState('idle') // idle | loading | done | error
     const [formError, setFormError] = useState('')
@@ -95,7 +109,7 @@ export default function ContractWizard({ customerId, propertyId, invoiceId: pres
     const [saveStatus, setSaveStatus] = useState('idle') // idle | saving | error
     const [saveError, setSaveError] = useState('')
 
-    const isAddendumMode = !!presetParent
+    const isAddendumMode = !!presetParent || !!editParent
     const visibleTemplates = isAddendumMode ? templates.filter(isAddendumTemplate) : templates
     const templateIsAddendum = isAddendumTemplate(selectedTemplate)
     const isAddendum = isAddendumMode || templateIsAddendum
@@ -218,6 +232,7 @@ export default function ContractWizard({ customerId, propertyId, invoiceId: pres
     }
 
     function goBack() {
+        if (editing && stage === 'details') return onBack()
         if (stage === 'template') return onBack()
         if (stage === 'parent' || stage === 'job') return setStage('template')
         if (stage === 'details') {
@@ -295,9 +310,10 @@ export default function ContractWizard({ customerId, propertyId, invoiceId: pres
         setSaveError('')
         try {
             const res = await fetch('/api/contracts', {
-                method: 'POST',
+                method: editing ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    ...(editing ? { id: editContract._id, action: 'editDraft' } : {}),
                     layoutVersion: 2,
                     templateId: selectedTemplate._id,
                     customerId,
@@ -327,7 +343,7 @@ export default function ContractWizard({ customerId, propertyId, invoiceId: pres
             })
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || 'Failed')
-            onCreated(data.id)
+            onCreated(editing ? editContract._id : data.id)
         } catch (err) {
             console.error(err)
             setSaveError(err.message && err.message !== 'Failed' ? err.message : '')
@@ -345,7 +361,7 @@ export default function ContractWizard({ customerId, propertyId, invoiceId: pres
                     ← Back
                 </button>
 
-                <h1 className="font-serif text-2xl text-white mb-6">{isAddendum ? 'New Addendum' : 'New Contract'}</h1>
+                <h1 className="font-serif text-2xl text-white mb-6">{editing ? `Edit ${editContract.contractId}` : isAddendum ? 'New Addendum' : 'New Contract'}</h1>
 
                 {chosenParent && isAddendum && (
                     <div className="bg-blue/20 border border-blue/40 rounded-xl px-4 py-3 mb-6">
@@ -807,7 +823,7 @@ export default function ContractWizard({ customerId, propertyId, invoiceId: pres
                             disabled={saveStatus === 'saving'}
                             className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-lg font-semibold py-4 rounded-xl transition-colors active:scale-[0.98]"
                         >
-                            {saveStatus === 'saving' ? 'Creating...' : isAddendum ? 'Create Addendum' : 'Create Contract'}
+                            {saveStatus === 'saving' ? 'Saving...' : editing ? 'Save Changes' : isAddendum ? 'Create Addendum' : 'Create Contract'}
                         </button>
                     </div>
                 )}

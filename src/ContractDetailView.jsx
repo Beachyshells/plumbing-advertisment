@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import Toast from './Toast.jsx'
 import { generateContractPdf } from './contractPdf.js'
 import ContractSections from './ContractSections.jsx'
+import ContractWizard from './ContractWizard.jsx'
 
 function formatMoney(amount) {
     return `$${Number(amount || 0).toFixed(2)}`
@@ -125,6 +126,9 @@ export default function ContractDetailView({ contractId, onBack, onOpenContract,
     const [signStatus, setSignStatus] = useState('idle') // idle | saving | error
     const [toast, setToast] = useState(null)
     const [sendStatus, setSendStatus] = useState('idle') // idle | sending | error
+    const [editingDraft, setEditingDraft] = useState(false)
+    const [billStatus, setBillStatus] = useState('idle') // idle | saving | error
+    const [billError, setBillError] = useState('')
     const [voidConfirming, setVoidConfirming] = useState(false)
     const [voidStatus, setVoidStatus] = useState('idle') // idle | saving | error
     const [printStatus, setPrintStatus] = useState('idle') // idle | making | error
@@ -330,6 +334,43 @@ export default function ContractDetailView({ contractId, onBack, onOpenContract,
         }
     }
 
+    // Adds this signed addendum's price change to the job's bill.
+    async function handleAddToBill(invoiceId) {
+        setBillStatus('saving')
+        setBillError('')
+        try {
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ invoiceId, action: 'addAddendum', contractDocId: contractId }),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) throw new Error(data.error || 'Failed')
+            setBillStatus('idle')
+            setToast('Added to the job\'s bill')
+            load()
+        } catch (err) {
+            setBillError(err.message && err.message !== 'Failed' ? err.message : '')
+            setBillStatus('error')
+        }
+    }
+
+    if (editingDraft && contract) {
+        return (
+            <ContractWizard
+                customerId={contract.customerId}
+                propertyId={contract.propertyId}
+                editContract={contract}
+                onBack={() => setEditingDraft(false)}
+                onCreated={() => {
+                    setEditingDraft(false)
+                    setToast('Draft updated')
+                    load()
+                }}
+            />
+        )
+    }
+
     if (status === 'loading') {
         return <div className="min-h-screen bg-navy px-4 py-10"><p className="text-white/40 text-sm text-center py-10">Loading...</p></div>
     }
@@ -402,6 +443,15 @@ export default function ContractDetailView({ contractId, onBack, onOpenContract,
                     </div>
                 )}
 
+                {!signingRole && contract.status === 'draft' && Number(contract.layoutVersion) === 2 && (
+                    <button
+                        onClick={() => setEditingDraft(true)}
+                        className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold py-3 rounded-xl transition-colors mb-3"
+                    >
+                        Edit Draft
+                    </button>
+                )}
+
                 {!signingRole && contract.status !== 'signed' && contract.status !== 'voided' && (
                     contract.customerEmail ? (
                         <button
@@ -440,6 +490,31 @@ export default function ContractDetailView({ contractId, onBack, onOpenContract,
                                     <p className="text-white/70 text-xs whitespace-pre-wrap leading-relaxed">{contract.termsText}</p>
                                 </div>
                             </>
+                        )}
+
+                        {contract.status === 'signed' && (hasRealParent || hasLinkedParent) && Number(contract.totalPrice) !== 0 && contract.totalPrice != null && (
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-4">
+                                <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Job Bill</p>
+                                {!contract.billInvoice ? (
+                                    <p className="text-white/50 text-xs">The original contract isn't linked to a job, so this can't be added to a bill automatically.</p>
+                                ) : (contract.billInvoice.lineNotes || []).includes(`From signed addendum ${contract.contractId}`) ? (
+                                    <p className="text-brand-green text-sm">✓ Added to job #{contract.billInvoice.invoiceNumber}'s bill</p>
+                                ) : (
+                                    <>
+                                        <p className="text-white/60 text-xs mb-3">
+                                            Adds this addendum's {Number(contract.totalPrice) < 0 ? 'price reduction' : 'added cost'} as one line on job #{contract.billInvoice.invoiceNumber}.
+                                        </p>
+                                        <button
+                                            onClick={() => handleAddToBill(contract.billInvoice._id)}
+                                            disabled={billStatus === 'saving'}
+                                            className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
+                                        >
+                                            {billStatus === 'saving' ? 'Adding...' : `Add to Job #${contract.billInvoice.invoiceNumber} Bill`}
+                                        </button>
+                                        {billStatus === 'error' && <p className="text-red-400 text-xs text-center mt-2">{billError || 'Couldn\'t add it — try again.'}</p>}
+                                    </>
+                                )}
+                            </div>
                         )}
 
                         {contract.status === 'signed' && (

@@ -1,4 +1,5 @@
 import { createClient } from '@sanity/client'
+import { requireAdmin, requireStaff, readToken, makeToken } from './_auth.js'
 
 const readClient = createClient({
     projectId: 't9p92c4q',
@@ -54,6 +55,13 @@ async function verifyEmployeePin(employeeId, pin) {
 }
 
 export default async function handler(req, res) {
+    // Most timeclock actions check the employee's own PIN. These are Michael's
+    // admin screens, and markRead needs a logged-in employee.
+    const timeclockAction = req.method === 'GET' ? req.query.action : req.body?.action
+    const ADMIN_ACTIONS = ['roster', 'entries', 'adminEditEntry', 'adminRecordPayment', 'updateEmployee']
+    if (ADMIN_ACTIONS.includes(timeclockAction) && !requireAdmin(req, res)) return
+    if (timeclockAction === 'markRead' && !requireStaff(req, res)) return
+
     // ============================== GET ==============================
     if (req.method === 'GET') {
         const { action, employeeId, pin } = req.query
@@ -180,7 +188,12 @@ export default async function handler(req, res) {
             if (action === 'verifyPin') {
                 const check = await verifyEmployeePin(body.employeeId, body.pin)
                 if (!check.ok) return res.status(check.status).json({ error: check.error })
-                return res.status(200).json({ success: true, firstName: check.employee.firstName })
+                // The token lets the employee portal read the job list and parts.
+                return res.status(200).json({
+                    success: true,
+                    firstName: check.employee.firstName,
+                    token: makeToken({ role: 'employee', employeeId: check.employee._id }),
+                })
             }
 
             // ---- clock in ----

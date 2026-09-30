@@ -1,4 +1,5 @@
 import { createClient } from '@sanity/client'
+import { requireAdmin, requireStaff, readToken, makeToken } from './_auth.js'
 
 const client = createClient({
     projectId: 't9p92c4q',
@@ -31,8 +32,10 @@ export default async function handler(req, res) {
         }
 
         const isCorrect = pin === record.pin
+        if (!isCorrect) return res.status(200).json({ correct: false })
 
-        return res.status(200).json({ correct: isCorrect })
+        // A signed login token the app sends with every admin API call.
+        return res.status(200).json({ correct: true, token: makeToken({ role: 'admin' }) })
     } catch (err) {
         console.error('Failed to verify PIN:', err)
         return res.status(500).json({ error: 'Could not verify PIN' })

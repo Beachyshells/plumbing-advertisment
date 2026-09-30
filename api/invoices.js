@@ -1,4 +1,5 @@
 import { createClient } from '@sanity/client'
+import { requireAdmin, requireStaff, readToken, makeToken } from './_auth.js'
 
 const readClient = createClient({
     projectId: 't9p92c4q',
@@ -215,6 +216,13 @@ async function resolveLineItems(submittedLineItems, existingLineItemsByKey = new
 }
 
 export default async function handler(req, res) {
+    // Employees can read a job's invoice and add parts to it (that action also
+    // checks their own PIN). Everything else is Michael only.
+    const isEmployeeCall =
+        (req.method === 'GET' && (req.query.propertyId || req.query.id) && !req.query.customerId && !req.query.calendarMonth) ||
+        (req.method === 'PATCH' && req.body?.action === 'employeeUpdateLineItems')
+    if (isEmployeeCall ? !requireStaff(req, res) : !requireAdmin(req, res)) return
+
     // ---- GET: one invoice (?id=), a filtered list (?customerId= / ?propertyId=), or everything ----
     if (req.method === 'GET') {
         try {

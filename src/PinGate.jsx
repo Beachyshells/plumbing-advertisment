@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
+import { getAdminToken, setAdminToken } from './apiAuth.js'
 
 const STORAGE_KEY = 'invoicePinVerified'
 
 function getInitialUnlockedState() {
     if (typeof window === 'undefined') return false
-    return localStorage.getItem(STORAGE_KEY) === 'true'
+    // Unlocked only with a saved login token — phones that were unlocked
+    // before tokens existed are asked for the PIN one more time.
+    try {
+        return localStorage.getItem(STORAGE_KEY) === 'true' && !!getAdminToken()
+    } catch {
+        return false
+    }
 }
 
 export default function PinGate({ children }) {
@@ -32,7 +39,8 @@ export default function PinGate({ children }) {
             })
             const data = await res.json()
 
-            if (data.correct) {
+            if (data.correct && data.token) {
+                setAdminToken(data.token)
                 localStorage.setItem(STORAGE_KEY, 'true')
                 setUnlocked(true)
                 setStatus('idle')

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import EmployeePartsView from './EmployeePartsView.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import Toast from './Toast.jsx'
+import { setEmployeeToken } from './apiAuth.js'
 
 const EMPTY_INTAKE = { firstName: '', lastName: '', phone: '', email: '', startDate: new Date().toISOString().slice(0, 10), pin: '', confirmPin: '' }
 
@@ -49,6 +50,7 @@ export default function Employee() {
     }, [])
 
     function backToLanding() {
+        setEmployeeToken(null)
         setView('landing')
         setSelectedEmployee(null)
         setVerifiedPin('')
@@ -131,6 +133,8 @@ export default function Employee() {
                 setPinStatus(nextAttempts >= 3 ? 'locked' : 'error')
                 return
             }
+            const data = await res.json().catch(() => ({}))
+            setEmployeeToken(data.token || null)
             setVerifiedPin(pinInput)
             setPinStatus('idle')
             setView('portal')

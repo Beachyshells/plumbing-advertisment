@@ -1,5 +1,6 @@
 import { createClient } from '@sanity/client'
 import { Resend } from 'resend'
+import { requireAdmin } from './_auth.js'
 
 const readClient = createClient({
     projectId: 't9p92c4q',
@@ -191,6 +192,16 @@ const PARENT_CHECK_PROJECTION = `{
 }`
 
 export default async function handler(req, res) {
+    // The customer's signing page is public: it can read one contract by its
+    // id, record that it was opened, and sign as the customer. Everything
+    // else — listing, creating, sending, voiding, linking, signing for the
+    // company, emailing copies — is Michael only.
+    const isCustomerCall =
+        (req.method === 'GET' && req.query.id && Object.keys(req.query).length === 1) ||
+        (req.method === 'PATCH' && req.body?.action === 'view') ||
+        (req.method === 'PATCH' && req.body?.action === 'sign' && req.body?.signerRole === 'customer')
+    if (!isCustomerCall && !requireAdmin(req, res)) return
+
     // ---- GET: templates list, one contract, or a customer's contracts ----
     if (req.method === 'GET') {
         try {
@@ -545,18 +556,26 @@ export default async function handler(req, res) {
                     return res.status(400).json({ error: 'Invalid signer role' })
                 }
 
+                const now = new Date().toISOString()
+
+                const existing = await readClient.fetch(
+                    `*[_type == "contract" && _id == $id][0]{ signedAt, companySignedAt, status }`,
+                    { id: contractDocId }
+                )
+                if (!existing) return res.status(404).json({ error: 'Contract not found' })
+                // A signature, once given, is never replaced.
+                if (existing.status === 'voided') return res.status(400).json({ error: 'This contract has been voided' })
+                if (signerRole === 'customer' && existing.signedAt) {
+                    return res.status(400).json({ error: 'This contract has already been signed by the customer' })
+                }
+                if (signerRole === 'company' && existing.companySignedAt) {
+                    return res.status(400).json({ error: 'This contract has already been signed by the company' })
+                }
+
                 const [header, data] = signatureDataUrl.split(',')
                 const contentType = header.match(/data:(.*);base64/)?.[1] || 'image/png'
                 const buffer = Buffer.from(data, 'base64')
                 const asset = await writeClient.assets.upload('image', buffer, { contentType })
-
-                const now = new Date().toISOString()
-
-                const existing = await readClient.fetch(
-                    `*[_type == "contract" && _id == $id][0]{ signedAt, companySignedAt }`,
-                    { id: contractDocId }
-                )
-                if (!existing) return res.status(404).json({ error: 'Contract not found' })
 
                 const update = {}
                 if (signerRole === 'customer') {

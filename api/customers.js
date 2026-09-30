@@ -1,4 +1,5 @@
 import { createClient } from '@sanity/client'
+import { requireAdmin, requireStaff, readToken, makeToken } from './_auth.js'
 
 const readClient = createClient({
     projectId: 't9p92c4q',
@@ -56,6 +57,9 @@ function computeStatus(profile) {
 }
 
 export default async function handler(req, res) {
+    // Michael only — see api/_auth.js.
+    if (!requireAdmin(req, res)) return
+
     if (req.method === 'GET') {
         const id = req.query.id
         const propertyId = req.query.propertyId

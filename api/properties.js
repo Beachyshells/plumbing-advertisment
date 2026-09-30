@@ -1,4 +1,5 @@
 import { createClient } from '@sanity/client'
+import { requireAdmin, requireStaff, readToken, makeToken } from './_auth.js'
 
 const readClient = createClient({
     projectId: 't9p92c4q',
@@ -44,6 +45,11 @@ const PROPERTY_PROJECTION = `
 `
 
 export default async function handler(req, res) {
+    // The employee timeclock only needs the active-job list; everything else
+    // is Michael only.
+    const isEmployeeRead = req.method === 'GET' && req.query.activeOnly === 'true'
+    if (isEmployeeRead ? !requireStaff(req, res) : !requireAdmin(req, res)) return
+
     if (req.method === 'GET') {
         const id = req.query.id
         try {

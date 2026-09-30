@@ -5,7 +5,12 @@ function todayString() {
 }
 
 // Common filter change intervals, in months.
-const INTERVALS = [3, 6, 12]
+const INTERVALS = [1, 3, 6, 12]
+
+// "1 month", "6 months"
+function intervalLabel(months) {
+    return `${months} month${months === 1 ? '' : 's'}`
+}
 
 // "2026-09-30" + 6 months -> "2027-03-30" (clamped to the month's last day).
 function addMonths(isoDate, months) {
@@ -129,7 +134,7 @@ export default function EquipmentLogView({ invoice, onBack }) {
                     // Filters only: how often it's changed, and when it last was
                     // (installing a new one counts as changing it).
                     ...(draft.isFilter
-                        ? { replaceEvery: draft.intervalMonths ? `${draft.intervalMonths} months` : '', lastChanged: draft.installDate || undefined }
+                        ? { replaceEvery: draft.intervalMonths ? intervalLabel(draft.intervalMonths) : '', lastChanged: draft.installDate || undefined }
                         : {}),
                 }),
             })
@@ -275,7 +280,7 @@ export default function EquipmentLogView({ invoice, onBack }) {
                                                             }
                                                             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${draft.intervalMonths === months ? 'bg-blue text-white' : 'bg-white/5 text-white/60 border border-white/10'}`}
                                                         >
-                                                            {months} months
+                                                            {intervalLabel(months)}
                                                         </button>
                                                     ))}
                                                 </div>

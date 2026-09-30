@@ -363,6 +363,10 @@ export default async function handler(req, res) {
                     technician,
                     notes,
                     totalAmount,
+                    "equipmentItems": lineItems[itemType == "catalog" && inventoryItem->isEquipment == true]{
+                        "name": inventoryItem->name,
+                        "inventoryItemId": inventoryItem->_id
+                    },
                     paymentStatus,
                     jobStatus,
                     status,

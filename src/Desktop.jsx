@@ -459,6 +459,36 @@ function CustomersView({ onBack, onAddJob, initialSelectedId }) {
 
 const TABS = ['Overview', 'Site Access', 'Equipment', 'Service History', 'Contracts']
 
+// Equipment on a customer's jobs that nobody has logged a serial number for
+// yet (it's on the bill, but no equipment record exists). Returns a copy of
+// `groups` with those added as "pending" units under the right address, so
+// the Equipment tab and the printout show everything that was installed —
+// not only what already has a serial on file.
+function withPendingJobEquipment(groups, invoices) {
+    const byProperty = new Map(groups.map((g) => [g.propertyId, { ...g, equipment: [...g.equipment] }]))
+    invoices.forEach((inv) => {
+        if (!inv.propertyId || inv.status === 'canceled') return
+        ;(inv.equipmentItems || []).forEach((item, index) => {
+            if (!item?.name) return
+            let group = byProperty.get(inv.propertyId)
+            if (!group) {
+                group = { propertyId: inv.propertyId, address: inv.propertyAddress, equipment: [] }
+                byProperty.set(inv.propertyId, group)
+            }
+            const logged = group.equipment.some((e) => !e.pending && e.invoiceId === inv._id && e.equipmentType === item.name)
+            if (logged) return
+            group.equipment.push({
+                _id: `pending-${inv._id}-${index}`,
+                pending: true,
+                equipmentType: item.name,
+                invoiceNumber: inv.invoiceNumber,
+                invoice: inv,
+            })
+        })
+    })
+    return [...byProperty.values()].filter((g) => g.equipment.length > 0)
+}
+
 function CustomerCard({ customer, onBack, onAddJob }) {
     const [tab, setTab] = useState('Overview')
     const [invoices, setInvoices] = useState([])
@@ -504,7 +534,7 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                         .then((data) => ({ ...p, equipment: data.equipment || [] }))
                 )
             )
-            const withEquipment = groups.filter((g) => g.equipment.length > 0)
+            const withEquipment = withPendingJobEquipment(groups, invoices)
             // Only label units by address when they're spread across houses.
             const equipment = withEquipment.flatMap((g) =>
                 g.equipment.map((e) => ({ ...e, propertyLabel: withEquipment.length > 1 ? formatAddress(g.address) : '' }))
@@ -598,7 +628,7 @@ function CustomerCard({ customer, onBack, onAddJob }) {
             }
         })
         if (distinctProperties.length === 0) {
-            setEquipmentGroups([])
+            setEquipmentGroups(withPendingJobEquipment([], invoices))
             setEquipmentAggStatus('ready')
             return
         }
@@ -611,7 +641,7 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                     .catch(() => ({ ...p, equipment: [] }))
             )
         ).then((groups) => {
-            setEquipmentGroups(groups.filter((g) => g.equipment.length > 0))
+            setEquipmentGroups(withPendingJobEquipment(groups, invoices))
             setEquipmentAggStatus('ready')
         })
     }, [tab, invoiceStatus, equipmentAggStatus])
@@ -823,6 +853,19 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                                         {group.equipment.map((item) => (
                                             <div key={item._id} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
                                                 <p className="text-white text-base font-serif">{item.equipmentType || 'Untitled unit'}</p>
+                                                {item.pending && (
+                                                    <div className="flex items-center justify-between gap-3 mt-1">
+                                                        <p className="text-accent text-xs">
+                                                            On job #{item.invoiceNumber || '—'} — serial number not logged yet
+                                                        </p>
+                                                        <button
+                                                            onClick={() => setSelectedInvoice(item.invoice)}
+                                                            className="text-blue text-xs font-semibold shrink-0"
+                                                        >
+                                                            Open job
+                                                        </button>
+                                                    </div>
+                                                )}
                                                 {(item.make || item.model) && (
                                                     <p className="text-white/50 text-xs mt-0.5">
                                                         {item.make && <><span className="text-blue-light">Make:</span> {item.make}</>}

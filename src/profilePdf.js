@@ -186,7 +186,7 @@ export async function generateProfilePdf({ customer = {}, property = {}, equipme
         data: equipment.map((e) => [
             e.equipmentType,
             [e.make, e.model].filter(Boolean).join(' '),
-            e.serialNumber,
+            e.pending ? 'Not logged yet' : e.serialNumber,
             formatDate(e.installDate),
         ]),
         rows: glanceRows,
@@ -275,7 +275,11 @@ export async function generateProfilePdf({ customer = {}, property = {}, equipme
     // Every unit on file, plus at least one blank block to write a new one in.
     const units = equipment.length ? [...equipment, {}] : [{}, {}, {}]
     units.forEach((e, i) => {
-        const extra = [e.propertyLabel, text(e.notes)].filter(Boolean).join(' — ')
+        const extra = [
+            e.propertyLabel,
+            e.pending ? `on job #${e.invoiceNumber || '—'}, serial not logged yet` : '',
+            text(e.notes),
+        ].filter(Boolean).join(' — ')
         unitBlock(`UNIT ${i + 1}${extra ? ` — ${extra.slice(0, 80)}` : ''}`, e)
     })
 

@@ -536,6 +536,10 @@ function CustomerCard({ customer, onBack, onAddJob }) {
 
     function fetchInvoices() {
         setInvoiceStatus('loading')
+        // Equipment is looked up from the job list, so reload it too —
+        // otherwise equipment logged on a job (then coming back here) never
+        // shows up until the whole page is reloaded.
+        setEquipmentAggStatus('idle')
         fetch(`/api/invoices?customerId=${encodeURIComponent(customer._id)}`)
             .then((res) => {
                 if (!res.ok) throw new Error('Failed to load')
@@ -582,6 +586,11 @@ function CustomerCard({ customer, onBack, onAddJob }) {
         if (tab !== 'Equipment' || invoiceStatus !== 'ready' || equipmentAggStatus !== 'idle') return
         const distinctProperties = []
         const seen = new Set()
+        // The profile's own address counts too, not just houses with jobs.
+        if (customer.property?._id) {
+            seen.add(customer.property._id)
+            distinctProperties.push({ propertyId: customer.property._id, address: customer.property.address })
+        }
         invoices.forEach((inv) => {
             if (inv.propertyId && !seen.has(inv.propertyId)) {
                 seen.add(inv.propertyId)
@@ -605,7 +614,7 @@ function CustomerCard({ customer, onBack, onAddJob }) {
             setEquipmentGroups(groups.filter((g) => g.equipment.length > 0))
             setEquipmentAggStatus('ready')
         })
-    }, [tab, invoiceStatus])
+    }, [tab, invoiceStatus, equipmentAggStatus])
 
     if (selectedInvoice) {
         return (

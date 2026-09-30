@@ -325,7 +325,8 @@ export default async function handler(req, res) {
                             "inventoryItemId": inventoryItem->_id,
                             "inventoryItemName": inventoryItem->name,
                             "inventoryItemPrice": inventoryItem->sellPrice,
-                            "isEquipment": inventoryItem->isEquipment
+                            "isEquipment": inventoryItem->isEquipment,
+                            "category": inventoryItem->category
                         },
 
                         receipts[]{
@@ -365,7 +366,8 @@ export default async function handler(req, res) {
                     totalAmount,
                     "equipmentItems": lineItems[itemType == "catalog" && inventoryItem->isEquipment == true]{
                         "name": inventoryItem->name,
-                        "inventoryItemId": inventoryItem->_id
+                        "inventoryItemId": inventoryItem->_id,
+                        "category": inventoryItem->category
                     },
                     paymentStatus,
                     jobStatus,

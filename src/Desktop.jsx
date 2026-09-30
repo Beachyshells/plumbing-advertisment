@@ -480,6 +480,7 @@ function withPendingJobEquipment(groups, invoices) {
             group.equipment.push({
                 _id: `pending-${inv._id}-${index}`,
                 pending: true,
+                isFilter: item.category === 'Filters',
                 equipmentType: item.name,
                 invoiceNumber: inv.invoiceNumber,
                 invoice: inv,
@@ -879,6 +880,11 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                                                         .join(' · ')}
                                                 </p>
                                                 {item.warrantyExpires && <p className="text-white/40 text-xs">Warranty until: {item.warrantyExpires}</p>}
+                                                {item.replaceEvery && (
+                                                    <p className="text-teal-300 text-xs">
+                                                        Filter: every {item.replaceEvery}{item.lastChanged ? ` · last changed ${item.lastChanged}` : ''}
+                                                    </p>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -1617,6 +1623,7 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             .catch(() => { })
     }, [])
     const [showEquipmentLog, setShowEquipmentLog] = useState(false)
+    const [unloggedSerials, setUnloggedSerials] = useState(0)
     const [jobStatusUpdating, setJobStatusUpdating] = useState(false)
     const [showCancelForm, setShowCancelForm] = useState(false)
     const [cancelReasonDraft, setCancelReasonDraft] = useState('')
@@ -2099,6 +2106,27 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         }
     }
 
+    // Counts equipment on this job that has no serial number logged yet, so
+    // the Equipment button can remind the crew to log it before install.
+    // Re-checked every time they come back from the Equipment screen.
+    useEffect(() => {
+        if (showEquipmentLog || !invoice.propertyId) return
+        const equipmentNames = (invoice.lineItems || [])
+            .filter((li) => li.itemType === 'catalog' && li.isEquipment && li.inventoryItemName)
+            .map((li) => li.inventoryItemName)
+        const loadEquipment = equipmentNames.length
+            ? fetch(`/api/equipment?propertyId=${encodeURIComponent(invoice.propertyId)}`).then((res) => (res.ok ? res.json() : { equipment: [] }))
+            : Promise.resolve({ equipment: [] })
+        loadEquipment
+            .then(({ equipment = [] }) => {
+                const missing = equipmentNames.filter(
+                    (name) => !equipment.some((e) => e.invoiceId === invoice._id && e.equipmentType === name && e.serialNumber)
+                )
+                setUnloggedSerials(missing.length)
+            })
+            .catch(() => setUnloggedSerials(0))
+    }, [showEquipmentLog, invoice._id, invoice.propertyId, invoice.lineItems])
+
     if (showEquipmentLog) {
         return <EquipmentLogView invoice={invoice} onBack={() => setShowEquipmentLog(false)} />
     }
@@ -2509,9 +2537,16 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
 
                 <button
                     onClick={() => setShowEquipmentLog(true)}
-                    className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 mb-3 flex items-center justify-between transition-colors text-left"
+                    className={`w-full rounded-2xl p-4 mb-3 flex items-center justify-between transition-colors text-left border ${unloggedSerials > 0 ? 'bg-accent/15 hover:bg-accent/25 border-accent/50' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}
                 >
-                    <p className="text-white text-sm font-semibold">Equipment</p>
+                    <div>
+                        <p className="text-white text-sm font-semibold">Equipment</p>
+                        {unloggedSerials > 0 && (
+                            <p className="text-accent text-xs mt-0.5">
+                                {unloggedSerials} unit{unloggedSerials === 1 ? '' : 's'} need a serial number — log before install
+                            </p>
+                        )}
+                    </div>
                     <span className="text-white/40 text-lg">→</span>
                 </button>
 

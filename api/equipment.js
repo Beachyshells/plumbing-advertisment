@@ -102,24 +102,28 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Missing equipmentId' })
         }
         try {
-            await writeClient
-                .patch(equipmentId)
-                .set({
-                    equipmentType: cleanText(body.equipmentType, 200),
-                    make: cleanText(body.make, 200),
-                    model: cleanText(body.model, 200),
-                    serialNumber: cleanText(body.serialNumber, 200),
-                    installDate: body.installDate || undefined,
-                    installedBy: cleanText(body.installedBy, 200),
-                    warrantyExpires: body.warrantyExpires || undefined,
-                    filterPartNumber: cleanText(body.filterPartNumber, 200),
-                    filterSize: cleanText(body.filterSize, 200),
-                    replaceEvery: cleanText(body.replaceEvery, 200),
-                    lastChanged: body.lastChanged || undefined,
-                    notes: cleanText(body.notes, 1000),
-                    ...(body.invoiceId !== undefined ? { invoiceId: cleanText(body.invoiceId, 200) || undefined } : {}),
-                })
-                .commit()
+            // Only change the fields this request actually sent. (The job's
+            // short Log Serial form doesn't send make, model, etc., and those
+            // must not be wiped when a serial is corrected there.)
+            const TEXT_FIELDS = { equipmentType: 200, make: 200, model: 200, serialNumber: 200, installedBy: 200, filterPartNumber: 200, filterSize: 200, replaceEvery: 200, notes: 1000 }
+            const DATE_FIELDS = ['installDate', 'warrantyExpires', 'lastChanged']
+            const update = {}
+            const clear = []
+            for (const [field, max] of Object.entries(TEXT_FIELDS)) {
+                if (body[field] !== undefined) update[field] = cleanText(body[field], max)
+            }
+            for (const field of DATE_FIELDS) {
+                if (body[field] === undefined) continue
+                if (body[field]) update[field] = body[field]
+                else clear.push(field)
+            }
+            if (body.invoiceId !== undefined) {
+                if (body.invoiceId) update.invoiceId = cleanText(body.invoiceId, 200)
+                else clear.push('invoiceId')
+            }
+            let patch = writeClient.patch(equipmentId).set(update)
+            if (clear.length) patch = patch.unset(clear)
+            await patch.commit()
             return res.status(200).json({ success: true })
         } catch (err) {
             console.error('Failed to update equipment:', err)

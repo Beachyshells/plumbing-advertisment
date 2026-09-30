@@ -128,13 +128,14 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     })
 
 
-    const CATEGORY_PILLS = ['All', 'Equipment', 'Plumbing', 'Electrical', 'Heating', 'Other']
+    const CATEGORY_PILLS = ['All', 'Equipment', 'Filters', 'Plumbing', 'Electrical', 'Heating', 'Other']
 
     // One consistent color per category, used for both the filter pills and
     // the item cards in the grouped view — so a category reads the same way
     // everywhere in this screen.
     const CATEGORY_COLORS = {
         Equipment: { active: 'bg-purple-500 text-white', inactive: 'text-purple-300 border-purple-500/40', accent: 'border-l-purple-500' },
+        Filters: { active: 'bg-teal-500 text-white', inactive: 'text-teal-300 border-teal-500/40', accent: 'border-l-teal-500' },
         Plumbing: { active: 'bg-blue-500 text-white', inactive: 'text-blue-300 border-blue-500/40', accent: 'border-l-blue-500' },
         Electrical: { active: 'bg-yellow-500 text-navy', inactive: 'text-yellow-300 border-yellow-500/40', accent: 'border-l-yellow-500' },
         Heating: { active: 'bg-orange-500 text-white', inactive: 'text-orange-300 border-orange-500/40', accent: 'border-l-orange-500' },
@@ -147,13 +148,15 @@ export default function CustomerInvoiceWizard({ onBack, preselectedCustomer }) {
     }
 
     function itemCategory(item) {
+        // Filters get their own group even when they're also tracked equipment.
+        if (item.category === 'Filters') return 'Filters'
         return item.isEquipment ? 'Equipment' : (item.category || 'Other')
     }
 
     const filteredInventory = inventory
         .filter((item) => {
             if (categoryFilter === 'all') return true
-            if (categoryFilter === 'Equipment') return item.isEquipment
+            if (categoryFilter === 'Equipment') return item.isEquipment && item.category !== 'Filters'
             return item.category === categoryFilter
         })
         .filter(matchesSearch)

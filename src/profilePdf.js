@@ -178,16 +178,16 @@ export async function generateProfilePdf({ customer = {}, property = {}, equipme
     const glanceRows = Math.max(4, Math.min(equipment.length, 6))
     table({
         columns: [
-            { label: 'TYPE', x: 36 },
-            { label: 'MAKE / MODEL', x: 156 },
-            { label: 'SERIAL NO.', x: 326 },
-            { label: 'INSTALLED', x: 476 },
+            { label: 'EQUIPMENT', x: 36 },
+            { label: 'SERIAL NO.', x: 256 },
+            { label: 'INSTALLED', x: 396 },
+            { label: 'WARRANTY UNTIL', x: 486 },
         ],
         data: equipment.map((e) => [
             e.equipmentType,
-            [e.make, e.model].filter(Boolean).join(' '),
             e.pending ? 'Not logged yet' : e.serialNumber,
             formatDate(e.installDate),
+            formatDate(e.warrantyExpires),
         ]),
         rows: glanceRows,
     })
@@ -256,6 +256,23 @@ export async function generateProfilePdf({ customer = {}, property = {}, equipme
     }
 
     const UNIT_HEIGHT = 16 + 26 * 3 + 16
+
+    // A unit is on a filter schedule if it has one (or came from the Filters
+    // category on a job).
+    function isFilterUnit(e) {
+        return !!(e.replaceEvery || e.lastChanged || e.isFilter)
+    }
+
+    // "6 months" after the last change. Empty if either is missing.
+    function nextDue(e) {
+        const months = Number((/^(\d+)\s*month/i.exec(e.replaceEvery || '') || [])[1])
+        const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(e.lastChanged || '')
+        if (!months || !match) return ''
+        const y2 = Number(match[1])
+        const m2 = Number(match[2]) - 1 + months
+        const lastDay = new Date(Date.UTC(y2, m2 + 1, 0)).getUTCDate()
+        return new Date(Date.UTC(y2, m2, Math.min(Number(match[3]), lastDay))).toISOString().slice(0, 10)
+    }
     function unitBlock(label, e = {}) {
         ensureSpace(UNIT_HEIGHT)
         doc.setFillColor(...NAVY)
@@ -265,9 +282,12 @@ export async function generateProfilePdf({ customer = {}, property = {}, equipme
         doc.setTextColor(255, 255, 255)
         doc.text(label, LEFT + 5, y + 11)
         y += 27
-        unitRow([['EQUIPMENT TYPE', e.equipmentType, 36], ['MAKE', e.make, 216], ['MODEL', e.model, 396]])
-        unitRow([['SERIAL NUMBER', e.serialNumber, 36], ['INSTALL DATE', formatDate(e.installDate), 216], ['INSTALLED BY', e.installedBy, 351], ['WARRANTY EXPIRES', formatDate(e.warrantyExpires), 486]])
-        unitRow([['FILTER / CARTRIDGE PART NO.', e.filterPartNumber, 36], ['SIZE', e.filterSize, 216], ['REPLACE EVERY', e.replaceEvery, 351], ['LAST CHANGED', formatDate(e.lastChanged), 486]])
+        unitRow([['EQUIPMENT', e.equipmentType, 36], ['SERIAL NUMBER', e.pending ? '' : e.serialNumber, 306]])
+        unitRow([['INSTALL DATE', formatDate(e.installDate), 36], ['INSTALLED BY', e.installedBy, 216], ['WARRANTY EXPIRES', formatDate(e.warrantyExpires), 396]])
+        // Filters only (or a blank write-in unit): the change schedule.
+        if (isFilterUnit(e) || !e.equipmentType) {
+            unitRow([['REPLACE EVERY', e.replaceEvery, 36], ['LAST CHANGED', formatDate(e.lastChanged), 216], ['NEXT CHANGE DUE', formatDate(nextDue(e)), 396]])
+        }
         y += 4
     }
 
@@ -300,26 +320,19 @@ export async function generateProfilePdf({ customer = {}, property = {}, equipme
         rows: 3,
     })
 
-    const consumables = equipment.filter((e) => e.filterPartNumber || e.replaceEvery)
+    const consumables = equipment.filter(isFilterUnit)
     const consumableRows = Math.max(4, consumables.length + 2)
     ensureSpace(40 + consumableRows * 22)
     y += 13
-    sectionBar('CONSUMABLES — CALL-BACK SCHEDULE')
+    sectionBar('FILTER CHANGES — CALL-BACK SCHEDULE')
     table({
         columns: [
-            { label: 'ITEM / PART NO.', x: 36 },
-            { label: 'UNIT IT BELONGS TO', x: 196 },
-            { label: 'INTERVAL', x: 326 },
-            { label: 'LAST DONE', x: 411 },
-            { label: 'NEXT DUE', x: 496 },
+            { label: 'UNIT', x: 36 },
+            { label: 'REPLACE EVERY', x: 256 },
+            { label: 'LAST CHANGED', x: 356 },
+            { label: 'NEXT DUE', x: 466 },
         ],
-        data: consumables.map((e) => [
-            [e.filterPartNumber, e.filterSize].filter(Boolean).join(' — '),
-            [e.equipmentType, e.make].filter(Boolean).join(' — '),
-            e.replaceEvery,
-            formatDate(e.lastChanged),
-            '',
-        ]),
+        data: consumables.map((e) => [e.equipmentType, e.replaceEvery, formatDate(e.lastChanged), formatDate(nextDue(e))]),
         rows: consumableRows,
     })
 

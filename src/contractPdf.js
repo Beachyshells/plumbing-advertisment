@@ -15,29 +15,72 @@ function loadImageAsDataUrl(url) {
     })
 }
 
-// Places a signature image on the PDF. Tries the exact method that has
-// always worked first (the original file, loaded the same way as the logo),
-// and only if that fails, a flattened white-background JPEG from Sanity.
-// Returns true if a signature was placed.
-async function placeSignature(doc, url, x, y, width, height) {
-    if (!url) return false
-    const attempts = [url]
-    if (url.includes('cdn.sanity.io/images/')) attempts.push(`${url}?fm=jpg&bg=ffffff`)
-    for (const attempt of attempts) {
-        const dataUrl = await loadImageAsDataUrl(attempt)
-        if (!dataUrl || !dataUrl.startsWith('data:image/')) {
-            console.error('Signature image did not load:', attempt)
-            continue
+// Turns a signature image URL into a white-background JPEG that jsPDF can
+// always place. Drawn signatures are transparent PNGs, and some browsers'
+// PDF handling chokes on those, so the image is redrawn onto a white canvas
+// first. Tries downloading the file (no cross-site restrictions on the
+// canvas afterward), then loading it directly as a cross-origin image.
+function imageToWhiteJpeg(src, crossOrigin) {
+    return new Promise((resolve) => {
+        const img = new Image()
+        if (crossOrigin) img.crossOrigin = 'anonymous'
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas')
+                canvas.width = img.naturalWidth || 600
+                canvas.height = img.naturalHeight || 200
+                const ctx = canvas.getContext('2d')
+                ctx.fillStyle = '#ffffff'
+                ctx.fillRect(0, 0, canvas.width, canvas.height)
+                ctx.drawImage(img, 0, 0)
+                resolve(canvas.toDataURL('image/jpeg', 0.92))
+            } catch (err) {
+                console.error('Could not redraw signature image:', err)
+                resolve(null)
+            }
         }
-        const format = dataUrl.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG'
-        try {
-            doc.addImage(dataUrl, format, x, y, width, height)
-            return true
-        } catch (err) {
-            console.error('Could not place signature image:', attempt, err)
+        img.onerror = () => {
+            console.error('Signature image failed to load:', src)
+            resolve(null)
         }
+        img.src = src
+    })
+}
+
+async function loadSignatureJpeg(url) {
+    // Already-downloaded image data (sent by the server): just redraw it.
+    if (url.startsWith('data:image/')) return imageToWhiteJpeg(url, false)
+    // 1) Download the file, then redraw it from a local copy.
+    try {
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const blob = await res.blob()
+        const localUrl = URL.createObjectURL(blob)
+        const jpeg = await imageToWhiteJpeg(localUrl, false)
+        URL.revokeObjectURL(localUrl)
+        if (jpeg) return jpeg
+    } catch (err) {
+        console.error('Signature download failed:', url, err)
     }
-    return false
+    // 2) Load it straight from Sanity's image CDN.
+    return imageToWhiteJpeg(url, true)
+}
+
+// Places a signature image on the PDF. Returns true if it was placed.
+async function placeSignature(doc, url, x, y, width, height) {
+    if (!url) {
+        console.error('No signature image URL on this contract')
+        return false
+    }
+    const jpeg = await loadSignatureJpeg(url)
+    if (!jpeg) return false
+    try {
+        doc.addImage(jpeg, 'JPEG', x, y, width, height)
+        return true
+    } catch (err) {
+        console.error('Could not place signature image:', err)
+        return false
+    }
 }
 
 // Picks the right layout: contracts created with the sectioned layout get
@@ -194,8 +237,8 @@ async function generateOriginalContractPdf(contract) {
         }
     }
 
-    await drawSignatureSection('CUSTOMER', contract.signerName, contract.signedAt, contract.signatureImageUrl)
-    await drawSignatureSection('COMPANY REPRESENTATIVE', contract.companySignerName, contract.companySignedAt, contract.companySignatureImageUrl)
+    await drawSignatureSection('CUSTOMER', contract.signerName, contract.signedAt, contract.signatureImageData || contract.signatureImageUrl)
+    await drawSignatureSection('COMPANY REPRESENTATIVE', contract.companySignerName, contract.companySignedAt, contract.companySignatureImageData || contract.companySignatureImageUrl)
 
     // ---- Footer ----
     doc.setDrawColor(...GRAY_LINE)
@@ -444,8 +487,8 @@ async function generateLayout2Pdf(contract) {
     // Keep the heading with the customer's signature block.
     ensureSpace(170)
     sectionTitle('Signatures')
-    await drawSignature('CUSTOMER', contract.signerName, contract.signedAt, contract.signatureImageUrl)
-    await drawSignature(`COMPANY REPRESENTATIVE — ${company.name}`, contract.companySignerName, contract.companySignedAt, contract.companySignatureImageUrl)
+    await drawSignature('CUSTOMER', contract.signerName, contract.signedAt, contract.signatureImageData || contract.signatureImageUrl)
+    await drawSignature(`COMPANY REPRESENTATIVE — ${company.name}`, contract.companySignerName, contract.companySignedAt, contract.companySignatureImageData || contract.companySignatureImageUrl)
 
     // ---- E-Signature Record ----
     if (contract.signedAt || contract.companySignedAt) {

@@ -44,6 +44,25 @@ async function emailSignedCopy(req, contract) {
     }
 }
 
+// Downloads a signature image on the server and returns it as a data URL,
+// so the browser can put it in the PDF without fetching from Sanity's image
+// CDN itself (a cross-site download some browsers block). Only Sanity
+// image URLs are fetched. Returns null on any failure.
+async function signatureAsDataUrl(url) {
+    if (typeof url !== 'string' || !url.startsWith('https://cdn.sanity.io/images/')) return null
+    try {
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const type = res.headers.get('content-type') || 'image/png'
+        if (!type.startsWith('image/')) throw new Error(`Not an image: ${type}`)
+        const buffer = Buffer.from(await res.arrayBuffer())
+        return `data:${type};base64,${buffer.toString('base64')}`
+    } catch (err) {
+        console.error('Could not load signature image for PDF:', url, err)
+        return null
+    }
+}
+
 function cleanText(value, maxLength = 1000) {
     if (typeof value !== 'string') return ''
     return value.slice(0, maxLength)
@@ -262,8 +281,18 @@ export default async function handler(req, res) {
                 if (!contract) return res.status(404).json({ error: 'Contract not found' })
                 // Send back just the yes/no, not the whole template wording.
                 const { templateBodyText, ...rest } = contract
+                // Signature images ride along as data, ready for the PDF.
+                const [signatureImageData, companySignatureImageData] = await Promise.all([
+                    signatureAsDataUrl(rest.signatureImageUrl),
+                    signatureAsDataUrl(rest.companySignatureImageUrl),
+                ])
                 return res.status(200).json({
-                    contract: { ...rest, templateIsAddendum: isAddendumTemplate({ templateType: rest.templateType, bodyText: templateBodyText }) },
+                    contract: {
+                        ...rest,
+                        signatureImageData,
+                        companySignatureImageData,
+                        templateIsAddendum: isAddendumTemplate({ templateType: rest.templateType, bodyText: templateBodyText }),
+                    },
                 })
             }
 

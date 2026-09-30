@@ -105,8 +105,12 @@ export default function EquipmentLogView({ invoice, onBack }) {
             notes: logged.notes || '',
             isFilter: !!item.isFilter,
             intervalMonths: monthsFrom(logged.replaceEvery) || (item.isFilter ? 6 : 0),
-            nextChange: '',
-            // The next change was already scheduled when this was first logged.
+            nextChange: item.isFilter
+                ? addMonths(logged.lastChanged || logged.installDate || todayString(), monthsFrom(logged.replaceEvery) || 6)
+                : '',
+            // Usually already scheduled when first logged, so it starts
+            // unchecked — but it can still be added (e.g. the item wasn't set
+            // up as a filter yet when its serial was logged).
             scheduleNext: false,
             _editingKey: logged._id,
         })
@@ -285,7 +289,7 @@ export default function EquipmentLogView({ invoice, onBack }) {
                                                     ))}
                                                 </div>
                                             </div>
-                                            {!draft._editingKey && (
+                                            {(
                                                 <>
                                                     <label className="flex items-center gap-2 text-white text-sm">
                                                         <input
@@ -295,6 +299,9 @@ export default function EquipmentLogView({ invoice, onBack }) {
                                                         />
                                                         Put the next filter change on the calendar
                                                     </label>
+                                                    {draft._editingKey && !draft.scheduleNext && (
+                                                        <p className="text-white/40 text-xs -mt-1">Only check this if the next change isn't already on the calendar.</p>
+                                                    )}
                                                     {draft.scheduleNext && (
                                                         <div>
                                                             <label className="text-white/40 text-xs uppercase tracking-widest mb-1 block">Next Filter Change</label>

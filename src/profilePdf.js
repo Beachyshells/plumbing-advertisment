@@ -274,7 +274,10 @@ export async function generateProfilePdf({ customer = {}, property = {}, equipme
     equipmentPageHeader()
     // Every unit on file, plus at least one blank block to write a new one in.
     const units = equipment.length ? [...equipment, {}] : [{}, {}, {}]
-    units.forEach((e, i) => unitBlock(`UNIT ${i + 1}${e.notes ? ` — ${text(e.notes).slice(0, 70)}` : ''}`, e))
+    units.forEach((e, i) => {
+        const extra = [e.propertyLabel, text(e.notes)].filter(Boolean).join(' — ')
+        unitBlock(`UNIT ${i + 1}${extra ? ` — ${extra.slice(0, 80)}` : ''}`, e)
+    })
 
     y += 10
     ensureSpace(120)

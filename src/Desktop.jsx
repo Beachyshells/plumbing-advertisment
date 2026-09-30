@@ -477,20 +477,45 @@ function CustomerCard({ customer, onBack, onAddJob }) {
     const [addendumParent, setAddendumParent] = useState(null)
     const [printStatus, setPrintStatus] = useState('idle') // idle | making | error
 
-    // Prints the profile for the customer's service address, with that
-    // property's current equipment and this customer's jobs there.
+    // Prints the profile with every piece of equipment at any property this
+    // customer has (their profile address plus every house they've had a
+    // job at — the same places the Equipment tab looks) and all their jobs.
     async function handlePrintProfile() {
         setPrintStatus('making')
         try {
-            const propertyId = customer.property?._id
-            let equipment = []
-            if (propertyId) {
-                const res = await fetch(`/api/equipment?propertyId=${encodeURIComponent(propertyId)}`)
-                if (!res.ok) throw new Error('Could not load equipment')
-                equipment = (await res.json()).equipment || []
+            const places = []
+            const seen = new Set()
+            const addPlace = (propertyId, address) => {
+                if (propertyId && !seen.has(propertyId)) {
+                    seen.add(propertyId)
+                    places.push({ propertyId, address })
+                }
             }
-            const jobsHere = invoices.filter((inv) => !propertyId || inv.propertyId === propertyId)
-            await generateProfilePdf({ customer, property: customer.property || {}, equipment, invoices: jobsHere })
+            addPlace(customer.property?._id, customer.property?.address)
+            invoices.forEach((inv) => addPlace(inv.propertyId, inv.propertyAddress))
+
+            const groups = await Promise.all(
+                places.map((p) =>
+                    fetch(`/api/equipment?propertyId=${encodeURIComponent(p.propertyId)}`)
+                        .then((res) => {
+                            if (!res.ok) throw new Error('Could not load equipment')
+                            return res.json()
+                        })
+                        .then((data) => ({ ...p, equipment: data.equipment || [] }))
+                )
+            )
+            const withEquipment = groups.filter((g) => g.equipment.length > 0)
+            // Only label units by address when they're spread across houses.
+            const equipment = withEquipment.flatMap((g) =>
+                g.equipment.map((e) => ({ ...e, propertyLabel: withEquipment.length > 1 ? formatAddress(g.address) : '' }))
+            )
+
+            // Use the profile's address; if it has none, the most recent job's.
+            const property = customer.property?.address
+                ? customer.property
+                : { ...(customer.property || {}), address: invoices[0]?.propertyAddress }
+
+            await generateProfilePdf({ customer, property, equipment, invoices })
             setPrintStatus('idle')
         } catch (err) {
             console.error(err)

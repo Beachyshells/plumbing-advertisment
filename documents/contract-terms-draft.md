@@ -1,40 +1,42 @@
-# ADK Contract Terms — v2 (working version)
+# ADK Contract Terms — v4 (matches Studio as of September 30, 2026)
 
-**Status:** Ready to use once the new contract layout is built. **Don't paste into Studio yet** — the app still fills in the old `{{placeholders}}`, so the templates and the code switch over together. Save this file in the repo's `documents/` folder.
+**Status:** In use. This is exactly the Terms and Conditions wording in each Contract Template in Sanity Studio. If a template is changed in Studio, update this file to match.
 
-This version uses sensible defaults in place of a lawyer's review. See "For the lawyer later" at the bottom — bring this whole file to that appointment.
+These defaults were chosen without a lawyer's review — see "For the lawyer later" at the bottom.
 
-## How the new contracts are put together
+## How a contract is put together
 
 The app builds these sections automatically from the job, above the terms:
 
 - **Header:** company name, 18 Nichols Rd, West Chazy, NY 12992, phone, email, contract number, date
 - **Customer & Property**
-- **Scope of Work:** each item listed by name with its quantity, plus labor — **no individual prices**
-- **Equipment:** make and model of any equipment being installed
-- **Price and Payment:** one Total, plus a deposit and balance schedule **only if** a deposit is entered
+- **Scope of Work:** each item by name and quantity, plus labor — **no individual prices**
+- **Equipment:** equipment being installed
+- **Price and Payment:** one Total, plus a deposit and balance only if a deposit is entered
 - **Schedule:** start date and estimated completion
 - **Signatures**
-- **Notice of Cancellation** page — a separate form the customer can fill out and send back to cancel (One-Time Service and Installation only)
-- **E-Signature Record** page — who signed, when, IP address, audit trail
+- **E-Signature Record** page — who signed, when, IP address, history
 
-Each template below is **only the Terms and Conditions**. Copy everything inside a box into that template's Contract Body.
+Each template below holds **only the Terms and Conditions** that follow those sections.
 
-## Defaults chosen
+## Decisions in use
 
-| Decision | Default used | Why |
-|---|---|---|
-| Deposit | None unless entered for a specific job | New York has rules about holding deposits on home improvement jobs; taking none avoids that until it's checked |
-| Late fee | 1% per month on balances 30+ days overdue | Kept low to stay well clear of New York interest limits |
-| Warranty — installations | 12 months | Same as the current template |
-| Warranty — service/repairs | 90 days | Common for repair work |
-| Warranty — maintenance visits | 90 days | Same reasoning |
-| Liability limit | Softer version (responsible for own negligence) | The strict "limited to price paid" version is unlikely to hold up against negligence claims and reads badly to customers |
-| 3-day cancellation | Included, with a separate cancellation form | Giving a cancellation right the law may not require is low-risk; leaving out one it does require is not |
+| Topic | What the contracts say |
+|---|---|
+| Deposit | None unless one is entered for a specific job |
+| Late fee | 1% per month on balances 30+ days overdue |
+| Workmanship warranty — service/repairs | 12 months, labor only |
+| Workmanship warranty — installations | 12 months |
+| Workmanship warranty — maintenance visits | 90 days after each visit |
+| Liability | Company responsible only for damage caused by its own negligence or faulty work |
+| Aging components | Old mains, shutoffs, supply lines, fittings, and fixtures that fail during normal handling are pre-existing conditions and not the Company's cost; repair only with the customer's approval, at the customer's expense |
+| Cancellation (service & installation) | Before work begins, in writing (email is fine); customer pays the service call charge and any parts/equipment already ordered |
+| Cancellation (maintenance) | Either party, anytime, in writing or by email; customer pays for completed visits |
+| 3-day cancellation notice | **Not included** — checking with Michael whether the law requires it |
 
 ---
 
-## 1. One-Time Service Agreement (Type: One-Time Service) — NEW
+## 1. Service Agreement (Type: One-Time Service)
 
 ```
 TERMS AND CONDITIONS
@@ -51,34 +53,37 @@ Any change to the Scope of Work or the Price must be agreed in a written Addendu
 4. PRICE AND PAYMENT
 Customer agrees to pay the Total shown in the Price and Payment section above. If a deposit is shown there, it is due at signing; otherwise no deposit is required. The balance is due upon completion of the work. Payment may be made by cash, check, or card. A balance unpaid 30 days after it is due may be charged a late fee of 1% per month.
 
-5. CUSTOMER RESPONSIBILITIES
+5. SCHEDULE
+Work is scheduled to begin on or around the date shown in the Schedule section above. Dates may change due to weather, parts availability, or other factors outside Company's control; Company will give Customer reasonable notice of any change.
+
+6. CUSTOMER RESPONSIBILITIES
 Customer will provide reasonable access to the Property and to the areas needed for the work, secure pets, and tell Company about any known hazards or problems at the Property before work begins. Customer understands that water service may need to be shut off during the work, and Company will give notice before doing so whenever possible.
 
-6. CLEAN-UP
+7. CLEAN-UP
 Company will remove its debris, packaging, and replaced parts from the work area when the work is complete, unless Customer asks to keep them.
 
-7. WARRANTY
-Company warrants its workmanship for 90 days from the date the work is completed. Parts and equipment are covered by their manufacturers' warranties where applicable. This warranty does not cover damage caused by freezing, misuse, lack of maintenance, water quality, work done by others, or normal wear of consumable items such as filters and cartridges.
+8. WARRANTY
+Company warrants its workmanship for 12 months from the date the work is completed. This warranty covers defects in labor only. Parts and equipment are covered separately by their manufacturers' warranties, if any. This warranty does not cover damage caused by freezing, misuse, lack of maintenance, water quality, work done by others, or normal wear of consumable items such as filters and cartridges.
 
-8. LIMITATION OF LIABILITY
-Company is responsible for damage caused by its own negligence in performing the work. Company is not responsible for pre-existing conditions not caused by its work, or for indirect or consequential damages such as loss of use.
+9. LIMITATION OF LIABILITY AND AGING COMPONENTS
+Company is responsible only for damage to the Property caused by Company's own negligence or faulty work. Older plumbing — including main lines, shutoff valves, supply lines, fittings, and fixtures — can fail during normal handling because of age, corrosion, or wear (for example, a worn main shutoff breaking when turned off). Such failures are pre-existing conditions, not caused by Company, and are not Company's responsibility. If one happens, Company will explain what failed and, with Customer's approval, can repair or replace it at Customer's expense. Company is not responsible for indirect, incidental, or consequential damages such as loss of use.
 
-9. CANCELLATION
-Customer may cancel this Agreement without penalty before midnight of the third business day after signing it, by notifying Company in writing or by sending the attached Notice of Cancellation. Any payment made will be refunded within 10 business days of cancellation. After that period, if Customer cancels before work begins, any deposit will be refunded less costs Company has already incurred, such as parts special-ordered for this job. If work has already begun, Customer agrees to pay for work completed and materials purchased or installed.
+10. CANCELLATION
+Customer may cancel this Agreement before work begins by notifying Company in writing (email is fine). If Customer cancels, Customer agrees to pay the service call charge and for any parts Company has already purchased or special-ordered for this job; any deposit paid will be refunded less those amounts. If work has already begun, Customer agrees to pay for the work completed and the materials purchased or installed.
 
-10. DEPOSITS AND PAYMENTS BEFORE COMPLETION
+11. DEPOSITS AND PAYMENTS BEFORE COMPLETION
 Any payment received before the work is complete will be handled as required by New York law.
 
-11. LIEN NOTICE
+12. LIEN NOTICE
 Under New York law, contractors, subcontractors, and material suppliers who are not paid for work or materials may have the right to file a lien against the Property.
 
-12. DISPUTES
+13. DISPUTES
 If a problem comes up, both parties agree to first try to resolve it directly and in good faith before taking any other action.
 
-13. ELECTRONIC SIGNATURES AND COPIES
+14. ELECTRONIC SIGNATURES AND COPIES
 By signing electronically, Customer agrees to conduct this transaction electronically and consents to an electronic signature in place of a handwritten one. Customer may request a paper copy at any time and may withdraw consent to sign electronically before signing by contacting Company. A copy of the fully signed Agreement will be emailed to Customer.
 
-14. ENTIRE AGREEMENT; GOVERNING LAW
+15. ENTIRE AGREEMENT; GOVERNING LAW
 This Agreement, including the sections above these terms and any signed Addenda, is the entire agreement between the parties. It is governed by the laws of the State of New York.
 
 By signing below, Customer acknowledges they have read, understood, and agree to this Agreement.
@@ -118,11 +123,11 @@ Company will remove its debris and packaging when the installation is complete. 
 9. WARRANTY
 Company warrants its installation workmanship for 12 months from the date of completion. Installed equipment is covered by its manufacturer's warranty; Company will give Customer the manufacturer warranty information and record the equipment serial numbers at installation. This warranty does not cover damage caused by freezing, misuse, lack of maintenance, water quality, work done by others, or normal wear of consumable items such as filters, cartridges, and media.
 
-10. LIMITATION OF LIABILITY
-Company is responsible for damage caused by its own negligence in performing the work. Company is not responsible for pre-existing conditions not caused by its work, or for indirect or consequential damages such as loss of use.
+10. LIMITATION OF LIABILITY AND AGING COMPONENTS
+Company is responsible only for damage to the Property caused by Company's own negligence or faulty work. Older plumbing — including main lines, shutoff valves, supply lines, fittings, and fixtures — can fail during normal handling because of age, corrosion, or wear (for example, a worn main shutoff breaking when turned off). Such failures are pre-existing conditions, not caused by Company, and are not Company's responsibility. If one happens, Company will explain what failed and, with Customer's approval, can repair or replace it at Customer's expense. Company is not responsible for indirect, incidental, or consequential damages such as loss of use.
 
 11. CANCELLATION
-Customer may cancel this Contract without penalty before midnight of the third business day after signing it, by notifying Company in writing or by sending the attached Notice of Cancellation. Any payment made will be refunded within 10 business days of cancellation. After that period, if Customer cancels before work begins, any deposit will be refunded less costs Company has already incurred, such as equipment ordered for this job. If work has already begun, Customer agrees to pay for work completed and materials and equipment purchased or installed.
+Customer may cancel this Contract before work begins by notifying Company in writing (email is fine). If Customer cancels, Customer agrees to pay the service call charge and for any equipment or parts Company has already purchased or ordered for this job; any deposit paid will be refunded less those amounts. If work has already begun, Customer agrees to pay for the work completed and the materials and equipment purchased or installed.
 
 12. DEPOSITS AND PAYMENTS BEFORE COMPLETION
 Any payment received before the work is complete will be handled as required by New York law.
@@ -146,8 +151,6 @@ By signing below, Customer acknowledges they have read, understood, and agree to
 
 ## 3. Maintenance Agreement (Type: Recurring Maintenance)
 
-The app adds a **Visit Frequency** line (e.g. "Every 6 months") and shows the price as per-visit or per-year for this type.
-
 ```
 TERMS AND CONDITIONS
 
@@ -161,7 +164,7 @@ Customer agrees to pay the price shown in the Price and Payment section above. U
 If Company finds a problem that needs repair beyond routine maintenance, Company will explain it and provide a price. No additional work will be done without Customer's approval.
 
 4. TERM AND CANCELLATION
-This Agreement begins on the start date shown above and continues until canceled. Either party may cancel at any time with written notice (email is fine). Customer pays only for visits already completed.
+This Agreement begins on the start date shown above and continues until canceled. Either party may cancel at any time with written notice, including by email or other electronic message. Customer pays only for visits already completed.
 
 5. CUSTOMER RESPONSIBILITIES
 Customer will provide reasonable access to the equipment for each scheduled visit, secure pets, and tell Company about any changes in water quality, leaks, or equipment problems between visits.
@@ -169,8 +172,8 @@ Customer will provide reasonable access to the equipment for each scheduled visi
 6. WARRANTY
 Company warrants its maintenance workmanship for 90 days after each visit. Replacement parts and filters are covered by their manufacturers' warranties where applicable.
 
-7. LIMITATION OF LIABILITY
-Company is responsible for damage caused by its own negligence in performing the work. Company is not responsible for pre-existing conditions not caused by its work, or for indirect or consequential damages such as loss of use.
+7. LIMITATION OF LIABILITY AND AGING COMPONENTS
+Company is responsible only for damage to the Property caused by Company's own negligence or faulty work. Older plumbing — including main lines, shutoff valves, supply lines, fittings, and fixtures — can fail during normal handling because of age, corrosion, or wear (for example, a worn main shutoff breaking when turned off). Such failures are pre-existing conditions, not caused by Company, and are not Company's responsibility. If one happens, Company will explain what failed and, with Customer's approval, can repair or replace it at Customer's expense. Company is not responsible for indirect, incidental, or consequential damages such as loss of use.
 
 8. ELECTRONIC SIGNATURES AND COPIES
 By signing electronically, Customer agrees to conduct this transaction electronically and consents to an electronic signature in place of a handwritten one. Customer may request a paper copy at any time and may withdraw consent to sign electronically before signing by contacting Company. A copy of the fully signed Agreement will be emailed to Customer.
@@ -197,10 +200,10 @@ This Agreement covers the work or visit described in the Purpose section above, 
 Customer authorizes Company and its employees to access the Property as reasonably necessary for this work, including basements, crawl spaces, mechanical rooms, wells, and outdoor areas.
 
 3. ASSUMPTION OF RISK
-Customer understands that work on plumbing, wells, and water systems — especially older or already-damaged systems — carries risks, including that aging pipes, fittings, or equipment may fail when handled, and Customer voluntarily accepts these risks.
+Customer understands that work on plumbing, wells, and water systems — especially older or already-damaged systems — carries risks. Aging main lines, shutoff valves, supply lines, fittings, and equipment may fail when handled normally (for example, a worn main shutoff breaking when turned off). Customer voluntarily accepts these risks.
 
 4. RELEASE FOR PRE-EXISTING CONDITIONS
-To the fullest extent permitted by law, Customer releases Company from liability for damage arising from conditions that existed before Company's work and were not caused by it, and from conditions Customer knew about but did not disclose. This release does not cover damage caused by Company's own negligence.
+To the fullest extent permitted by law, Customer releases Company from liability for damage arising from conditions that existed before Company's work and were not caused by it — including the failure of aging components described above — and from conditions Customer knew about but did not disclose. If such a failure happens, Company will explain what failed and, with Customer's approval, can repair or replace it at Customer's expense. This release does not cover damage caused by Company's own negligence.
 
 5. ELECTRONIC SIGNATURES AND COPIES
 By signing electronically, Customer agrees to conduct this transaction electronically and consents to an electronic signature in place of a handwritten one. Customer may request a paper copy at any time and may withdraw consent to sign electronically before signing by contacting Company. A copy of the fully signed Agreement will be emailed to Customer.
@@ -215,7 +218,7 @@ By signing below, Customer acknowledges they have read, understood, and agree to
 
 ## 5. Addendum (Type: Addendum)
 
-The app builds an **Original Contract** section (its number and the date it was signed), a **Changes** table listing items by name and quantity, and a **Price Change** section showing the amount added or removed plus the **New Contract Total**.
+The app builds an **Original Contract** section, a **Changes** table (items added or removed), and a **Price Change** section showing the amount and the **New Contract Total**. The template's **Type must be set to Addendum** — that is how the app recognizes it.
 
 ```
 TERMS AND CONDITIONS
@@ -233,7 +236,7 @@ The Original Contract's price is changed by the amount shown in the Price Change
 If the changes affect the schedule, the updated dates are shown above; otherwise the Original Contract's schedule still applies.
 
 5. ALL OTHER TERMS UNCHANGED
-Except as expressly changed by this Addendum, every term of the Original Contract — including its warranty, cancellation, and payment terms — remains in full force and effect.
+Except as expressly changed by this Addendum, every term of the Original Contract — including its warranty, liability, cancellation, and payment terms — remains in full force and effect.
 
 6. ELECTRONIC SIGNATURES AND COPIES
 By signing electronically, Customer agrees to conduct this transaction electronically and consents to an electronic signature in place of a handwritten one. Customer may request a paper copy at any time and may withdraw consent to sign electronically before signing by contacting Company. A copy of the fully signed Addendum will be emailed to Customer.
@@ -248,12 +251,13 @@ By signing below, Customer acknowledges they have read, understood, and agree to
 
 ## For the lawyer later
 
-These defaults are a reasonable starting point, but they were written without legal review. Ask a New York attorney to check:
+These terms were written without legal review. Ask a New York attorney to check:
 
-1. **Cancellation notice.** Whether the 3-business-day notice and the separate Notice of Cancellation form match what New York requires for home improvement and at-home sales, including the exact wording and whether it must appear in a specific size or place. If this notice isn't done right, a customer's right to cancel may stay open longer than three days.
-2. **Deposits.** Whether taking a deposit on a home improvement job requires holding it in an escrow account, posting a bond, or telling the customer where it's held. **Until this is checked, avoid taking deposits** (the default).
-3. **Lien notice.** Whether the wording in the Lien Notice section is what's required.
-4. **Everything else New York requires in a home improvement contract**, and whether any job size or type is exempt.
-5. **Late fee** of 1% per month.
-6. **Liability wording** (the softer version) and the Waiver's release for pre-existing conditions.
-7. **Warranty lengths** and exclusions.
+1. **Cancellation right (highest priority).** The 3-business-day cancellation right and Notice of Cancellation form are not included. Confirm whether New York's home improvement rules or the federal "Cooling-Off Rule" require them for these jobs (for example, sales agreed at the customer's home). If a required notice is missing, a customer's right to cancel may not expire at all until it's given.
+2. **Deposits.** Whether taking a deposit on a home improvement job requires holding it in an escrow account, posting a bond, or telling the customer where it's held. Until this is checked, avoid taking deposits.
+3. **Aging-components clause.** Whether the wording that makes failures of old mains, shutoffs, and fittings the customer's responsibility will hold up, and whether it should be signed as a separate acknowledgment.
+4. **Service call charge on cancellation.** Whether it's enforceable as written, and whether the amount should be stated.
+5. **Lien notice.** Whether the wording in the Lien Notice section is what's required.
+6. **Everything else New York requires in a home improvement contract**, and whether any job size or type is exempt.
+7. **Late fee** of 1% per month.
+8. **Warranty lengths** and exclusions.

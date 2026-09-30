@@ -360,6 +360,7 @@ export default async function handler(req, res) {
                     invoiceNumber,
                     serviceDate,
                     workPerformed,
+                    technician,
                     notes,
                     totalAmount,
                     paymentStatus,

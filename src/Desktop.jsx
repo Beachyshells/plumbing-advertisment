@@ -6,6 +6,7 @@ import { queuePendingEmail, syncPendingEmails } from './offlineQueue.js'
 import EmployeesAdmin from './EmployeesAdmin.jsx'
 import CalendarView from './CalendarView.jsx'
 import EquipmentLogView from './EquipmentLogView.jsx'
+import { generateProfilePdf } from './profilePdf.js'
 import MoneyInput from './MoneyInput.jsx'
 import ContractWizard from './ContractWizard.jsx'
 import ContractDetailView from './ContractDetailView.jsx'
@@ -474,6 +475,28 @@ function CustomerCard({ customer, onBack, onAddJob }) {
     // Set when "+ Add Addendum" is pressed on an original contract —
     // holds { _id, contractId, propertyId, invoiceId } of that original.
     const [addendumParent, setAddendumParent] = useState(null)
+    const [printStatus, setPrintStatus] = useState('idle') // idle | making | error
+
+    // Prints the profile for the customer's service address, with that
+    // property's current equipment and this customer's jobs there.
+    async function handlePrintProfile() {
+        setPrintStatus('making')
+        try {
+            const propertyId = customer.property?._id
+            let equipment = []
+            if (propertyId) {
+                const res = await fetch(`/api/equipment?propertyId=${encodeURIComponent(propertyId)}`)
+                if (!res.ok) throw new Error('Could not load equipment')
+                equipment = (await res.json()).equipment || []
+            }
+            const jobsHere = invoices.filter((inv) => !propertyId || inv.propertyId === propertyId)
+            await generateProfilePdf({ customer, property: customer.property || {}, equipment, invoices: jobsHere })
+            setPrintStatus('idle')
+        } catch (err) {
+            console.error(err)
+            setPrintStatus('error')
+        }
+    }
 
     function fetchContracts() {
         setContractsStatus('loading')
@@ -633,6 +656,14 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
 
+                        <button
+                            onClick={handlePrintProfile}
+                            disabled={printStatus === 'making'}
+                            title="Print profile (PDF)"
+                            className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 border border-white/20 rounded-xl transition-colors text-lg"
+                        >
+                            {printStatus === 'making' ? '…' : '🖨'}
+                        </button>
                         <a
                             href={`/invoice?edit=${customer._id}`}
                             title="Edit profile"
@@ -648,6 +679,10 @@ function CustomerCard({ customer, onBack, onAddJob }) {
                         </button>
                     </div>
                 </div>
+
+                {printStatus === 'error' && (
+                    <p className="text-red-400 text-xs mb-4">Couldn't make the profile PDF — try again.</p>
+                )}
 
                 {activeJob && (
                     <button

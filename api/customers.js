@@ -105,6 +105,7 @@ export default async function handler(req, res) {
                         notes,
                         status,
                         creditBalance,
+                        "createdAt": coalesce(createdAt, _createdAt),
                         "property": property->{
                             _id,
                             address,

@@ -187,7 +187,5 @@ export function buildContractSections(contract) {
         customerName,
         company: contract.companyInfo || null,
         sections,
-        // The 3-day cancellation form goes with job contracts (per the terms).
-        includeCancellationNotice: usesDepositSchedule,
     }
 }

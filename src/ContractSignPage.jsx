@@ -173,6 +173,23 @@ export default function ContractSignPage() {
                     <p className="text-white/40 text-xs mt-1">Contract {contract.contractId}</p>
                 </div>
 
+                {bothSigned && signStatus !== 'done' && (
+                    // Opened from the "your signed copy" email — put the
+                    // download right at the top so it can't be missed.
+                    <div className="bg-brand-green/15 border border-brand-green/40 rounded-2xl p-5 mb-6 text-center">
+                        <p className="text-brand-green text-lg font-semibold mb-1">✓ Your Contract Is Fully Signed</p>
+                        <p className="text-white/60 text-sm mb-4">Download your signed copy and keep it for your records.</p>
+                        <button
+                            onClick={handleDownload}
+                            disabled={pdfStatus === 'making'}
+                            className="w-full bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-base font-semibold py-3.5 rounded-xl transition-colors"
+                        >
+                            {pdfStatus === 'making' ? 'Preparing...' : 'Download Your Signed Copy (PDF)'}
+                        </button>
+                        {pdfStatus === 'error' && <p className="text-red-400 text-xs mt-2">Couldn't make the PDF — please try again.</p>}
+                    </div>
+                )}
+
                 {isLayout2 ? (
                     <div className="mb-6">
                         <ContractSections contract={contract} />

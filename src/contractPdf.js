@@ -447,37 +447,6 @@ async function generateLayout2Pdf(contract) {
     await drawSignature('CUSTOMER', contract.signerName, contract.signedAt, contract.signatureImageUrl)
     await drawSignature(`COMPANY REPRESENTATIVE — ${company.name}`, contract.companySignerName, contract.companySignedAt, contract.companySignatureImageUrl)
 
-    // ---- Notice of Cancellation (job contracts) ----
-    if (built.includeCancellationNotice) {
-        newPage()
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(14)
-        doc.setTextColor(...NAVY)
-        doc.text('NOTICE OF CANCELLATION', 306, y, { align: 'center' })
-        y += 26
-        paragraph(`${built.title} No. ${contract.contractId || ''}`, { size: 10, color: GRAY_LABEL })
-        paragraph(`Date of transaction: ${contract.signedAt ? formatDate(contract.signedAt.slice(0, 10)) : '____________________'}`, { size: 10 })
-        y += 10
-        const noticeParagraphs = [
-            'You may CANCEL this transaction, without any penalty or obligation, within THREE BUSINESS DAYS from the above date.',
-            'If you cancel, any payments made by you under this contract will be returned within TEN BUSINESS DAYS following receipt by the Company of your cancellation notice.',
-            'If you cancel, you must make available to the Company at your residence, in substantially as good condition as when received, any goods delivered to you under this contract; or you may, if you wish, comply with the Company\'s instructions regarding the return of the goods at the Company\'s expense and risk.',
-            `To cancel this transaction, mail or deliver a signed and dated copy of this cancellation notice, or any other written notice, to ${company.name}, ${[company.street, company.cityStateZip].filter(Boolean).join(', ')}, or email it to ${company.email}, NOT LATER THAN MIDNIGHT of the third business day after the date of transaction above.`,
-        ]
-        for (const p of noticeParagraphs) {
-            paragraph(p, { size: 10.5, lineHeight: 14 })
-            y += 10
-        }
-        y += 16
-        paragraph('I HEREBY CANCEL THIS TRANSACTION.', { size: 11, style: 'bold' })
-        y += 30
-        doc.setFont('helvetica', 'normal')
-        doc.setFontSize(10)
-        doc.setTextColor(...BLACK)
-        doc.text('Date: _______________________', LEFT, y)
-        doc.text('Customer\'s Signature: ______________________________', 250, y)
-    }
-
     // ---- E-Signature Record ----
     if (contract.signedAt || contract.companySignedAt) {
         newPage()

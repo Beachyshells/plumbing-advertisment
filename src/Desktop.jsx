@@ -7,6 +7,7 @@ import EmployeesAdmin from './EmployeesAdmin.jsx'
 import CalendarView from './CalendarView.jsx'
 import EquipmentLogView from './EquipmentLogView.jsx'
 import { generateProfilePdf } from './profilePdf.js'
+import CatalogPicker from './CatalogPicker.jsx'
 import MoneyInput from './MoneyInput.jsx'
 import ContractWizard from './ContractWizard.jsx'
 import ContractDetailView from './ContractDetailView.jsx'
@@ -1648,7 +1649,6 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
     const [invoiceDiscount, setInvoiceDiscount] = useState(EMPTY_DISCOUNT)
     const [invoiceDiscountAppliedBy, setInvoiceDiscountAppliedBy] = useState('')
     const [inventory, setInventory] = useState([])
-    const [catalogSearchTerm, setCatalogSearchTerm] = useState('')
     const [miscDraft, setMiscDraft] = useState({ miscName: '', miscSellPrice: '', miscNote: '' })
     const [editStatus, setEditStatus] = useState('idle') // idle | loading | saving | error
 
@@ -1745,7 +1745,6 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                 { key: `${item._id}-${Date.now()}`, _key: null, itemType: 'catalog', inventoryItemId: item._id, name: item.name, unitPrice: item.sellPrice, quantity: 1, ...EMPTY_DISCOUNT, discountAppliedBy: '' },
             ],
         }))
-        setCatalogSearchTerm('')
     }
 
     function addEditMiscItem() {
@@ -1793,12 +1792,6 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
         : 0
     const editSubtotal = editLineItemsTotal + (Number(editData?.laborCost) || 0)
     const editTotalAmount = applyDiscountClient(editSubtotal, invoiceDiscount.discountType, invoiceDiscount.discountValue)
-
-    const filteredEditInventory = inventory.filter((item) => {
-        const term = catalogSearchTerm.trim().toLowerCase()
-        if (!term) return false
-        return item.name?.toLowerCase().includes(term)
-    })
 
     async function handleSaveEdit() {
         setEditStatus('saving')
@@ -2319,24 +2312,13 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                             </div>
                         )}
 
-                        <input
-                            type="text"
-                            value={catalogSearchTerm}
-                            onChange={(e) => setCatalogSearchTerm(e.target.value)}
-                            placeholder="Search parts to add..."
-                            className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-lg py-3 px-4 outline-none focus:border-blue mb-2"
-                        />
-                        <div className="flex flex-col gap-2 mb-4">
-                            {filteredEditInventory.map((item) => (
-                                <button
-                                    key={item._id}
-                                    onClick={() => addEditCatalogItem(item)}
-                                    className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors"
-                                >
-                                    <p className="text-white text-sm">{item.name}</p>
-                                    <p className="text-white/40 text-xs">{formatMoney(item.sellPrice)}</p>
-                                </button>
-                            ))}
+                        <div className="mb-4">
+                            <CatalogPicker
+                                inventory={inventory}
+                                onPick={addEditCatalogItem}
+                                formatPrice={formatMoney}
+                                placeholder="Search parts to add..."
+                            />
                         </div>
 
                         <div className="flex flex-col gap-2 mb-5">

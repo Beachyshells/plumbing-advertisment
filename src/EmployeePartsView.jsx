@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import MoneyInput from './MoneyInput.jsx'
+import CatalogPicker from './CatalogPicker.jsx'
 
 const DISCOUNT_REASONS = [
     { value: 'veteran', label: 'Veteran' },
@@ -94,7 +95,6 @@ export default function EmployeePartsView({ propertyId, employeeId, pin, onBack 
     const [invoiceDiscount, setInvoiceDiscount] = useState(EMPTY_DISCOUNT)
     const [invoiceDiscountAppliedBy, setInvoiceDiscountAppliedBy] = useState('')
     const [inventory, setInventory] = useState([])
-    const [catalogSearchTerm, setCatalogSearchTerm] = useState('')
     const [miscDraft, setMiscDraft] = useState({ miscName: '', miscSellPrice: '', miscNote: '' })
     const [saveStatus, setSaveStatus] = useState('idle') // idle | saving | saved | error
 
@@ -152,7 +152,6 @@ export default function EmployeePartsView({ propertyId, employeeId, pin, onBack 
             ...prev,
             { key: `${item._id}-${Date.now()}`, _key: null, itemType: 'catalog', inventoryItemId: item._id, name: item.name, unitPrice: item.sellPrice, quantity: 1, ...EMPTY_DISCOUNT, discountAppliedBy: '' },
         ])
-        setCatalogSearchTerm('')
         setSaveStatus('idle')
     }
 
@@ -232,12 +231,6 @@ export default function EmployeePartsView({ propertyId, employeeId, pin, onBack 
         return sum + applyDiscountClient(base, li.discountType, li.discountValue)
     }, 0)
     const total = applyDiscountClient(subtotal, invoiceDiscount.discountType, invoiceDiscount.discountValue)
-
-    const filteredInventory = inventory.filter((item) => {
-        const term = catalogSearchTerm.trim().toLowerCase()
-        if (!term) return false
-        return item.name?.toLowerCase().includes(term)
-    })
 
     return (
         <div className="min-h-screen bg-navy px-4 py-10">
@@ -328,27 +321,7 @@ export default function EmployeePartsView({ propertyId, employeeId, pin, onBack 
 
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4">
                             <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Add From Catalog</p>
-                            <input
-                                type="text"
-                                value={catalogSearchTerm}
-                                onChange={(e) => setCatalogSearchTerm(e.target.value)}
-                                placeholder="Search parts..."
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white text-base py-3 px-4 outline-none focus:border-blue mb-2"
-                            />
-                            {filteredInventory.length > 0 && (
-                                <div className="flex flex-col gap-2">
-                                    {filteredInventory.map((item) => (
-                                        <button
-                                            key={item._id}
-                                            onClick={() => addCatalogItem(item)}
-                                            className="text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-colors flex items-center justify-between"
-                                        >
-                                            <p className="text-white text-sm">{item.name}</p>
-                                            <p className="text-white/40 text-xs">{formatMoney(item.sellPrice)}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                            <CatalogPicker inventory={inventory} onPick={addCatalogItem} formatPrice={formatMoney} />
                         </div>
 
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-6">

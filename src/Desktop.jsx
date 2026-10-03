@@ -1427,6 +1427,162 @@ function Field({ label, value }) {
     )
 }
 
+// "2026-10-06" → "Tue, Oct 6, 2026" (read as a local date, never shifted by time zone)
+function formatDayLong(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value || '')
+    if (!match) return value || '—'
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+const RESCHEDULE_REASONS = ['Customer asked', 'Weather', 'Waiting on parts', 'We ran behind']
+
+// Moves a job to a new day on the same invoice. Everything else on the job
+// stays exactly as it was; each move is listed underneath so the original
+// date is never lost.
+function RescheduleCard({ invoice, onRescheduled, onEmailNewDate, emailStatus }) {
+    const [open, setOpen] = useState(false)
+    const [newDate, setNewDate] = useState('')
+    const [reason, setReason] = useState('')
+    const [status, setStatus] = useState('idle') // idle | saving | error
+    const [error, setError] = useState('')
+    const [justMoved, setJustMoved] = useState(false)
+
+    const history = invoice.rescheduleHistory || []
+    const canReschedule = invoice.status !== 'canceled' && invoice.jobStatus !== 'complete'
+
+    function close() {
+        setOpen(false)
+        setNewDate('')
+        setReason('')
+        setStatus('idle')
+        setError('')
+    }
+
+    async function save() {
+        setStatus('saving')
+        setError('')
+        try {
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reschedule', invoiceId: invoice._id, newDate, reason }),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) throw new Error(data.error || 'Failed')
+            onRescheduled(data.serviceDate, data.entry)
+            close()
+            setJustMoved(true)
+        } catch (err) {
+            setError(err.message && err.message !== 'Failed' ? err.message : 'Something went wrong — try again.')
+            setStatus('error')
+        }
+    }
+
+    return (
+        <div className="bg-white/10 border border-white/20 rounded-2xl p-4 mb-3">
+            <div className="flex items-center justify-between gap-3">
+                <div>
+                    <p className="text-white/70 text-xs uppercase tracking-widest font-semibold">Scheduled For</p>
+                    <p className="text-white text-lg font-semibold">{formatDayLong(invoice.serviceDate)}</p>
+                </div>
+                {canReschedule && !open && (
+                    <button
+                        onClick={() => { setOpen(true); setJustMoved(false) }}
+                        className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue hover:bg-blue-light text-white transition-colors"
+                    >
+                        Reschedule
+                    </button>
+                )}
+            </div>
+
+            {open && (
+                <div className="mt-4 flex flex-col gap-3">
+                    <div>
+                        <label className="text-white/80 text-xs uppercase tracking-widest font-semibold mb-1 block">New Date</label>
+                        <input
+                            type="date"
+                            value={newDate}
+                            onChange={(e) => setNewDate(e.target.value)}
+                            className="w-full bg-white text-gray-900 border border-white/20 rounded-xl text-base py-3 px-4 outline-none focus:border-blue"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-white/80 text-xs uppercase tracking-widest font-semibold mb-1 block">Why? (optional)</label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {RESCHEDULE_REASONS.map((r) => (
+                                <button
+                                    key={r}
+                                    onClick={() => setReason(r)}
+                                    className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-colors ${reason === r ? 'bg-white text-gray-900 border-white' : 'bg-transparent text-white border-white/40'}`}
+                                >
+                                    {r}
+                                </button>
+                            ))}
+                        </div>
+                        <input
+                            type="text"
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            placeholder="Or type a reason"
+                            className="w-full bg-white text-gray-900 border border-white/20 rounded-xl text-base py-3 px-4 outline-none focus:border-blue placeholder:text-gray-500"
+                        />
+                    </div>
+                    <p className="text-white/80 text-sm">Only the date changes. Parts, payments, notes and status all stay on this job.</p>
+                    {status === 'error' && <p className="text-red-300 text-sm font-semibold">{error}</p>}
+                    <div className="flex gap-2">
+                        <button
+                            onClick={save}
+                            disabled={!newDate || status === 'saving'}
+                            className="flex-1 bg-blue hover:bg-blue-light disabled:opacity-40 text-white text-base font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]"
+                        >
+                            {status === 'saving' ? 'Saving...' : 'Move Job'}
+                        </button>
+                        <button
+                            onClick={close}
+                            className="flex-1 bg-white/10 hover:bg-white/20 border border-white/30 text-white text-base font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]"
+                        >
+                            Back
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {justMoved && (
+                <div className="mt-4">
+                    <button
+                        onClick={onEmailNewDate}
+                        disabled={emailStatus === 'sending' || emailStatus === 'sent'}
+                        className="w-full bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-60 text-base font-semibold py-3 rounded-xl transition-colors"
+                    >
+                        {emailStatus === 'sending' ? 'Sending...' : emailStatus === 'sent' ? '✓ New date emailed' : 'Email customer the new date'}
+                    </button>
+                </div>
+            )}
+
+            {history.length > 0 && (
+                <div className="mt-4 border-t border-white/20 pt-3">
+                    <p className="text-white/70 text-xs uppercase tracking-widest font-semibold mb-2">Date Changes</p>
+                    <ul className="flex flex-col gap-2">
+                        {history.map((h) => (
+                            <li key={h._key} className="text-white text-sm">
+                                <span className="line-through text-white/60">{formatDayLong(h.fromDate)}</span>
+                                {' → '}
+                                <span className="font-semibold">{formatDayLong(h.toDate)}</span>
+                                {(h.reason || h.changedAt) && (
+                                    <span className="block text-white/70 text-xs">
+                                        {[h.reason, h.changedAt ? `changed ${new Date(h.changedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''].filter(Boolean).join(' · ')}
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    )
+}
+
 
 // ---- Invoices: browsable list + unpaid/partial summary + detail view ----
 function InvoicesView({ onBack }) {
@@ -1838,6 +1994,10 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
             setInvoice((prev) => ({
                 ...prev,
                 serviceDate: editData.serviceDate,
+                // The server keeps a record when the date changes here; show it now too.
+                rescheduleHistory: prev.serviceDate && editData.serviceDate && prev.serviceDate !== editData.serviceDate
+                    ? [...(prev.rescheduleHistory || []), { _key: `local-${Date.now()}`, fromDate: prev.serviceDate, toDate: editData.serviceDate, reason: 'Date changed in Edit', changedAt: new Date().toISOString() }]
+                    : prev.rescheduleHistory,
                 workPerformed: editData.workPerformed,
                 totalAmount: data.totalAmount,
                 paymentStatus: data.paymentStatus,
@@ -2385,6 +2545,21 @@ function InvoiceDetail({ invoice: initialInvoice, onBack }) {
                         </div>
                     </div>
                 )}
+
+                <RescheduleCard
+                    invoice={invoice}
+                    onRescheduled={(serviceDate, entry) => {
+                        setInvoice((prev) => ({
+                            ...prev,
+                            serviceDate,
+                            rescheduleHistory: [...(prev.rescheduleHistory || []), entry],
+                        }))
+                        setConfirmationStatus('idle')
+                        setToast(`Job moved to ${formatDayLong(serviceDate)}`)
+                    }}
+                    onEmailNewDate={handleSendConfirmation}
+                    emailStatus={confirmationStatus}
+                />
 
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-3 flex items-center justify-between gap-3">
                     <div>

@@ -329,6 +329,7 @@ export default async function handler(req, res) {
                         discountAppliedBy,
                         confirmationEmailSent,
                         confirmationEmailSentAt,
+                        rescheduleHistory[]{ _key, fromDate, toDate, reason, changedAt, changedBy },
 "customerId": customer->_id,
                         "propertyId": property->_id,
                         "propertyAddress": property->address,
@@ -688,6 +689,44 @@ export default async function handler(req, res) {
                 return res.status(200).json({ success: true, confirmationEmailSentAt: sentAt })
             }
 
+            // Moves a job to a new day on the SAME invoice. Nothing else on
+            // the job changes — parts, payments, status, notes all stay. The
+            // old date is kept in rescheduleHistory so there's a record of
+            // every move (and the original date is the first entry's fromDate).
+            if (action === 'reschedule') {
+                const newDate = String(body.newDate || '').slice(0, 10)
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
+                    return res.status(400).json({ error: 'Pick the new date' })
+                }
+
+                const existing = await readClient.fetch(
+                    `*[_type == "customerInvoice" && _id == $id][0]{ serviceDate, status }`,
+                    { id: invoiceId }
+                )
+                if (!existing) return res.status(404).json({ error: 'Invoice not found' })
+                if (existing.status === 'canceled') return res.status(400).json({ error: 'That job was canceled — reactivate it first' })
+                if (existing.serviceDate === newDate) return res.status(400).json({ error: 'The job is already scheduled for that day' })
+
+                const entry = {
+                    _type: 'reschedule',
+                    _key: randomKey(),
+                    fromDate: existing.serviceDate || undefined,
+                    toDate: newDate,
+                    reason: cleanText(body.reason, 300) || undefined,
+                    changedAt: new Date().toISOString(),
+                    changedBy: 'Michael',
+                }
+
+                await writeClient
+                    .patch(invoiceId)
+                    .setIfMissing({ rescheduleHistory: [] })
+                    .append('rescheduleHistory', [entry])
+                    .set({ serviceDate: newDate })
+                    .commit()
+
+                return res.status(200).json({ success: true, serviceDate: newDate, entry })
+            }
+
             // Employee-facing, from the field — adding/removing parts & equipment,
             // and/or adjusting discounts (including giving something away free).
             // PIN-gated since this is reachable from the employee portal, not
@@ -785,7 +824,23 @@ export default async function handler(req, res) {
                 if (body.canceledAt !== undefined) updatePayload.canceledAt = body.canceledAt
             }
 
-            await writeClient.patch(invoiceId).set(updatePayload).commit()
+            // If the date was changed from the Edit screen instead of the
+            // Reschedule button, still keep a record of the old date.
+            let editPatch = writeClient.patch(invoiceId).set(updatePayload)
+            if (updatePayload.serviceDate && existing.serviceDate && updatePayload.serviceDate !== existing.serviceDate) {
+                editPatch = editPatch
+                    .setIfMissing({ rescheduleHistory: [] })
+                    .append('rescheduleHistory', [{
+                        _type: 'reschedule',
+                        _key: randomKey(),
+                        fromDate: existing.serviceDate,
+                        toDate: updatePayload.serviceDate,
+                        reason: 'Date changed in Edit',
+                        changedAt: new Date().toISOString(),
+                        changedBy: 'Michael',
+                    }])
+            }
+            await editPatch.commit()
 
             return res.status(200).json({ success: true, ...updatePayload })
         } catch (err) {

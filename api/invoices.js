@@ -251,6 +251,32 @@ export default async function handler(req, res) {
                 return res.status(200).json({ invoices: withNames })
             }
 
+            // Jobs that were moved to a new day and Michael hasn't tapped
+            // "Got it" on yet — the calendar's "Rescheduled" alert card.
+            if (req.query.unconfirmedReschedules) {
+                const moved = await readClient.fetch(
+                    `*[_type == "customerInvoice" && rescheduleNeedsReview == true && status != "canceled"] | order(serviceDate asc){
+                        _id,
+                        invoiceNumber,
+                        serviceDate,
+                        jobStatus,
+                        workPerformed,
+                        "lastMove": rescheduleHistory[-1]{ fromDate, toDate, reason, changedAt },
+                        "customerFirstName": customer->firstName,
+                        "customerLastName": customer->lastName,
+                        "additionalContactFirstName": customer->additionalContactFirstName,
+                        "additionalContactLastName": customer->additionalContactLastName,
+                        "propertyAddress": property->address
+                    }`
+                )
+                const withNames = moved.map((inv) => {
+                    const primary = [inv.customerFirstName, inv.customerLastName].filter(Boolean).join(' ')
+                    const secondary = [inv.additionalContactFirstName, inv.additionalContactLastName].filter(Boolean).join(' ')
+                    return { ...inv, customerName: secondary ? `${primary} / ${secondary}` : primary }
+                })
+                return res.status(200).json({ invoices: withNames })
+            }
+
             // Jobs scheduled before a date (today) that still aren't finished —
             // the calendar's "Open jobs" list, so last month's unfinished work
             // doesn't hide on a page Michael has to flip back to.
@@ -287,6 +313,7 @@ export default async function handler(req, res) {
                         serviceDate,
                         jobStatus,
                         workPerformed,
+                        "movedFrom": rescheduleHistory[-1].fromDate,
                         "customerFirstName": customer->firstName,
                         "customerLastName": customer->lastName,
                         "additionalContactFirstName": customer->additionalContactFirstName,
@@ -675,6 +702,11 @@ export default async function handler(req, res) {
                 return res.status(200).json({ success: true, status: 'active' })
             }
 
+            if (action === 'acknowledgeReschedule') {
+                await writeClient.patch(invoiceId).set({ rescheduleNeedsReview: false }).commit()
+                return res.status(200).json({ success: true })
+            }
+
             if (action === 'acknowledgeCancelation') {
                 await writeClient.patch(invoiceId).set({ cancelAcknowledged: true }).commit()
                 return res.status(200).json({ success: true, cancelAcknowledged: true })
@@ -721,7 +753,7 @@ export default async function handler(req, res) {
                     .patch(invoiceId)
                     .setIfMissing({ rescheduleHistory: [] })
                     .append('rescheduleHistory', [entry])
-                    .set({ serviceDate: newDate })
+                    .set({ serviceDate: newDate, rescheduleNeedsReview: true })
                     .commit()
 
                 return res.status(200).json({ success: true, serviceDate: newDate, entry })
@@ -839,6 +871,7 @@ export default async function handler(req, res) {
                         changedAt: new Date().toISOString(),
                         changedBy: 'Michael',
                     }])
+                    .set({ rescheduleNeedsReview: true })
             }
             await editPatch.commit()
 

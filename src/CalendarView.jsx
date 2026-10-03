@@ -89,6 +89,55 @@ function OpenJobs({ jobs, onOpen }) {
     )
 }
 
+// Jobs that were moved to a new day — shown at the top like cancelations
+// until Michael taps "Got it", so a date change never slips by him.
+// Light card with dark text so it's easy to read on a phone.
+function RescheduleAlert({ jobs, confirmingId, onConfirm, onOpen }) {
+    if (jobs.length === 0) return null
+    return (
+        <div className="bg-white border-2 border-blue rounded-2xl p-5 shadow-lg mb-6">
+            <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl" aria-hidden="true">📅</span>
+                <p className="text-navy font-serif text-lg font-semibold">
+                    {jobs.length} Rescheduled Job{jobs.length === 1 ? '' : 's'}
+                </p>
+            </div>
+            <div className="flex flex-col gap-3">
+                {jobs.map((job) => (
+                    <div key={job._id} className="bg-sky-50 border border-sky-300 rounded-xl p-4">
+                        <p className="text-navy text-base font-semibold">{job.customerName || 'No customer'}</p>
+                        <p className="text-gray-800 text-sm mt-0.5">{formatAddress(job.propertyAddress) || 'No address'}</p>
+                        {job.lastMove && (
+                            <p className="text-navy text-base mt-2">
+                                {job.lastMove.fromDate && <span className="line-through text-gray-600">{shortDate(job.lastMove.fromDate)}</span>}
+                                {job.lastMove.fromDate && ' → '}
+                                <span className="font-bold">{shortDate(job.lastMove.toDate || job.serviceDate)}</span>
+                            </p>
+                        )}
+                        {job.lastMove?.reason && <p className="text-gray-800 text-sm mt-1">Why: {job.lastMove.reason}</p>}
+                        {job.invoiceNumber && <p className="text-gray-700 text-sm mt-1">Job #{job.invoiceNumber}</p>}
+                        <div className="flex gap-2 mt-3">
+                            <button
+                                onClick={() => onOpen(job)}
+                                className="flex-1 bg-white border-2 border-navy text-navy text-base font-semibold py-2.5 rounded-lg active:scale-[0.98]"
+                            >
+                                Open Job
+                            </button>
+                            <button
+                                onClick={() => onConfirm(job._id)}
+                                disabled={confirmingId === job._id}
+                                className="flex-1 bg-blue hover:bg-blue-light disabled:opacity-50 text-white text-base font-semibold py-2.5 rounded-lg transition-colors active:scale-[0.98]"
+                            >
+                                {confirmingId === job._id ? 'Saving...' : 'Got it'}
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 function CancelationAlert({ cancelations, confirmingId, onConfirm, className = '' }) {
     if (cancelations.length === 0) return null
     return (
@@ -132,6 +181,7 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
     const [confirmingId, setConfirmingId] = useState(null)
     const [toast, setToast] = useState(null)
     const [openJobs, setOpenJobs] = useState([])
+    const [reschedules, setReschedules] = useState([])
     const monthString = toMonthString(cursor)
     const todayFull = new Date().toISOString().slice(0, 10)
 
@@ -178,6 +228,25 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
         }
     }
 
+    async function handleConfirmReschedule(id) {
+        setConfirmingId(id)
+        try {
+            const res = await fetch('/api/invoices', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'acknowledgeReschedule', invoiceId: id }),
+            })
+            if (!res.ok) throw new Error('Failed')
+            setReschedules((prev) => prev.filter((j) => j._id !== id))
+            setToast('Got it')
+        } catch (err) {
+            console.error(err)
+            setToast("Couldn't save — try again")
+        } finally {
+            setConfirmingId(null)
+        }
+    }
+
     useEffect(() => {
         fetchMonth()
         setSelectedDay(null)
@@ -191,6 +260,10 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
         fetch(`/api/invoices?openBefore=${localToday()}`)
             .then((res) => (res.ok ? res.json() : { invoices: [] }))
             .then((data) => setOpenJobs(data.invoices || []))
+            .catch(() => { }) // non-critical — the card just doesn't show if this fails
+        fetch('/api/invoices?unconfirmedReschedules=true')
+            .then((res) => (res.ok ? res.json() : { invoices: [] }))
+            .then((data) => setReschedules(data.invoices || []))
             .catch(() => { }) // non-critical — the card just doesn't show if this fails
     }, [])
 
@@ -230,6 +303,13 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                     confirmingId={confirmingId}
                     onConfirm={handleConfirmCancelation}
                     className="mb-6 lg:hidden"
+                />
+
+                <RescheduleAlert
+                    jobs={reschedules}
+                    confirmingId={confirmingId}
+                    onConfirm={handleConfirmReschedule}
+                    onOpen={onOpenInvoice}
                 />
 
                 <OpenJobs jobs={openJobs} onOpen={onOpenInvoice} />
@@ -349,6 +429,11 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                                                     </div>
                                                     <p className="text-white/40 text-xs mt-0.5">{formatAddress(inv.propertyAddress)}</p>
                                                     {inv.workPerformed && <p className="text-white/40 text-xs mt-1 italic">{inv.workPerformed}</p>}
+                                                    {inv.movedFrom && (
+                                                        <p className="mt-2 inline-block bg-white text-navy text-xs font-bold px-2 py-0.5 rounded-full">
+                                                            📅 Moved from {shortDate(inv.movedFrom)}
+                                                        </p>
+                                                    )}
                                                 </button>
                                             ))}
                                         </div>

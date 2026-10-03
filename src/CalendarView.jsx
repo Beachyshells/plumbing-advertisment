@@ -14,6 +14,81 @@ function daysInMonth(year, month) {
     return new Date(year, month + 1, 0).getDate()
 }
 
+// Today as YYYY-MM-DD in the phone's own time zone (not UTC, which would
+// roll over to tomorrow in the evening).
+function localToday() {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function daysAgo(dateString) {
+    const [y, m, d] = dateString.split('-').map(Number)
+    const then = new Date(y, m - 1, d)
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    return Math.round((today - then) / 86400000)
+}
+
+function shortDate(dateString) {
+    const [y, m, d] = dateString.split('-').map(Number)
+    return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
+// Jobs from earlier days that still aren't finished, in a fold-down card at
+// the top. Light card with dark text so it's easy to read on a phone.
+function OpenJobs({ jobs, onOpen }) {
+    const [open, setOpen] = useState(false)
+    if (jobs.length === 0) return null
+    return (
+        <div className="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
+            <button
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+                className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left active:bg-gray-100"
+            >
+                <span className="flex items-center gap-3">
+                    <span className="min-w-8 h-8 px-2 flex items-center justify-center rounded-full bg-orange-600 text-white text-base font-bold">
+                        {jobs.length}
+                    </span>
+                    <span className="text-navy text-lg font-semibold">
+                        Open job{jobs.length === 1 ? '' : 's'} from earlier days
+                    </span>
+                </span>
+                <span className="text-navy text-xl font-bold" aria-hidden="true">{open ? '▲' : '▼'}</span>
+            </button>
+            {open && (
+                <div className="border-t border-gray-200 flex flex-col">
+                    {jobs.map((job) => {
+                        const ago = daysAgo(job.serviceDate)
+                        return (
+                            <button
+                                key={job._id}
+                                onClick={() => onOpen(job)}
+                                className="text-left px-5 py-4 border-b border-gray-200 last:border-b-0 active:bg-gray-100 hover:bg-gray-50"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <p className="text-navy text-base font-semibold">{job.customerName || 'No customer'}</p>
+                                    <span
+                                        className={`shrink-0 text-sm font-bold px-2.5 py-0.5 rounded-full ${job.jobStatus === 'ongoing' ? 'bg-green-700 text-white' : 'bg-sky-700 text-white'}`}
+                                    >
+                                        {job.jobStatus === 'ongoing' ? 'Ongoing' : 'Not Started'}
+                                    </span>
+                                </div>
+                                <p className="text-gray-800 text-base mt-1">{formatAddress(job.propertyAddress) || 'No address'}</p>
+                                {job.workPerformed && <p className="text-gray-700 text-sm mt-1">{job.workPerformed}</p>}
+                                <p className="text-gray-700 text-sm mt-1 font-medium">
+                                    Scheduled {shortDate(job.serviceDate)} · {ago === 1 ? '1 day ago' : `${ago} days ago`}
+                                    {job.invoiceNumber ? ` · Job #${job.invoiceNumber}` : ''}
+                                </p>
+                            </button>
+                        )
+                    })}
+                </div>
+            )}
+        </div>
+    )
+}
+
 function CancelationAlert({ cancelations, confirmingId, onConfirm, className = '' }) {
     if (cancelations.length === 0) return null
     return (
@@ -56,6 +131,7 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
     const [cancelations, setCancelations] = useState([])
     const [confirmingId, setConfirmingId] = useState(null)
     const [toast, setToast] = useState(null)
+    const [openJobs, setOpenJobs] = useState([])
     const monthString = toMonthString(cursor)
     const todayFull = new Date().toISOString().slice(0, 10)
 
@@ -109,8 +185,13 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
 
     // Independent of month navigation on purpose — Michael shouldn't be able
     // to "page away" from an unconfirmed cancelation by changing months.
+    // Same for unfinished jobs from earlier days.
     useEffect(() => {
         fetchCancelations()
+        fetch(`/api/invoices?openBefore=${localToday()}`)
+            .then((res) => (res.ok ? res.json() : { invoices: [] }))
+            .then((data) => setOpenJobs(data.invoices || []))
+            .catch(() => { }) // non-critical — the card just doesn't show if this fails
     }, [])
 
     const byDate = {}
@@ -150,6 +231,8 @@ export default function CalendarView({ onBack, onOpenInvoice }) {
                     onConfirm={handleConfirmCancelation}
                     className="mb-6 lg:hidden"
                 />
+
+                <OpenJobs jobs={openJobs} onOpen={onOpenInvoice} />
 
                 {status === 'loading' && <p className="text-white/40 text-sm text-center py-10">Loading...</p>}
                 {status === 'error' && <p className="text-red-400 text-sm text-center py-10">Couldn't load the calendar.</p>}

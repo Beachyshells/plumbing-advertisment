@@ -251,6 +251,34 @@ export default async function handler(req, res) {
                 return res.status(200).json({ invoices: withNames })
             }
 
+            // Jobs scheduled before a date (today) that still aren't finished —
+            // the calendar's "Open jobs" list, so last month's unfinished work
+            // doesn't hide on a page Michael has to flip back to.
+            if (req.query.openBefore) {
+                const before = String(req.query.openBefore).slice(0, 10)
+                const openJobs = await readClient.fetch(
+                    `*[_type == "customerInvoice" && status != "canceled" && jobStatus != "complete" && defined(serviceDate) && serviceDate < $before] | order(serviceDate asc){
+                        _id,
+                        invoiceNumber,
+                        serviceDate,
+                        jobStatus,
+                        workPerformed,
+                        "customerFirstName": customer->firstName,
+                        "customerLastName": customer->lastName,
+                        "additionalContactFirstName": customer->additionalContactFirstName,
+                        "additionalContactLastName": customer->additionalContactLastName,
+                        "propertyAddress": property->address
+                    }`,
+                    { before }
+                )
+                const withNames = openJobs.map((inv) => {
+                    const primary = [inv.customerFirstName, inv.customerLastName].filter(Boolean).join(' ')
+                    const secondary = [inv.additionalContactFirstName, inv.additionalContactLastName].filter(Boolean).join(' ')
+                    return { ...inv, customerName: secondary ? `${primary} / ${secondary}` : primary }
+                })
+                return res.status(200).json({ invoices: withNames })
+            }
+
             if (calendarMonth) {
                 const monthInvoices = await readClient.fetch(
                     `*[_type == "customerInvoice" && status != "canceled" && jobStatus != "complete" && serviceDate >= $monthStart && serviceDate <= $monthEnd]{
